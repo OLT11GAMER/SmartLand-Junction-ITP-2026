@@ -1,0 +1,169 @@
+You are generating synthetic cadastral and agricultural map data for Kosovo for a demo application.
+
+Goal
+- Create believable fake land parcels and farmland attributes without using real cadastral data.
+- Use an SVG border of Kosovo to constrain points and polygons inside the country outline.
+- Use grayscale masks or bitmap layers to bias where points cluster and what areas are considered farmland.
+- Generate rectangularish parcel polygons using either a jittered grid or a Voronoi-based partition.
+- The output must look consistent and map-ready, but it must remain clearly synthetic.
+- Do not trace or replicate any real-world map or cadastral dataset.
+
+Input assets
+- `kosovo-border.svg`: vector boundary polygon used only as a clipping mask.
+- `farmland-mask.png`: grayscale image where brighter pixels mean higher farmland probability.
+- `density-mask.png`: optional grayscale image that controls parcel density or point spread.
+- `health-mask.png`: optional grayscale image that influences harvest health score.
+- `crop-type-mask.png`: optional grayscale image that influences crop type probability.
+- `seed`: integer seed so the output can be regenerated deterministically.
+
+Primary output
+- A `FeatureCollection` of parcel polygons in GeoJSON.
+- A companion JSON file containing parcel attributes and metadata.
+- Optional point layer for visual seeds or sample markers.
+
+Recommended file structure
+- `data/kosovo-parcels.geojson`
+- `data/kosovo-parcels.meta.json`
+- `data/kosovo-parcels-points.geojson`
+- `data/kosovo-bounds.json`
+
+Core data model
+Each parcel should include:
+- `id`: stable string like `KOS-PRZ-000123`
+- `parcelIndex`: numeric index
+- `district`: municipality or region name
+- `centroid`: `[lng, lat]`
+- `geometry`: polygon coordinates
+- `areaHa`: float hectares
+- `shapeType`: `rectangular`, `irregular-rect`, or `voronoi`
+- `landUse`: `farmland`, `pasture`, `orchard`, `vineyard`, `fallow`, `forest_edge`, `mixed`
+- `cropType`: `wheat`, `corn`, `barley`, `potato`, `beans`, `vegetables`, `orchard`, `vineyard`, `pasture`
+- `isFarmland`: boolean
+- `farmScore`: 0-100 score for how farmable or active the parcel is
+- `harvestHealth`: 0-100 score for crop condition or expected yield quality
+- `soilQuality`: 0-100 synthetic soil proxy
+- `waterAccess`: 0-100 synthetic irrigation proxy
+- `slopeRisk`: 0-100 synthetic terrain difficulty proxy
+- `confidence`: 0-1 synthetic confidence score
+- `noise`: object storing the random inputs used to generate the record
+- `maskValues`: object storing sampled grayscale values from each raster input
+- `labels`: array of tags like `["synthetic", "demo", "farmland"]`
+
+Data structure rules
+- Keep geometry and attributes separate, but link them by `id`.
+- Use deterministic generation from a seed so the same inputs always produce the same output.
+- Store all coordinates in WGS84 lon/lat.
+- Keep polygons simple enough for rendering, but varied enough to avoid obvious repetition.
+- Ensure polygons do not overlap unless intentionally modeling shared boundaries.
+- Ensure every polygon lies fully inside the Kosovo boundary after clipping.
+- If a polygon falls outside the border, clip it or discard it and regenerate.
+
+Recommended generation pipeline
+1. Load the Kosovo SVG border and convert it to a polygon mask.
+2. Load grayscale rasters and normalize pixel values to `0..1`.
+3. Generate candidate seed points inside the border.
+4. Weight seed placement by the farmland mask and optional density mask.
+5. Build parcels using one of two methods:
+   - Jittered grid for rectangularish land plots.
+   - Voronoi partition for more organic but still tileable parcels.
+6. Post-process each parcel:
+   - Snap edges slightly toward grid alignment if you want farm-like blocks.
+   - Randomly rotate or skew a subset of parcels within small limits.
+   - Clip to the border polygon.
+7. Sample masks at the parcel centroid and along the polygon area.
+8. Derive attributes from mask values plus seeded noise.
+9. Assign crop type and land use using weighted probabilities.
+10. Export GeoJSON and metadata JSON.
+
+Suggested parcel generation approach
+- Use a jittered rectangular grid if you want farmland to look managed and rectangular.
+- Use Voronoi only as a base partition, then enforce a rectangle bias by:
+  - constraining seed points to a grid,
+  - clamping aspect ratios,
+  - applying small orthogonal nudges,
+  - simplifying polygon edges.
+- For farmland areas, prefer rectangular or near-rectangular polygons.
+- For non-farmland areas, allow more irregular shapes.
+
+Suggested probability logic
+- `isFarmland` should depend on farmland mask strength, plus small seeded randomness.
+- `cropType` should depend on district, farmland mask, and crop mask.
+- `harvestHealth` should depend on health mask, slope risk, water access, and noise.
+- `farmScore` should combine farmland mask, density mask, and crop suitability.
+- `confidence` should be lower where masks disagree or the polygon is very irregular.
+
+Example weighting strategy
+- `farmlandProbability = 0.15 + farmlandMask * 0.7 + densityMask * 0.15`
+- `harvestHealth = clamp(round(20 + healthMask * 60 + waterAccess * 0.15 - slopeRisk * 0.25 + noise * 10), 0, 100)`
+- `farmScore = clamp(round(farmlandMask * 55 + cropSuitability * 25 + waterAccess * 10 + noise * 10), 0, 100)`
+
+Suggested parcel output schema
+```json
+{
+  "type": "Feature",
+  "properties": {
+    "id": "KOS-PRZ-000123",
+    "parcelIndex": 123,
+    "district": "Prizren",
+    "centroid": [20.7421, 42.2145],
+    "areaHa": 2.84,
+    "shapeType": "irregular-rect",
+    "landUse": "farmland",
+    "cropType": "wheat",
+    "isFarmland": true,
+    "farmScore": 82,
+    "harvestHealth": 76,
+    "soilQuality": 64,
+    "waterAccess": 58,
+    "slopeRisk": 19,
+    "confidence": 0.87,
+    "maskValues": {
+      "farmland": 0.81,
+      "density": 0.72,
+      "health": 0.65,
+      "cropType": 0.54
+    },
+    "noise": {
+      "seed": 918273,
+      "jitter": 0.13,
+      "rotation": -3.2
+    },
+    "labels": ["synthetic", "demo", "farmland"]
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [[[20.74,42.21],[20.75,42.21],[20.75,42.22],[20.74,42.22],[20.74,42.21]]]
+  }
+}
+```
+
+Best practices for visual realism
+- Mix a few large parcels with many small parcels.
+- Vary parcel density by district.
+- Keep farmland clusters continuous, not uniformly distributed.
+- Add sparse non-farmland breaks: roads, forest edges, water-adjacent zones, or fallow strips.
+- Use multiple noise layers instead of one random variable.
+- Avoid perfect symmetry and avoid obvious grid repetition.
+
+If using Voronoi
+- Use boundary-clipped Voronoi cells as a starting point.
+- Apply mild rectangular snapping to edges.
+- Remove extreme slivers and merge tiny cells.
+- Rebalance area distribution so the map does not look like pure cellular noise.
+
+If using rectangular grid filling
+- Start with a coarse grid over Kosovo.
+- Jitter cell centers slightly.
+- Split selected cells into 2 to 4 subplots.
+- Merge or drop cells based on masks and target density.
+- Rotate some cells by small angles only if needed.
+
+Final output requirements
+- Produce valid GeoJSON.
+- Keep the data deterministic with the same seed.
+- Separate generation metadata from parcel features.
+- Make the data easy to regenerate, update, and style in a map UI.
+
+Implementation hint
+- The code should be written so that the SVG border and grayscale masks are the only external spatial inputs.
+- Everything else should be synthesized from the seed, the masks, and controlled noise.

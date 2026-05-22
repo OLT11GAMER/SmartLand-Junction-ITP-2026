@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOKA Admin - Kosovo Land Health</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+* { box-sizing: border-box; }
+:root {
+  --forest: #24422b;
+  --forest-2: #365f3d;
+  --sage: #6d8f6d;
+  --sage-2: #93ae8f;
+  --mint: #e9f2e7;
+  --earth: #9b7750;
+  --earth-2: #c39b70;
+  --sand: #f4efe6;
+  --cream: #fbfaf6;
+  --white: #ffffff;
+  --text: #18311c;
+  --muted: #6c7c6f;
+  --line: #d9e2d7;
+  --line-2: #c7d3c6;
+  --shadow: 0 12px 30px rgba(35, 56, 37, 0.08);
+  --shadow-soft: 0 6px 18px rgba(35, 56, 37, 0.06);
+  --radius: 16px;
+  --radius-sm: 12px;
+}
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: linear-gradient(180deg, #f7f6f1 0%, #f3f1ea 100%);
+  color: var(--text);
+  overflow: hidden;
+}
+button, input, textarea, select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+.app {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 76px minmax(0, 1fr);
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(251, 250, 246, 0.94);
+  backdrop-filter: blur(10px);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, var(--forest), var(--sage));
+  color: var(--white);
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-soft);
+  flex: 0 0 auto;
+}
+.brand-copy {
+  min-width: 0;
+}
+.brand-title {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+}
+.brand-sub {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.2;
+}
+.top-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: var(--shadow-soft);
+}
+.chip.soft {
+  background: var(--mint);
+  border-color: #d7e4d3;
+  color: var(--forest);
+}
+.layout {
+  min-height: 0;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1.35fr) 390px;
+  gap: 14px;
+}
+.panel {
+  min-height: 0;
+  background: rgba(255,255,255,0.8);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.panel-head {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,244,236,0.96));
+}
+.panel-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.panel-title h2, .panel-title h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.panel-title .muted {
+  font-size: 12px;
+  color: var(--muted);
+}
+.panel-body {
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+}
+.stack {
+  display: grid;
+  gap: 12px;
+}
+.card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+}
+.card.pad {
+  padding: 14px;
+}
+.hero-card {
+  background: linear-gradient(145deg, #294430 0%, #355f39 100%);
+  color: var(--white);
+  border-color: rgba(255,255,255,0.12);
+}
+.hero-card .muted {
+  color: rgba(255,255,255,0.78);
+}
+.hero-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+.hero-score {
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+}
+.hero-label {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.72);
+  margin-bottom: 6px;
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(255,255,255,0.12);
+  color: var(--white);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.08);
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.metric {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+  padding: 12px;
+}
+.metric .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.metric .value {
+  font-size: 18px;
+  font-weight: 800;
+}
+.metric .sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.section-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--forest);
+  margin: 0 0 10px;
+}
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 12px;
+  background: var(--white);
+  color: var(--text);
+  outline: none;
+}
+.input:focus {
+  border-color: var(--sage);
+  box-shadow: 0 0 0 3px rgba(109, 143, 109, 0.12);
+}
+.legend {
+  display: grid;
+  gap: 8px;
+}
+.legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+}
+.legend-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+.muni-list {
+  display: grid;
+  gap: 10px;
+}
+.muni-item {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+.muni-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.muni-name {
+  font-size: 13px;
+  font-weight: 800;
+}
+.muni-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+.bar {
+  width: 100%;
+  height: 9px;
+  border-radius: 999px;
+  background: #edf2ea;
+  overflow: hidden;
+}
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--sage), var(--forest));
+}
+.map-shell {
+  position: relative;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.map-toolbar {
+  position: absolute;
+  z-index: 500;
+  top: 14px;
+  left: 14px;
+  display: grid;
+  gap: 10px;
+  width: min(100%, 420px);
+}
+.toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.layer-btn {
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,0.96);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-soft);
+}
+.layer-btn.active {
+  background: var(--forest);
+  color: var(--white);
+  border-color: var(--forest);
+}
+.map-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: rgba(255,255,255,0.96);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: var(--shadow-soft);
+  font-size: 12px;
+}
+.map-legend strong {
+  font-size: 12px;
+}
+.map {
+  min-height: 560px;
+  flex: 1;
+  border-top: 1px solid var(--line);
+  background: #d8e2d3;
+}
+.map-footer {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 10px;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--line);
+  background: rgba(250,248,243,0.96);
+}
+.footer-stat {
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+}
+.footer-stat .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.footer-stat .value {
+  margin-top: 5px;
+  font-size: 18px;
+  font-weight: 800;
+}
+.footer-stat .sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+.detail-head {
+  display: grid;
+  gap: 12px;
+}
+.detail-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.kv {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+  padding: 12px;
+}
+.kv .k {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.kv .v {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.timeline {
+  display: grid;
+  gap: 8px;
+}
+.timeline-bars {
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0,1fr));
+  gap: 3px;
+  align-items: end;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fff, #f8f6ef);
+}
+.timeline-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.timeline-bar i {
+  width: 100%;
+  display: block;
+  border-radius: 999px 999px 4px 4px;
+  background: linear-gradient(180deg, #bfd9b5, var(--forest));
+}
+.timeline-bar span {
+  font-size: 10px;
+  color: var(--muted);
+  transform: rotate(-45deg);
+  transform-origin: center;
+  white-space: nowrap;
+  margin-top: 16px;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.subcard {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+  padding: 12px;
+}
+.subcard .title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.subcard .body {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.confidence {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.meter {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: #edf2ea;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.meter > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #e2c16a, #6e9c5d);
+}
+.meter-label {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.ledger {
+  display: grid;
+  gap: 10px;
+}
+.ledger-item {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+  padding: 12px;
+}
+.ledger-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 22px;
+  bottom: -11px;
+  width: 2px;
+  height: 11px;
+  background: #cad6c8;
+}
+.ledger-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.ledger-action {
+  font-size: 13px;
+  font-weight: 800;
+}
+.ledger-time, .ledger-hash {
+  font-size: 11px;
+  color: var(--muted);
+  word-break: break-word;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.btn {
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-soft);
+}
+.btn.primary {
+  background: var(--forest);
+  color: var(--white);
+  border-color: var(--forest);
+}
+.btn.soft {
+  background: var(--mint);
+  border-color: #d5e3d1;
+  color: var(--forest);
+}
+.advisor-box {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff, #f8f7f0);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.advisor-input {
+  display: flex;
+  gap: 8px;
+}
+.advisor-input input {
+  flex: 1;
+  min-width: 0;
+}
+.footnote {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.toast {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  padding: 12px 14px;
+  background: var(--forest);
+  color: var(--white);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: 0.22s ease;
+  z-index: 9999;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.leaflet-container {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #d7e2cf;
+}
+.leaflet-control-attribution {
+  font-size: 10px;
+}
+.parcel-tooltip {
+  font-size: 12px;
+  font-weight: 700;
+}
+@media (max-width: 1280px) {
+  .layout {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+  .right {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 980px) {
+  html, body {
+    overflow: auto;
+  }
+  .app {
+    height: auto;
+    min-height: 100vh;
+    grid-template-rows: auto auto;
+  }
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .map {
+    min-height: 420px;
+  }
+  .panel {
+    min-height: auto;
+  }
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 14px 16px;
+  }
+  .top-meta {
+    justify-content: flex-start;
+  }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <i data-lucide="sprout" width="22" height="22"></i>
+      </div>
+      <div class="brand-copy">
+        <div class="brand-title">TOKA</div>
+        <div class="brand-sub">Kosovo land health intelligence · admin view</div>
+      </div>
+    </div>
+    <div class="top-meta">
+      <div class="chip soft"><i data-lucide="shield-check" width="14" height="14"></i> Government admin</div>
+      <div class="chip"><i data-lucide="map" width="14" height="14"></i> Full Kosovo map</div>
+      <div class="chip"><i data-lucide="database" width="14" height="14"></i> AKK cadastral sync</div>
+      <div class="chip"><i data-lucide="activity" width="14" height="14"></i><span id="summaryParcelCount">72 parcels</span></div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel left">
+      <div class="panel-head">
+        <div class="panel-title">
+          <h2>Overview</h2>
+          <span class="muted">early warning, not enforcement</span>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="stack">
+          <div class="card hero-card pad">
+            <div class="hero-row">
+              <div>
+                <div class="hero-label">Selected owner</div>
+                <div style="font-size:20px;font-weight:800;line-height:1.15" id="ownerName">Agim Berisha</div>
+                <div class="muted" id="ownerMeta">Prizren · 5 parcels · demo access</div>
+              </div>
+              <div style="text-align:right">
+                <div class="hero-label">Land Pulse</div>
+                <div class="hero-score" id="ownerPulse">82</div>
+              </div>
+            </div>
+            <div style="margin-top:14px" class="status-pill" id="ownerStatus"><span class="status-dot"></span> Thriving</div>
+            <div class="muted" style="margin-top:10px;line-height:1.45" id="ownerSummary">Agim's parcels in Prizren show mixed conditions: one thriving field, one stress signal, and one parcel with a rising abandonment risk.</div>
+          </div>
+
+          <div class="card pad">
+            <div class="section-title">Access filters</div>
+            <input class="input" id="searchInput" placeholder="Search owner, parcel ID, municipality">
+            <div style="height:10px"></div>
+            <div class="filter-row">
+              <span class="chip soft" style="padding:8px 10px">All Kosovo</span>
+              <span class="chip" style="padding:8px 10px">Owner lens</span>
+              <span class="chip" style="padding:8px 10px">At risk</span>
+              <span class="chip" style="padding:8px 10px">Sentinel-2</span>
+            </div>
+          </div>
+
+          <div class="card pad">
+            <div class="section-title">Layer controls</div>
+            <div class="toolbar-row" id="layerButtons">
+              <button class="layer-btn active" data-layer="pulse"><i data-lucide="leaf" width="14" height="14"></i>Land Pulse</button>
+              <button class="layer-btn" data-layer="ledger"><i data-lucide="link-2" width="14" height="14"></i>Ledger activity</button>
+              <button class="layer-btn" data-layer="satellite"><i data-lucide="satellite" width="14" height="14"></i>Satellite check</button>
+              <button class="layer-btn" data-layer="risk"><i data-lucide="triangle-alert" width="14" height="14"></i>Abandonment risk</button>
+            </div>
+          </div>
+
+          <div class="card pad">
+            <div class="section-title">Kosovo municipality risk</div>
+            <div class="muni-list" id="municipalityList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel center">
+      <div class="panel-head">
+        <div class="panel-title">
+          <h2>Map of Kosovo</h2>
+          <span class="muted" id="mapModeLabel">Layer: Land Pulse</span>
+        </div>
+      </div>
+      <div class="map-shell">
+        <div class="map-toolbar">
+          <div class="map-legend" id="mapLegend"></div>
+          <div class="toolbar-row">
+            <span class="chip soft" id="liveParcelChip"><i data-lucide="mouse-pointer-click" width="14" height="14"></i> Click any parcel</span>
+            <span class="chip"><i data-lucide="route" width="14" height="14"></i> 24-month history</span>
+            <span class="chip"><i data-lucide="badge-euro" width="14" height="14"></i> Municipality loss</span>
+          </div>
+        </div>
+        <div id="map" class="map"></div>
+        <div class="map-footer">
+          <div class="footer-stat">
+            <div class="label">Thriving parcels</div>
+            <div class="value" id="thrivingCount">0</div>
+            <div class="sub">Pulse 75-100</div>
+          </div>
+          <div class="footer-stat">
+            <div class="label">Under stress / at risk</div>
+            <div class="value" id="riskCount">0</div>
+            <div class="sub">Needs preventive outreach</div>
+          </div>
+          <div class="footer-stat">
+            <div class="label">Projected economic loss</div>
+            <div class="value" id="lossTotal">€0</div>
+            <div class="sub">Yield × land size × probability</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel right">
+      <div class="panel-head">
+        <div class="panel-title">
+          <h2>Parcel intelligence</h2>
+          <span class="muted" id="selectedMunicipality">Prizren</span>
+        </div>
+      </div>
+      <div class="panel-body" id="detailPanel"></div>
+    </aside>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const municipalities = [
+    { name: 'Prizren', center: [42.213, 20.741], spread: [0.055, 0.07] },
+    { name: 'Pristina', center: [42.662, 21.165], spread: [0.05, 0.06] },
+    { name: 'Peja', center: [42.659, 20.288], spread: [0.05, 0.06] },
+    { name: 'Gjakova', center: [42.381, 20.430], spread: [0.05, 0.06] },
+    { name: 'Ferizaj', center: [42.370, 21.146], spread: [0.05, 0.06] },
+    { name: 'Gjilan', center: [42.463, 21.465], spread: [0.05, 0.06] },
+    { name: 'Mitrovica', center: [42.891, 20.867], spread: [0.05, 0.05] },
+    { name: 'Podujeva', center: [42.911, 21.192], spread: [0.04, 0.05] },
+    { name: 'Rahovec', center: [42.371, 20.650], spread: [0.04, 0.05] },
+    { name: 'Suhareka', center: [42.355, 20.825], spread: [0.04, 0.05] },
+    { name: 'Lipjan', center: [42.530, 21.138], spread: [0.04, 0.05] },
+    { name: 'Malisheva', center: [42.482, 20.745], spread: [0.04, 0.05] }
+  ];
+
+  const cropTypes = ['wheat', 'corn', 'orchard', 'vineyard', 'pasture', 'vegetables'];
+  const ownerPool = [
+    { name: 'Agim Berisha', phone: '+383 44 200 181', municipality: 'Prizren' },
+    { name: 'Arta Krasniqi', phone: '+383 44 355 240', municipality: 'Pristina' },
+    { name: 'Valon Hyseni', phone: '+383 44 411 903', municipality: 'Peja' },
+    { name: 'Blerina Gashi', phone: '+383 44 392 108', municipality: 'Gjakova' },
+    { name: 'Naim Gashi', phone: '+383 44 322 771', municipality: 'Ferizaj' },
+    { name: 'Driton Morina', phone: '+383 44 500 022', municipality: 'Gjilan' },
+    { name: 'Hana Kelmendi', phone: '+383 44 618 844', municipality: 'Mitrovica' },
+    { name: 'Jeton Shala', phone: '+383 44 244 006', municipality: 'Podujeva' }
+  ];
+
+  const state = {
+    parcels: [],
+    parcelById: new Map(),
+    selectedId: null,
+    layer: 'pulse',
+    map: null,
+    geoLayer: null,
+    selectedLayer: null,
+    search: ''
+  };
+
+  const el = {
+    map: document.getElementById('map'),
+    detailPanel: document.getElementById('detailPanel'),
+    municipalityList: document.getElementById('municipalityList'),
+    mapLegend: document.getElementById('mapLegend'),
+    mapModeLabel: document.getElementById('mapModeLabel'),
+    liveParcelChip: document.getElementById('liveParcelChip'),
+    searchInput: document.getElementById('searchInput'),
+    thrivingCount: document.getElementById('thrivingCount'),
+    riskCount: document.getElementById('riskCount'),
+    lossTotal: document.getElementById('lossTotal'),
+    summaryParcelCount: document.getElementById('summaryParcelCount'),
+    ownerName: document.getElementById('ownerName'),
+    ownerMeta: document.getElementById('ownerMeta'),
+    ownerPulse: document.getElementById('ownerPulse'),
+    ownerStatus: document.getElementById('ownerStatus'),
+    ownerSummary: document.getElementById('ownerSummary'),
+    selectedMunicipality: document.getElementById('selectedMunicipality'),
+    toast: document.getElementById('toast'),
+    layerButtons: document.getElementById('layerButtons')
+  };
+
+  const fmtEur = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  const fmtPct = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function mulberry32(seed) {
+    return function () {
+      let t = seed += 0x6D2B79F5;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function hashString(input) {
+    let h = 2166136261;
+    for (let i = 0; i < input.length; i++) {
+      h ^= input.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return ('00000000' + (h >>> 0).toString(16)).slice(-8);
+  }
+
+  function formatDate(date) {
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }).format(date);
+  }
+
+  function formatDateTime(date) {
+    return new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  }
+
+  function parcelStatus(pulse) {
+    if (pulse >= 75) return { label: 'Thriving', color: '#406d44', bg: '#e8f1e6' };
+    if (pulse >= 50) return { label: 'Under stress', color: '#9d763d', bg: '#f6ecdb' };
+    return { label: 'At risk', color: '#b54b3f', bg: '#fae7e4' };
+  }
+
+  function driverText(parcel) {
+    const drivers = [
+      { label: 'inactivity', value: parcel.inactivityScore },
+      { label: 'seasonal deviation', value: parcel.seasonalDeviation },
+      { label: 'engagement gap', value: parcel.engagementGapScore },
+      { label: 'historical risk', value: parcel.historyRisk }
+    ].sort((a, b) => b.value - a.value);
+
+    const status = parcelStatus(parcel.landPulse).label === 'Thriving'
+      ? 'Parcela është në gjendje të mirë'
+      : parcelStatus(parcel.landPulse).label === 'Under stress'
+        ? 'Parcela po hyn në stres'
+        : 'Parcela ka rrezik të lartë braktisjeje';
+
+    return `${status} sepse ${drivers[0].label} dhe ${drivers[1].label} po dominojnë sinjalin; një kontakt i butë dhe një vizitë e shpejtë do ta ulnin rrezikun.`;
+  }
+
+  function advisoryFor(parcel, prompt) {
+    const pulse = parcel.landPulse;
+    const urgency = pulse < 45 ? 'brenda 72 orëve' : pulse < 70 ? 'këtë javë' : 'kur të jetë e mundur';
+    const opening = pulse < 45
+      ? `Për parcelën e ${parcel.ownerName} në ${parcel.municipality}, unë do të veproja ${urgency} me një kontroll në terren.`
+      : `Për parcelën e ${parcel.ownerName} në ${parcel.municipality}, gjendja është e menaxhueshme dhe kërkon vëmendje ${urgency}.`;
+
+    const promptLower = (prompt || '').toLowerCase();
+    if (promptLower.includes('sms')) {
+      return `SMS e shkurtër: “TOKA sugjeron kontroll të parcelës ${parcel.parcelId} në ${parcel.municipality}. Aktiviteti është ${parcel.statusLabel.toLowerCase()} dhe një vizitë e shkurtër mund të parandalojë rënie të mëtejshme.”`;
+    }
+    if (promptLower.includes('ujit')) {
+      return `${opening} Nga sinjalet satelitore, ujitja duket e paqëndrueshme krahasuar me sezonin. Rekomandoj një kontroll të sistemit të ujitjes dhe një vizitë të lehtë me fermerin ${parcel.ownerName}.`;
+    }
+    if (promptLower.includes('pse')) {
+      return `${opening} AI e llogarit këtë nga mungesa e aktivitetit, devijimi sezonal dhe boshllëku i angazhimit. Nëse do, mund të dërgojmë një mesazh këshillues dhe të hapim një gjurmë të re në ledger.`;
+    }
+    return `${opening} ${prompt ? 'Pyetja juaj u lidh me parcelën aktuale.' : ''} Rekomandimi kryesor është parandalimi: kontakt i butë, verifikim satelitor dhe një regjistër i ri aktiviteti për të ruajtur vazhdimësinë.`;
+  }
+
+  function createTimeline(parcel) {
+    const bars = [];
+    for (let i = 0; i < parcel.timeline.length; i++) {
+      const value = parcel.timeline[i];
+      const height = clamp(value, 6, 100);
+      const label = i % 3 === 0 ? parcel.timelineLabels[i] : '';
+      bars.push(`
+        <div class="timeline-bar" title="${parcel.timelineLabels[i]} · ${value}%">
+          <i style="height:${height}%"></i>
+          <span>${label}</span>
+        </div>
+      `);
+    }
+    return bars.join('');
+  }
+
+  function ledgerCard(record, index, total) {
+    const shortHash = record.hash.slice(0, 10);
+    const shortPrev = record.prevHash ? record.prevHash.slice(0, 10) : 'genesis';
+    return `
+      <div class="ledger-item">
+        <div class="ledger-top">
+          <div class="ledger-action">${record.action}</div>
+          <span class="chip soft" style="padding:6px 10px">${index + 1}/${total}</span>
+        </div>
+        <div class="ledger-time">${formatDateTime(new Date(record.timestamp))}</div>
+        <div class="ledger-hash">hash ${shortHash} · prev ${shortPrev}</div>
+        <div class="footnote" style="margin-top:8px">${record.details}</div>
+      </div>
+    `;
+  }
+
+  function buildLedger(parcel) {
+    return parcel.ledger.map((record, index) => ledgerCard(record, index, parcel.ledger.length)).join('');
+  }
+
+  function buildLegend() {
+    const palettes = {
+      pulse: [
+        { label: 'Thriving', color: '#4a814d' },
+        { label: 'Under stress', color: '#c49b4f' },
+        { label: 'At risk', color: '#c85b4c' }
+      ],
+      ledger: [
+        { label: 'Recent activity', color: '#416e44' },
+        { label: 'Active chain', color: '#7fa66f' },
+        { label: 'Dormant', color: '#d9c2a2' }
+      ],
+      satellite: [
+        { label: 'High confidence', color: '#4f8c4d' },
+        { label: 'Mismatch', color: '#c49b4f' },
+        { label: 'Low confidence', color: '#c85b4c' }
+      ],
+      risk: [
+        { label: 'Low probability', color: '#4f8c4d' },
+        { label: 'Moderate', color: '#c49b4f' },
+        { label: 'High probability', color: '#c85b4c' }
+      ]
+    };
+    const items = palettes[state.layer].map(item => `
+      <span class="legend-row">
+        <span class="legend-left"><span class="swatch" style="background:${item.color}"></span>${item.label}</span>
+      </span>
+    `);
+    el.mapLegend.innerHTML = `<strong>${layerTitle(state.layer)}</strong>${items.join('')}`;
+    el.mapModeLabel.textContent = `Layer: ${layerTitle(state.layer)}`;
+  }
+
+  function layerTitle(layer) {
+    return {
+      pulse: 'Land Pulse',
+      ledger: 'Ledger activity',
+      satellite: 'Satellite verification',
+      risk: 'Predictive risk'
+    }[layer];
+  }
+
+  function parcelStyle(parcel) {
+    const selected = state.selectedId === parcel.parcelId;
+    let fill = '#8cb289';
+    let weight = selected ? 3 : 1.5;
+    let opacity = selected ? 0.95 : 0.74;
+    if (state.layer === 'pulse') {
+      if (parcel.landPulse >= 75) fill = '#5e9a5a';
+      else if (parcel.landPulse >= 50) fill = '#d1a24f';
+      else fill = '#c45d51';
+    } else if (state.layer === 'ledger') {
+      const recent = parcel.ledger.length;
+      fill = recent >= 4 ? '#4f8452' : recent === 3 ? '#8ca96f' : '#d6bf8f';
+    } else if (state.layer === 'satellite') {
+      if (parcel.aiConfidence >= 80) fill = '#5f9c5f';
+      else if (parcel.aiConfidence >= 62) fill = '#d1a24f';
+      else fill = '#c85b4c';
+    } else {
+      if (parcel.abandonmentProbability <= 0.25) fill = '#5f9c5f';
+      else if (parcel.abandonmentProbability <= 0.55) fill = '#d1a24f';
+      else fill = '#c85b4c';
+    }
+    return {
+      color: selected ? '#18311c' : '#6b7b67',
+      weight,
+      opacity: 1,
+      fillColor: fill,
+      fillOpacity: opacity
+    };
+  }
+
+  function muniStyle(value) {
+    if (value < 40) return '#5f9c5f';
+    if (value < 65) return '#d0a34e';
+    return '#c85b4c';
+  }
+
+  function updateSummary() {
+    const total = state.parcels.length;
+    const thriving = state.parcels.filter(p => p.landPulse >= 75).length;
+    const risk = state.parcels.filter(p => p.abandonmentProbability >= 0.45).length;
+    const totalLoss = state.parcels.reduce((sum, p) => sum + p.projectedLoss, 0);
+    el.summaryParcelCount.textContent = `${total} parcels`;
+    el.thrivingCount.textContent = thriving;
+    el.riskCount.textContent = risk;
+    el.lossTotal.textContent = fmtEur.format(totalLoss);
+  }
+
+  function renderMunicipalities() {
+    const grouped = new Map();
+    state.parcels.forEach(parcel => {
+      if (!grouped.has(parcel.municipality)) {
+        grouped.set(parcel.municipality, {
+          name: parcel.municipality,
+          count: 0,
+          riskSum: 0,
+          loss: 0,
+          highlight: 0
+        });
+      }
+      const bucket = grouped.get(parcel.municipality);
+      bucket.count += 1;
+      bucket.riskSum += parcel.abandonmentProbability;
+      bucket.loss += parcel.projectedLoss;
+      bucket.highlight += parcel.landPulse < 50 ? 1 : 0;
+    });
+    const items = [...grouped.values()]
+      .sort((a, b) => (b.riskSum / b.count) - (a.riskSum / a.count))
+      .slice(0, 8)
+      .map(bucket => {
+        const avgRisk = bucket.riskSum / bucket.count;
+        const loss = bucket.loss;
+        return `
+          <div class="muni-item">
+            <div class="muni-top">
+              <div>
+                <div class="muni-name">${bucket.name}</div>
+                <div class="muni-meta">${bucket.count} parcels · ${bucket.highlight} stressed</div>
+              </div>
+              <span class="chip" style="padding:7px 9px;background:${bucket.highlight ? '#faece7' : '#edf4ea'};color:${bucket.highlight ? '#b54b3f' : '#3d6a3f'};border-color:${bucket.highlight ? '#efcfca' : '#d9e7d4'}">${avgRisk.toFixed(0)}%</span>
+            </div>
+            <div class="bar"><span style="width:${avgRisk}% ; background:${muniStyle(avgRisk)}"></span></div>
+            <div class="muni-meta">Projected loss: ${fmtEur.format(loss)}</div>
+          </div>
+        `;
+      })
+      .join('');
+    el.municipalityList.innerHTML = items;
+  }
+
+  function buildDetail(parcel) {
+    const status = parcelStatus(parcel.landPulse);
+    const riskLabel = parcel.abandonmentProbability >= 0.55 ? 'High' : parcel.abandonmentProbability >= 0.3 ? 'Medium' : 'Low';
+    const satelliteMismatch = Math.abs(parcel.reportedActivityScore - parcel.satelliteSignalScore);
+    const promptText = parcel.lastPrompt || 'Çfarë duhet të bëj këtë javë?';
+    return `
+      <div class="stack detail-head">
+        <div class="card hero-card pad">
+          <div class="hero-row">
+            <div>
+              <div class="hero-label">Parcel ${parcel.parcelId}</div>
+              <div style="font-size:20px;font-weight:800;line-height:1.18">${parcel.ownerName}</div>
+              <div class="muted">${parcel.municipality} · ${parcel.village} · ${parcel.crop} · ${parcel.hectares.toFixed(1)} ha</div>
+            </div>
+            <div style="text-align:right">
+              <div class="hero-label">Abandonment</div>
+              <div class="hero-score">${Math.round(parcel.abandonmentProbability * 100)}%</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+            <div class="status-pill" style="background:${status.bg};color:${status.color};border-color:rgba(255,255,255,0.15)"><span class="status-dot"></span>${status.label}</div>
+            <div class="status-pill">${riskLabel} impact</div>
+          </div>
+        </div>
+
+        <div class="detail-meta">
+          <div class="kv">
+            <div class="k">Land Pulse</div>
+            <div class="v">${parcel.landPulse}/100</div>
+          </div>
+          <div class="kv">
+            <div class="k">Projected loss</div>
+            <div class="v">${fmtEur.format(parcel.projectedLoss)}</div>
+          </div>
+          <div class="kv">
+            <div class="k">Last activity</div>
+            <div class="v">${parcel.lastActivityLabel}</div>
+          </div>
+          <div class="kv">
+            <div class="k">AI confidence</div>
+            <div class="v">${parcel.aiConfidence}%</div>
+          </div>
+        </div>
+
+        <div class="subcard">
+          <div class="title">
+            <span>AI explanation</span>
+            <span class="chip soft" style="padding:5px 10px">Preventive</span>
+          </div>
+          <div class="body">${parcel.aiExplanation}</div>
+        </div>
+
+        <div class="subcard">
+          <div class="title">
+            <span>24-month timeline</span>
+            <span class="chip" style="padding:5px 10px">${parcel.timelineTrend}</span>
+          </div>
+          <div class="timeline">
+            <div class="timeline-bars">${createTimeline(parcel)}</div>
+          </div>
+        </div>
+
+        <div class="subcard">
+          <div class="title">
+            <span>Blockchain activity ledger</span>
+            <span class="chip soft" style="padding:5px 10px">Immutable chain</span>
+          </div>
+          <div class="ledger">${buildLedger(parcel)}</div>
+        </div>
+
+        <div class="subcard">
+          <div class="title">
+            <span>Satellite + AI verification</span>
+            <span class="chip" style="padding:5px 10px">Sentinel-2</span>
+          </div>
+          <div class="grid-2">
+            <div class="subcard" style="padding:12px;background:#fdfcf8">
+              <div class="title"><span>Farmer-reported</span><span>${parcel.reportedActivityLabel}</span></div>
+              <div class="body">${parcel.reportedActivityText}</div>
+            </div>
+            <div class="subcard" style="padding:12px;background:#fdfcf8">
+              <div class="title"><span>Satellite signal</span><span>${parcel.satelliteSignalLabel}</span></div>
+              <div class="body">${parcel.satelliteSignalText}</div>
+            </div>
+          </div>
+          <div class="confidence">
+            <div class="meter"><span style="width:${parcel.aiConfidence}%"></span></div>
+            <div class="meter-label">${parcel.aiConfidence}% confidence</div>
+          </div>
+          <div class="footnote" style="margin-top:8px">${satelliteMismatch <= 15 ? 'Signals are aligned. The system recommends routine monitoring.' : 'The mismatch is mild. TOKA recommends a gentle advisory and a quick field confirmation.'}</div>
+        </div>
+
+        <div class="subcard">
+          <div class="title">
+            <span>AI agricultural advisor në shqip</span>
+            <span class="chip soft" style="padding:5px 10px">Contextual</span>
+          </div>
+          <div class="advisor-box">
+            <div class="body" id="advisorResponse">${advisoryFor(parcel, promptText)}</div>
+            <div class="advisor-input">
+              <input id="advisorInput" class="input" placeholder="Pyet për parcelën, ujitjen, sezonin ose SMS">
+              <button class="btn primary" id="advisorSend"><i data-lucide="send" width="14" height="14"></i>Ask AI</button>
+            </div>
+            <div class="footnote">Ton i qetë, këshillues dhe jo ndëshkues.</div>
+          </div>
+        </div>
+
+        <div class="subcard">
+          <div class="title">
+            <span>Predictive abandonment + economic impact</span>
+            <span class="chip" style="padding:5px 10px">${parcel.municipality}</span>
+          </div>
+          <div class="grid-2">
+            <div class="kv">
+              <div class="k">Probability</div>
+              <div class="v">${Math.round(parcel.abandonmentProbability * 100)}%</div>
+            </div>
+            <div class="kv">
+              <div class="k">Municipality loss</div>
+              <div class="v">${fmtEur.format(parcel.municipalityLoss)}</div>
+            </div>
+          </div>
+          <div class="footnote" style="margin-top:10px">Projected from yield × land size × probability, aggregated at municipal level for early intervention planning.</div>
+        </div>
+
+        <div class="subcard">
+          <div class="title">
+            <span>Actions</span>
+            <span class="chip soft" style="padding:5px 10px">${parcel.ownerPhone}</span>
+          </div>
+          <div class="actions">
+            <button class="btn primary action-btn" data-action="contact"><i data-lucide="phone-call" width="14" height="14"></i>Contact owner</button>
+            <button class="btn action-btn" data-action="flag"><i data-lucide="flag" width="14" height="14"></i>Flag for review</button>
+            <button class="btn soft action-btn" data-action="sms"><i data-lucide="message-square" width="14" height="14"></i>Send advisory SMS</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderDetail(parcel) {
+    el.detailPanel.innerHTML = buildDetail(parcel);
+    el.selectedMunicipality.textContent = parcel.municipality;
+    el.ownerName.textContent = parcel.ownerName;
+    el.ownerMeta.textContent = `${parcel.municipality} · ${parcel.ownerParcels} parcels · demo access`;
+    el.ownerPulse.textContent = parcel.ownerPulse;
+    const ownerStatus = parcelStatus(parcel.ownerPulse);
+    el.ownerStatus.style.background = ownerStatus.bg;
+    el.ownerStatus.style.color = ownerStatus.color;
+    el.ownerStatus.style.borderColor = ownerStatus.bg;
+    el.ownerStatus.innerHTML = '<span class="status-dot"></span>' + ownerStatus.label;
+    el.ownerSummary.textContent = parcel.ownerSummary;
+    const advisorInput = document.getElementById('advisorInput');
+    if (advisorInput) advisorInput.value = parcel.lastPrompt || 'Çfarë duhet të bëj këtë javë?';
+    bindDetailControls(parcel);
+    lucide.createIcons();
+  }
+
+  function bindDetailControls(parcel) {
+    const advisorSend = document.getElementById('advisorSend');
+    const advisorInput = document.getElementById('advisorInput');
+    const advisorResponse = document.getElementById('advisorResponse');
+    if (advisorSend && advisorInput && advisorResponse) {
+      advisorSend.onclick = () => {
+        parcel.lastPrompt = advisorInput.value.trim() || 'Çfarë duhet të bëj këtë javë?';
+        advisorResponse.textContent = advisoryFor(parcel, parcel.lastPrompt);
+        toast(`AI advisory updated for ${parcel.parcelId}`);
+      };
+    }
+    document.querySelectorAll('.action-btn').forEach(btn => {
+      btn.onclick = () => handleAction(parcel, btn.dataset.action);
+    });
+  }
+
+  function handleAction(parcel, action) {
+    const labels = {
+      contact: 'Owner contacted by admin',
+      flag: 'Parcel flagged for review',
+      sms: 'Advisory SMS prepared in Albanian'
+    };
+    const details = {
+      contact: `${parcel.ownerName} was queued for a preventive outreach call. This does not alter cadastral ownership; it simply records a support action.`,
+      flag: `Government review marker added for ${parcel.parcelId}. The goal is preventive follow-up, not enforcement.`,
+      sms: `Advisory SMS drafted for ${parcel.ownerPhone}: “TOKA recommends a gentle visit to ${parcel.parcelId} in ${parcel.municipality}.”`
+    };
+    const now = new Date();
+    const prev = parcel.ledger[0] ? parcel.ledger[0].hash : 'genesis';
+    const newRecord = {
+      timestamp: now.toISOString(),
+      action: labels[action],
+      details: details[action],
+      prevHash: prev,
+      hash: hashString(`${parcel.parcelId}|${action}|${now.toISOString()}|${prev}|${parcel.ledger.length}`)
+    };
+    parcel.ledger.push(newRecord);
+    parcel.lastActivityLabel = formatDate(now);
+    parcel.lastPrompt = document.getElementById('advisorInput')?.value?.trim() || parcel.lastPrompt || 'Çfarë duhet të bëj këtë javë?';
+    if (action === 'sms') {
+      parcel.aiConfidence = clamp(parcel.aiConfidence + 2, 0, 100);
+    }
+    renderDetail(parcel);
+    redrawMap();
+    updateSummary();
+    toast(labels[action]);
+  }
+
+  function toast(message) {
+    el.toast.textContent = message;
+    el.toast.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => el.toast.classList.remove('show'), 2200);
+  }
+
+  function buildParcel(id, municipality, index, ownerOverride) {
+    const muni = municipalities.find(m => m.name === municipality);
+    const rnd = mulberry32(1200 + id * 97);
+    const availableOwners = ownerOverride
+      ? [ownerOverride]
+      : ownerPool.filter(owner => owner.name !== 'Agim Berisha');
+    const owner = availableOwners[Math.floor(rnd() * availableOwners.length)];
+    const lat = muni.center[0] + (rnd() - 0.5) * muni.spread[0];
+    const lng = muni.center[1] + (rnd() - 0.5) * muni.spread[1];
+    const width = 0.012 + rnd() * 0.01;
+    const height = 0.009 + rnd() * 0.008;
+    const corners = [
+      [lng - width / 2, lat - height / 2],
+      [lng + width / 2, lat - height / 2],
+      [lng + width / 2, lat + height / 2],
+      [lng - width / 2, lat + height / 2],
+      [lng - width / 2, lat - height / 2]
+    ];
+    const inactivityDays = Math.floor(rnd() * 180);
+    const seasonalDeviation = Math.floor(rnd() * 100);
+    const engagementGapDays = Math.floor(rnd() * 120);
+    const historyRisk = Math.floor(rnd() * 100);
+    const inactivityScore = clamp((inactivityDays / 180) * 100, 0, 100);
+    const engagementGapScore = clamp((engagementGapDays / 120) * 100, 0, 100);
+    const weightedRisk = (0.4 * inactivityScore) + (0.3 * seasonalDeviation) + (0.2 * engagementGapScore) + (0.1 * historyRisk);
+    const landPulse = Math.round(clamp(100 - weightedRisk, 0, 100));
+    const abandonmentProbability = clamp((weightedRisk / 100) * 0.86 + (historyRisk / 100) * 0.06, 0.03, 0.96);
+    const timeline = [];
+    const timelineLabels = [];
+    for (let i = 0; i < 24; i++) {
+      const season = Math.sin((i / 24) * Math.PI * 2 + (rnd() * 0.7)) * 9;
+      const trend = 68 - (i * 0.8) + (landPulse - 65) * 0.18;
+      const noise = (rnd() - 0.5) * 10;
+      const v = clamp(Math.round(trend + season + noise), 6, 100);
+      timeline.push(v);
+      const month = new Date();
+      month.setMonth(month.getMonth() - (23 - i));
+      timelineLabels.push(new Intl.DateTimeFormat('en-GB', { month: 'short', year: '2-digit' }).format(month));
+    }
+    const reportedActivityScore = clamp(Math.round(52 + (rnd() - 0.5) * 30 + (landPulse - 50) * 0.12), 10, 95);
+    const satelliteSignalScore = clamp(Math.round(reportedActivityScore - ((seasonalDeviation / 100) * 18) + ((rnd() - 0.5) * 10)), 8, 96);
+    const aiConfidence = clamp(Math.round(100 - Math.abs(reportedActivityScore - satelliteSignalScore) * 1.5 - seasonalDeviation * 0.12), 42, 97);
+    const reportedActivityLabel = reportedActivityScore > 70 ? 'Active' : reportedActivityScore > 45 ? 'Mixed' : 'Low';
+    const satelliteSignalLabel = satelliteSignalScore > 70 ? 'Healthy vegetation' : satelliteSignalScore > 45 ? 'Seasonal variation' : 'Sparse cover';
+    const ownerParcels = ownerPool.filter(o => o.name === owner.name).length || 1;
+    const ownerPulse = clamp(Math.round(landPulse + (rnd() - 0.5) * 12), 0, 100);
+    const parcelStatusLabel = parcelStatus(landPulse).label;
+    const explanation = driverText({
+      landPulse,
+      inactivityScore,
+      seasonalDeviation,
+      engagementGapScore,
+      historyRisk
+    });
+    const areaHa = clamp(0.7 + rnd() * 4.9, 0.6, 6.8);
+    const yieldPerHa = clamp(700 + rnd() * 1800, 700, 2500);
+    const municipalityMultiplier = 1.8 + rnd() * 1.7;
+    const projectedLoss = Math.round(areaHa * yieldPerHa * abandonmentProbability);
+    const municipalityLoss = Math.round(projectedLoss * municipalityMultiplier);
+    const lastActivityDays = Math.round(inactivityDays);
+    const lastActivityDate = new Date();
+    lastActivityDate.setDate(lastActivityDate.getDate() - lastActivityDays);
+    const ledger = buildLedgerSeed(id, owner.name, municipality, parcelStatusLabel, aiConfidence, reportedActivityLabel, satelliteSignalLabel);
+    return {
+      parcelId: `PL-${String(id).padStart(3, '0')}`,
+      ownerName: owner.name,
+      ownerPhone: owner.phone,
+      ownerParcels,
+      ownerPulse,
+      ownerSummary: owner.name === 'Agim Berisha'
+        ? 'Agim Berisha has a mixed portfolio in Prizren: one parcel is thriving, one is under stress, and one is trending toward abandonment without preventive contact.'
+        : `This owner has ${ownerParcels} parcel(s) in the active dataset. TOKA uses preventive alerts to keep activity visible and timely.`,
+      municipality,
+      village: `${municipality} sector ${String(index + 1).padStart(2, '0')}`,
+      crop: cropTypes[(id + index) % cropTypes.length],
+      hectares: areaHa,
+      yieldPerHa,
+      municipalityMultiplier,
+      landPulse,
+      statusLabel: parcelStatusLabel,
+      abandonmentProbability,
+      inactivityDays,
+      inactivityScore,
+      seasonalDeviation,
+      engagementGapDays,
+      engagementGapScore,
+      historyRisk,
+      weightedRisk,
+      lastActivityLabel: formatDate(lastActivityDate),
+      timeline,
+      timelineLabels,
+      timelineTrend: landPulse >= 75 ? 'Stable' : landPulse >= 50 ? 'Soft decline' : 'Declining',
+      reportedActivityLabel,
+      reportedActivityScore,
+      reportedActivityText: reportedText(reportedActivityScore, municipality),
+      satelliteSignalLabel,
+      satelliteSignalScore,
+      satelliteSignalText: satelliteText(satelliteSignalScore, seasonalDeviation),
+      aiConfidence,
+      aiExplanation: explanation,
+      projectedLoss,
+      municipalityLoss,
+      lastPrompt: 'Çfarë duhet të bëj këtë javë?',
+      ledger,
+      geometry: {
+        type: 'Polygon',
+        coordinates: [corners]
+      },
+      center: [lat, lng]
+    };
+  }
+
+  function buildLedgerSeed(id, ownerName, municipality, statusLabel, aiConfidence, reportedLabel, satelliteLabel) {
+    const now = Date.now();
+    const base = [
+      {
+        timestamp: new Date(now - 1000 * 60 * 60 * 72).toISOString(),
+        action: 'Satellite scan confirmed parcel state',
+        details: `Sentinel-2 comparison placed this parcel in ${statusLabel.toLowerCase()} mode with ${aiConfidence}% confidence.`,
+      },
+      {
+        timestamp: new Date(now - 1000 * 60 * 60 * 48).toISOString(),
+        action: 'Owner activity record created',
+        details: `${ownerName} or an authorized user reported ${reportedLabel.toLowerCase()} activity for ${municipality}.`,
+      },
+      {
+        timestamp: new Date(now - 1000 * 60 * 60 * 24).toISOString(),
+        action: 'AI advisory note generated',
+        details: `TOKA generated a preventive advisory after comparing the reported activity with the satellite signal (${satelliteLabel.toLowerCase()}).`,
+      }
+    ];
+    const records = [];
+    let prev = 'genesis';
+    base.forEach((item, idx) => {
+      const hash = hashString(`${id}|${item.timestamp}|${item.action}|${prev}|${idx}`);
+      records.push({
+        ...item,
+        prevHash: prev === 'genesis' ? 'genesis' : prev,
+        hash
+      });
+      prev = hash;
+    });
+    return records;
+  }
+
+  function reportedText(score, municipality) {
+    if (score > 70) return `Owner-reported activity suggests normal operations in the ${municipality} parcel zone.`;
+    if (score > 45) return `Owner-reported activity is mixed, with some recent work but not enough continuity for a strong seasonal signal.`;
+    return `Owner-reported activity is sparse and needs a gentle follow-up rather than enforcement.`;
+  }
+
+  function satelliteText(score, seasonalDeviation) {
+    if (score > 70) return `Vegetation and moisture patterns look healthy for this season, with minor variation.`;
+    if (score > 45) return `Sentinel-2 shows seasonal variation and a smaller biomass peak than expected.`;
+    return `The satellite signal suggests sparse cover and a clear deviation from normal seasonal behavior.`;
+  }
+
+  function buildMap() {
+    state.map = L.map('map', {
+      zoomControl: true,
+      minZoom: 8,
+      maxZoom: 13,
+      zoomSnap: 0.25,
+      scrollWheelZoom: true
+    });
+    const kosovoBounds = L.latLngBounds([[41.85, 19.90], [43.30, 21.90]]);
+    state.map.fitBounds(kosovoBounds, { padding: [22, 22] });
+    state.map.setMaxBounds(kosovoBounds.pad(0.18));
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(state.map);
+
+    const outline = L.rectangle(kosovoBounds, {
+      color: '#88a07b',
+      weight: 1.2,
+      dashArray: '6,8',
+      fillColor: '#edf3e7',
+      fillOpacity: 0.12
+    }).addTo(state.map);
+    outline.bindTooltip('Kosovo', { permanent: false, direction: 'center', className: 'parcel-tooltip' });
+
+    state.geoLayer = L.geoJSON(featureCollection(), {
+      style: feature => parcelStyle(feature.properties),
+      onEachFeature: (feature, layer) => {
+        const p = feature.properties;
+        layer.bindTooltip(`${p.parcelId} · ${p.ownerName} · ${p.landPulse}/100`, {
+          sticky: true,
+          className: 'parcel-tooltip'
+        });
+        layer.on('click', () => selectParcel(p.parcelId));
+        layer.on('mouseover', () => {
+          layer.setStyle({ weight: 3, fillOpacity: 0.9 });
+        });
+        layer.on('mouseout', () => redrawMap());
+      }
+    }).addTo(state.map);
+  }
+
+  function featureCollection() {
+    return {
+      type: 'FeatureCollection',
+      features: state.parcels.map(parcel => ({
+        type: 'Feature',
+        properties: parcel,
+        geometry: parcel.geometry
+      }))
+    };
+  }
+
+  function redrawMap() {
+    if (!state.geoLayer) return;
+    state.geoLayer.eachLayer(layer => {
+      const parcel = layer.feature.properties;
+      layer.setStyle(parcelStyle(parcel));
+      if (state.selectedId === parcel.parcelId) {
+        layer.bringToFront();
+      }
+    });
+  }
+
+  function selectParcel(parcelId) {
+    state.selectedId = parcelId;
+    const parcel = state.parcelById.get(parcelId);
+    renderDetail(parcel);
+    redrawMap();
+    el.liveParcelChip.innerHTML = '<i data-lucide="mouse-pointer-click" width="14" height="14"></i> ' + parcel.parcelId + ' selected';
+    lucide.createIcons();
+    state.map.setView([parcel.center[0], parcel.center[1]], Math.max(state.map.getZoom(), 11), { animate: true });
+  }
+
+  function applyLayer(layer) {
+    state.layer = layer;
+    document.querySelectorAll('.layer-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.layer === layer);
+    });
+    buildLegend();
+    redrawMap();
+    toast(`${layerTitle(layer)} layer enabled`);
+  }
+
+  function initData() {
+    const selectedOwners = [
+      { municipality: 'Prizren', owner: { name: 'Agim Berisha', phone: '+383 44 200 181', municipality: 'Prizren' } },
+      { municipality: 'Prizren', owner: { name: 'Agim Berisha', phone: '+383 44 200 181', municipality: 'Prizren' } },
+      { municipality: 'Prizren', owner: { name: 'Agim Berisha', phone: '+383 44 200 181', municipality: 'Prizren' } },
+      { municipality: 'Prizren', owner: { name: 'Agim Berisha', phone: '+383 44 200 181', municipality: 'Prizren' } },
+      { municipality: 'Prizren', owner: { name: 'Agim Berisha', phone: '+383 44 200 181', municipality: 'Prizren' } }
+    ];
+
+    let id = 1;
+    municipalities.forEach((muni, muniIndex) => {
+      for (let i = 0; i < 6; i++) {
+        const ownerOverride = muni.name === 'Prizren' && i < 5
+          ? selectedOwners[i].owner
+          : null;
+        const parcel = buildParcel(id, muni.name, i, ownerOverride);
+        if (muni.name === 'Prizren' && i < 5) {
+          const conditionSeed = i % 3;
+          if (conditionSeed === 0) {
+            parcel.landPulse = 86;
+            parcel.abandonmentProbability = 0.11;
+            parcel.statusLabel = 'Thriving';
+            parcel.reportedActivityScore = 84;
+            parcel.satelliteSignalScore = 81;
+            parcel.reportedActivityLabel = 'Active';
+            parcel.satelliteSignalLabel = 'Healthy vegetation';
+            parcel.reportedActivityText = 'Owner-reported activity suggests normal operations and the satellite pattern confirms healthy seasonal growth.';
+            parcel.satelliteSignalText = 'Vegetation and moisture patterns look healthy for this season, with minor variation.';
+            parcel.aiConfidence = 92;
+            parcel.aiExplanation = 'Parcela duket shumë e qëndrueshme; aktiviteti i raportuar dhe modeli sezonal përputhen mirë, ndaj rreziku i braktisjes është i ulët.';
+            parcel.timelineTrend = 'Stable';
+          } else if (conditionSeed === 1) {
+            parcel.landPulse = 63;
+            parcel.abandonmentProbability = 0.34;
+            parcel.statusLabel = 'Under stress';
+            parcel.reportedActivityScore = 58;
+            parcel.satelliteSignalScore = 53;
+            parcel.reportedActivityLabel = 'Mixed';
+            parcel.satelliteSignalLabel = 'Seasonal variation';
+            parcel.reportedActivityText = 'Owner-reported activity is mixed, with some recent work but not enough continuity for a strong seasonal signal.';
+            parcel.satelliteSignalText = 'Sentinel-2 shows seasonal variation and a smaller biomass peak than expected.';
+            parcel.aiConfidence = 78;
+            parcel.aiExplanation = 'Parcela është nën stres të lehtë sepse ka një boshllëk aktiviteti dhe një devijim sezonal të moderuar; një mesazh këshillues është i mjaftueshëm.';
+            parcel.timelineTrend = 'Soft decline';
+          } else {
+            parcel.landPulse = 41;
+            parcel.abandonmentProbability = 0.68;
+            parcel.statusLabel = 'At risk';
+            parcel.reportedActivityScore = 29;
+            parcel.satelliteSignalScore = 26;
+            parcel.reportedActivityLabel = 'Low';
+            parcel.satelliteSignalLabel = 'Sparse cover';
+            parcel.reportedActivityText = 'Owner-reported activity is sparse and needs a gentle follow-up rather than enforcement.';
+            parcel.satelliteSignalText = 'The satellite signal suggests sparse cover and a clear deviation from normal seasonal behavior.';
+            parcel.aiConfidence = 66;
+            parcel.aiExplanation = 'Parcela po afrohet te rreziku i braktisjes për shkak të mungesës së aktivitetit, boshllëkut të angazhimit dhe sinjaleve të dobëta sezonale.';
+            parcel.timelineTrend = 'Declining';
+          }
+          parcel.projectedLoss = Math.round(parcel.hectares * parcel.yieldPerHa * parcel.abandonmentProbability);
+          parcel.municipalityLoss = Math.round(parcel.projectedLoss * parcel.municipalityMultiplier);
+        }
+        parcel.ownerParcels = muni.name === 'Prizren' ? 5 : parcel.ownerParcels;
+        parcel.ownerSummary = parcel.ownerName === 'Agim Berisha'
+          ? 'Agim Berisha nga Prizren ka disa parcela me gjendje të ndryshme; njëra është në gjendje të mirë, njëra është nën stres, dhe njëra kërkon ndërhyrje parandaluese.'
+          : parcel.ownerSummary;
+        if (parcel.ownerName === 'Agim Berisha' && muni.name === 'Prizren' && i === 0) {
+          parcel.parcelId = 'PL-AGM-01';
+        } else if (parcel.ownerName === 'Agim Berisha' && muni.name === 'Prizren' && i === 1) {
+          parcel.parcelId = 'PL-AGM-02';
+        } else if (parcel.ownerName === 'Agim Berisha' && muni.name === 'Prizren' && i === 2) {
+          parcel.parcelId = 'PL-AGM-03';
+        } else if (parcel.ownerName === 'Agim Berisha' && muni.name === 'Prizren' && i === 3) {
+          parcel.parcelId = 'PL-AGM-04';
+        } else if (parcel.ownerName === 'Agim Berisha' && muni.name === 'Prizren' && i === 4) {
+          parcel.parcelId = 'PL-AGM-05';
+        }
+        state.parcels.push(parcel);
+        state.parcelById.set(parcel.parcelId, parcel);
+        id++;
+      }
+    });
+
+    const agimParcels = state.parcels.filter(parcel => parcel.ownerName === 'Agim Berisha');
+    const agimAveragePulse = Math.round(agimParcels.reduce((sum, parcel) => sum + parcel.landPulse, 0) / agimParcels.length);
+    agimParcels.forEach(parcel => {
+      parcel.ownerParcels = agimParcels.length;
+      parcel.ownerPulse = agimAveragePulse;
+      parcel.ownerSummary = 'Agim Berisha nga Prizren ka disa parcela me gjendje të ndryshme; njëra është në gjendje të mirë, njëra është nën stres, dhe njëra kërkon ndërhyrje parandaluese.';
+    });
+
+    state.selectedId = 'PL-AGM-03';
+  }
+
+  function initUI() {
+    updateSummary();
+    renderMunicipalities();
+    buildLegend();
+    renderDetail(state.parcelById.get(state.selectedId));
+    el.layerButtons.addEventListener('click', (event) => {
+      const btn = event.target.closest('.layer-btn');
+      if (!btn) return;
+      applyLayer(btn.dataset.layer);
+    });
+    el.searchInput.addEventListener('input', () => {
+      state.search = el.searchInput.value.trim().toLowerCase();
+      filterParcels();
+    });
+    lucide.createIcons();
+  }
+
+  function filterParcels() {
+    const term = state.search;
+    const current = featureCollection();
+    state.geoLayer.clearLayers();
+    state.geoLayer.addData({
+      type: 'FeatureCollection',
+      features: current.features.filter(feature => {
+        if (!term) return true;
+        const p = feature.properties;
+        return [p.parcelId, p.ownerName, p.municipality, p.village, p.crop].join(' ').toLowerCase().includes(term);
+      })
+    });
+    redrawMap();
+  }
+
+  function bootstrap() {
+    initData();
+    buildMap();
+    initUI();
+    selectParcel(state.selectedId);
+    redrawMap();
+    updateSummary();
+    renderMunicipalities();
+    requestAnimationFrame(() => state.map.invalidateSize());
+    window.addEventListener('resize', () => state.map.invalidateSize());
+  }
+
+  bootstrap();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,595 @@
+[
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "argparse",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "argparse",
+        "description": "argparse",
+        "detail": "argparse",
+        "documentation": {}
+    },
+    {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "math",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "math",
+        "description": "math",
+        "detail": "math",
+        "documentation": {}
+    },
+    {
+        "label": "random",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "random",
+        "description": "random",
+        "detail": "random",
+        "documentation": {}
+    },
+    {
+        "label": "re",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "re",
+        "description": "re",
+        "detail": "re",
+        "documentation": {}
+    },
+    {
+        "label": "sys",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
+        "documentation": {}
+    },
+    {
+        "label": "xml.etree.ElementTree",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "xml.etree.ElementTree",
+        "description": "xml.etree.ElementTree",
+        "detail": "xml.etree.ElementTree",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timezone",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Iterable",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Sequence",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "Image",
+        "importPath": "PIL",
+        "description": "PIL",
+        "isExtraImport": true,
+        "detail": "PIL",
+        "documentation": {}
+    },
+    {
+        "label": "affinity",
+        "importPath": "shapely",
+        "description": "shapely",
+        "isExtraImport": true,
+        "detail": "shapely",
+        "documentation": {}
+    },
+    {
+        "label": "MultiPolygon",
+        "importPath": "shapely.geometry",
+        "description": "shapely.geometry",
+        "isExtraImport": true,
+        "detail": "shapely.geometry",
+        "documentation": {}
+    },
+    {
+        "label": "Point",
+        "importPath": "shapely.geometry",
+        "description": "shapely.geometry",
+        "isExtraImport": true,
+        "detail": "shapely.geometry",
+        "documentation": {}
+    },
+    {
+        "label": "Polygon",
+        "importPath": "shapely.geometry",
+        "description": "shapely.geometry",
+        "isExtraImport": true,
+        "detail": "shapely.geometry",
+        "documentation": {}
+    },
+    {
+        "label": "box",
+        "importPath": "shapely.geometry",
+        "description": "shapely.geometry",
+        "isExtraImport": true,
+        "detail": "shapely.geometry",
+        "documentation": {}
+    },
+    {
+        "label": "shape",
+        "importPath": "shapely.geometry",
+        "description": "shapely.geometry",
+        "isExtraImport": true,
+        "detail": "shapely.geometry",
+        "documentation": {}
+    },
+    {
+        "label": "unary_union",
+        "importPath": "shapely.ops",
+        "description": "shapely.ops",
+        "isExtraImport": true,
+        "detail": "shapely.ops",
+        "documentation": {}
+    },
+    {
+        "label": "Cell",
+        "kind": 6,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "class Cell:\n    x0: float\n    y0: float\n    x1: float\n    y1: float\n    depth: int = 0\n    polygon: Optional[Polygon] = None\n    @property\n    def width(self) -> float:\n        return self.x1 - self.x0",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "clamp",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def clamp(value: float, min_value: float, max_value: float) -> float:\n    return max(min_value, min(max_value, value))\ndef weighted_choice(options: Sequence[Tuple[str, float]], rng: random.Random) -> str:\n    total = sum(weight for _, weight in options)\n    if total <= 0:\n        return options[0][0]\n    pick = rng.random() * total\n    upto = 0.0\n    for item, weight in options:\n        upto += weight",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "weighted_choice",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def weighted_choice(options: Sequence[Tuple[str, float]], rng: random.Random) -> str:\n    total = sum(weight for _, weight in options)\n    if total <= 0:\n        return options[0][0]\n    pick = rng.random() * total\n    upto = 0.0\n    for item, weight in options:\n        upto += weight\n        if pick <= upto:\n            return item",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "utc_now",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def utc_now() -> str:\n    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace(\"+00:00\", \"Z\")\ndef parse_args() -> argparse.Namespace:\n    parser = argparse.ArgumentParser(description=\"Generate synthetic Kosovo parcel GeoJSON files.\")\n    parser.add_argument(\"--seed\", type=int, default=DEFAULT_SEED, help=\"Deterministic seed.\")\n    parser.add_argument(\"--mode\", choices=[\"grid\", \"voronoi\"], default=\"grid\", help=\"Parcel generation strategy.\")\n    parser.add_argument(\"--target-parcels\", type=int, default=720, help=\"Approximate parcel count.\")\n    parser.add_argument(\"--border\", type=Path, default=None, help=\"Optional border SVG or GeoJSON file.\")\n    parser.add_argument(\"--farmland-mask\", type=Path, default=None, help=\"Optional grayscale farmland mask.\")\n    parser.add_argument(\"--density-mask\", type=Path, default=None, help=\"Optional grayscale density mask.\")",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "parse_args",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def parse_args() -> argparse.Namespace:\n    parser = argparse.ArgumentParser(description=\"Generate synthetic Kosovo parcel GeoJSON files.\")\n    parser.add_argument(\"--seed\", type=int, default=DEFAULT_SEED, help=\"Deterministic seed.\")\n    parser.add_argument(\"--mode\", choices=[\"grid\", \"voronoi\"], default=\"grid\", help=\"Parcel generation strategy.\")\n    parser.add_argument(\"--target-parcels\", type=int, default=720, help=\"Approximate parcel count.\")\n    parser.add_argument(\"--border\", type=Path, default=None, help=\"Optional border SVG or GeoJSON file.\")\n    parser.add_argument(\"--farmland-mask\", type=Path, default=None, help=\"Optional grayscale farmland mask.\")\n    parser.add_argument(\"--density-mask\", type=Path, default=None, help=\"Optional grayscale density mask.\")\n    parser.add_argument(\"--health-mask\", type=Path, default=None, help=\"Optional grayscale health mask.\")\n    parser.add_argument(\"--crop-type-mask\", type=Path, default=None, help=\"Optional grayscale crop mask.\")",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "load_image_mask",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def load_image_mask(path: Optional[Path]) -> Optional[np.ndarray]:\n    if not path:\n        return None\n    if not path.exists():\n        print(f\"[warn] Mask not found: {path}\", file=sys.stderr)\n        return None\n    image = Image.open(path).convert(\"L\")\n    return np.asarray(image, dtype=np.uint8)\ndef sample_array_bilinear(arr: np.ndarray, x: float, y: float) -> float:\n    height, width = arr.shape[:2]",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "sample_array_bilinear",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def sample_array_bilinear(arr: np.ndarray, x: float, y: float) -> float:\n    height, width = arr.shape[:2]\n    px = clamp(x, 0.0, 1.0) * (width - 1)\n    py = clamp(y, 0.0, 1.0) * (height - 1)\n    x0 = int(math.floor(px))\n    y0 = int(math.floor(py))\n    x1 = min(x0 + 1, width - 1)\n    y1 = min(y0 + 1, height - 1)\n    tx = px - x0\n    ty = py - y0",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "procedural_mask",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def procedural_mask(name: str, x: float, y: float, seed: int) -> float:\n    base = (sum(ord(c) for c in name) * 0.0017) + seed * 0.00013\n    value = 0.5\n    value += 0.24 * math.sin((x + base) * 12.6) * math.cos((y - base) * 9.8)\n    value += 0.14 * math.sin((x * 3.3 + y * 2.1 + base) * 7.4)\n    value += 0.08 * math.cos((x - y + base) * 14.0)\n    return clamp(value, 0.0, 1.0)\ndef sample_mask(arr: Optional[np.ndarray], name: str, x: float, y: float, seed: int) -> float:\n    if arr is None:\n        return procedural_mask(name, x, y, seed)",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "sample_mask",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def sample_mask(arr: Optional[np.ndarray], name: str, x: float, y: float, seed: int) -> float:\n    if arr is None:\n        return procedural_mask(name, x, y, seed)\n    return sample_array_bilinear(arr, x, y)\ndef normalize_to_unit(geom: Polygon) -> Polygon:\n    minx, miny, maxx, maxy = geom.bounds\n    width = maxx - minx\n    height = maxy - miny\n    if width <= 0 or height <= 0:\n        raise ValueError(\"Border geometry has invalid bounds.\")",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "normalize_to_unit",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def normalize_to_unit(geom: Polygon) -> Polygon:\n    minx, miny, maxx, maxy = geom.bounds\n    width = maxx - minx\n    height = maxy - miny\n    if width <= 0 or height <= 0:\n        raise ValueError(\"Border geometry has invalid bounds.\")\n    scaled = affinity.scale(geom, xfact=1.0 / width, yfact=1.0 / height, origin=(minx, miny))\n    translated = affinity.translate(scaled, xoff=-minx / width, yoff=-miny / height)\n    fixed = translated.buffer(0)\n    if fixed.geom_type == \"MultiPolygon\":",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "polygon_from_points",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def polygon_from_points(points: List[Tuple[float, float]]) -> Polygon:\n    poly = Polygon(points)\n    if not poly.is_valid:\n        poly = poly.buffer(0)\n    if poly.geom_type == \"MultiPolygon\":\n        poly = max(poly.geoms, key=lambda g: g.area)\n    if poly.geom_type != \"Polygon\":\n        raise ValueError(\"Unable to parse polygon geometry.\")\n    return poly\ndef parse_svg_points(value: str) -> List[Tuple[float, float]]:",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "parse_svg_points",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def parse_svg_points(value: str) -> List[Tuple[float, float]]:\n    parts = re.split(r\"\\s+\", value.strip())\n    points: List[Tuple[float, float]] = []\n    for part in parts:\n        if not part:\n            continue\n        if \",\" in part:\n            x_str, y_str = part.split(\",\", 1)\n        else:\n            coords = part.split()",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "parse_simple_svg_path",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def parse_simple_svg_path(d: str) -> List[Tuple[float, float]]:\n    tokens = SVG_COMMAND_RE.findall(d)\n    points: List[Tuple[float, float]] = []\n    idx = 0\n    command = None\n    current = (0.0, 0.0)\n    start = None\n    def read_number() -> float:\n        nonlocal idx\n        if idx >= len(tokens):",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "load_border_geometry",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def load_border_geometry(path: Optional[Path]) -> Polygon:\n    if path is None or not path.exists():\n        return default_border_outline()\n    suffix = path.suffix.lower()\n    if suffix in {\".json\", \".geojson\"}:\n        data = json.loads(path.read_text(encoding=\"utf-8\"))\n        if data.get(\"type\") == \"FeatureCollection\":\n            geoms = [shape(feature[\"geometry\"]) for feature in data[\"features\"] if feature.get(\"geometry\")]\n            geom = unary_union(geoms)\n        elif data.get(\"type\") == \"Feature\":",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "default_border_outline",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def default_border_outline() -> Polygon:\n    # A rough normalized Kosovo silhouette for out-of-the-box demo generation.\n    points = [\n        (0.12, 0.16),\n        (0.19, 0.08),\n        (0.31, 0.06),\n        (0.40, 0.10),\n        (0.53, 0.05),\n        (0.66, 0.11),\n        (0.80, 0.18),",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "make_units",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def make_units(target_parcels: int, rng: random.Random) -> Tuple[int, int]:\n    # A near-square base grid with a slight rectangle bias for farmland-like plots.\n    cols = max(14, int(round(math.sqrt(target_parcels * 1.25))))\n    rows = max(10, int(round(target_parcels / cols)))\n    return rows, cols\ndef subdivide_cell(cell: Cell, density: float, farmland: float, rng: random.Random) -> List[Cell]:\n    if cell.width < 0.03 or cell.height < 0.03:\n        return [cell]\n    split_score = 0.18 + density * 0.45 + farmland * 0.22 + rng.random() * 0.12\n    if split_score < 0.58:",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "subdivide_cell",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def subdivide_cell(cell: Cell, density: float, farmland: float, rng: random.Random) -> List[Cell]:\n    if cell.width < 0.03 or cell.height < 0.03:\n        return [cell]\n    split_score = 0.18 + density * 0.45 + farmland * 0.22 + rng.random() * 0.12\n    if split_score < 0.58:\n        return [cell]\n    ratio = 0.40 + rng.random() * 0.20\n    if split_score > 0.79:\n        split_x = cell.x0 + cell.width * ratio\n        split_y = cell.y0 + cell.height * (0.40 + rng.random() * 0.20)",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "voronoi_finite_polygons_2d",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def voronoi_finite_polygons_2d(vor: \"Voronoi\", radius: Optional[float] = None):\n    if Voronoi is None:\n        raise RuntimeError(\"scipy is required for Voronoi mode.\")\n    if vor.points.shape[1] != 2:\n        raise ValueError(\"Requires 2D input.\")\n    new_regions: List[List[int]] = []\n    new_vertices = vor.vertices.tolist()\n    center = vor.points.mean(axis=0)\n    if radius is None:\n        radius = vor.points.ptp().max() * 2",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "build_voronoi_cells",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def build_voronoi_cells(border: Polygon, rows: int, cols: int, rng: random.Random) -> List[Cell]:\n    if Voronoi is None:\n        raise RuntimeError(\"Voronoi mode requested, but scipy is not installed.\")\n    points = []\n    for row in range(rows):\n        for col in range(cols):\n            x = (col + 0.5) / cols\n            y = (row + 0.5) / rows\n            jitter_x = (rng.random() - 0.5) * (1.0 / cols) * 0.32\n            jitter_y = (rng.random() - 0.5) * (1.0 / rows) * 0.32",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "build_cells",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def build_cells(\n    border: Polygon,\n    target_parcels: int,\n    mode: str,\n    rng: random.Random,\n    masks: Dict[str, Optional[np.ndarray]],\n) -> List[Cell]:\n    rows, cols = make_units(target_parcels, rng)\n    if mode == \"voronoi\":\n        return build_voronoi_cells(border, rows, cols, rng)",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "local_to_geo",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def local_to_geo(x: float, y: float) -> Tuple[float, float]:\n    min_lon, min_lat, max_lon, max_lat = KOSOVO_BOUNDS\n    lon = min_lon + x * (max_lon - min_lon)\n    lat = max_lat - y * (max_lat - min_lat)\n    return lon, lat\ndef geo_polygon_area_ha(coords: List[Tuple[float, float]]) -> float:\n    if len(coords) < 3:\n        return 0.0\n    polygon = Polygon(coords)\n    if polygon.is_empty:",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "geo_polygon_area_ha",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def geo_polygon_area_ha(coords: List[Tuple[float, float]]) -> float:\n    if len(coords) < 3:\n        return 0.0\n    polygon = Polygon(coords)\n    if polygon.is_empty:\n        return 0.0\n    lon0, lat0 = polygon.centroid.x, polygon.centroid.y\n    meters_per_deg_lon = 111320.0 * math.cos(math.radians(lat0))\n    meters_per_deg_lat = 110540.0\n    projected = [",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "pick_district",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def pick_district(lon: float, lat: float) -> Dict[str, object]:\n    best = None\n    best_distance = float(\"inf\")\n    for district in DISTRICTS:\n        dx = lon - district[\"center\"][0]\n        dy = lat - district[\"center\"][1]\n        distance = dx * dx + dy * dy\n        if distance < best_distance:\n            best = district\n            best_distance = distance",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "crop_bias_for_district",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def crop_bias_for_district(district_name: str) -> Dict[str, float]:\n    return {\n        \"Prizren\": {\"vineyard\": 1.45, \"orchard\": 1.15, \"vegetables\": 1.10, \"wheat\": 1.05},\n        \"Rahovec\": {\"vineyard\": 1.75, \"orchard\": 1.25, \"wheat\": 0.95},\n        \"Suhareka\": {\"wheat\": 1.20, \"corn\": 1.10, \"orchard\": 1.05},\n        \"Pristina\": {\"wheat\": 1.25, \"corn\": 1.20, \"vegetables\": 1.15},\n        \"Peja\": {\"pasture\": 1.20, \"orchard\": 1.12, \"beans\": 1.05},\n        \"Gjakova\": {\"wheat\": 1.20, \"corn\": 1.15, \"vegetables\": 1.05},\n        \"Ferizaj\": {\"corn\": 1.20, \"wheat\": 1.15, \"beans\": 1.05},\n        \"Gjilan\": {\"corn\": 1.10, \"wheat\": 1.10, \"orchard\": 1.05},",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "choose_crop_type",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def choose_crop_type(is_farmland: bool, district: str, crop_mask: float, rng: random.Random) -> str:\n    if not is_farmland:\n        return weighted_choice([(\"pasture\", 0.6), (\"fallow\", 0.25), (\"mixed\", 0.15)], rng)\n    bias = crop_bias_for_district(district)\n    weights = []\n    for crop in CROP_TYPES:\n        weight = 1.0\n        weight *= bias.get(crop, 1.0)\n        if crop == \"vineyard\":\n            weight *= 0.7 + crop_mask * 1.4",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "choose_land_use",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def choose_land_use(is_farmland: bool, farmland_mask: float, density_mask: float, slope_risk: int, rng: random.Random) -> str:\n    if is_farmland:\n        return weighted_choice([\n            (\"farmland\", 0.55 + farmland_mask * 0.6),\n            (\"orchard\", 0.12 + farmland_mask * 0.2),\n            (\"vineyard\", 0.12 + farmland_mask * 0.18),\n            (\"mixed\", 0.10 + density_mask * 0.08),\n            (\"fallow\", 0.06 + (1.0 - farmland_mask) * 0.08),\n        ], rng)\n    return weighted_choice([",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "sample_mask_bundle",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def sample_mask_bundle(\n    masks: Dict[str, Optional[np.ndarray]],\n    x: float,\n    y: float,\n    seed: int,\n) -> Dict[str, float]:\n    return {\n        \"farmland\": round(sample_mask(masks[\"farmland\"], \"farmland\", x, y, seed), 3),\n        \"density\": round(sample_mask(masks[\"density\"], \"density\", x, y, seed), 3),\n        \"health\": round(sample_mask(masks[\"health\"], \"health\", x, y, seed), 3),",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "shape_type_for",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def shape_type_for(clip_ratio: float, width: float, height: float, mode: str) -> str:\n    if mode == \"voronoi\":\n        return \"voronoi\"\n    aspect = max(width, height) / max(1e-6, min(width, height))\n    if clip_ratio >= 0.90 and aspect <= 1.35:\n        return \"rectangular\"\n    return \"irregular-rect\"\ndef geometry_to_geojson(poly: Polygon) -> Dict[str, object]:\n    return json.loads(json.dumps(poly.__geo_interface__))\ndef make_feature(",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "geometry_to_geojson",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def geometry_to_geojson(poly: Polygon) -> Dict[str, object]:\n    return json.loads(json.dumps(poly.__geo_interface__))\ndef make_feature(\n    index: int,\n    cell: Cell,\n    geom_local: Polygon,\n    masks: Dict[str, Optional[np.ndarray]],\n    seed: int,\n    rng: random.Random,\n    mode: str,",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "make_feature",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def make_feature(\n    index: int,\n    cell: Cell,\n    geom_local: Polygon,\n    masks: Dict[str, Optional[np.ndarray]],\n    seed: int,\n    rng: random.Random,\n    mode: str,\n) -> Tuple[Dict[str, object], Dict[str, object]]:\n    centroid = geom_local.centroid",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "generate_parcels",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def generate_parcels(border: Polygon, masks: Dict[str, Optional[np.ndarray]], args: argparse.Namespace) -> Tuple[List[Dict[str, object]], List[Dict[str, object]]]:\n    rng = random.Random(args.seed)\n    cells = build_cells(border, args.target_parcels, args.mode, rng, masks)\n    features: List[Dict[str, object]] = []\n    points: List[Dict[str, object]] = []\n    for index, cell in enumerate(cells, start=1):\n        rect = box(cell.x0, cell.y0, cell.x1, cell.y1)\n        clipped = cell.polygon if cell.polygon is not None else rect.intersection(border)\n        if clipped.is_empty:\n            continue",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "build_metadata",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def build_metadata(\n    features: List[Dict[str, object]],\n    points: List[Dict[str, object]],\n    border: Polygon,\n    args: argparse.Namespace,\n    mask_sources: Dict[str, Optional[Path]],\n) -> Dict[str, object]:\n    district_counts: Dict[str, int] = {}\n    land_use_counts: Dict[str, int] = {}\n    farmland_count = 0",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "ensure_out_dir",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def ensure_out_dir(path: Path) -> None:\n    path.mkdir(parents=True, exist_ok=True)\ndef write_outputs(out_dir: Path, features: List[Dict[str, object]], points: List[Dict[str, object]], metadata: Dict[str, object]) -> None:\n    parcels_geojson = {\n        \"type\": \"FeatureCollection\",\n        \"features\": features,\n    }\n    points_geojson = {\n        \"type\": \"FeatureCollection\",\n        \"features\": points,",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "write_outputs",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def write_outputs(out_dir: Path, features: List[Dict[str, object]], points: List[Dict[str, object]], metadata: Dict[str, object]) -> None:\n    parcels_geojson = {\n        \"type\": \"FeatureCollection\",\n        \"features\": features,\n    }\n    points_geojson = {\n        \"type\": \"FeatureCollection\",\n        \"features\": points,\n    }\n    (out_dir / \"kosovo-parcels.geojson\").write_text(json.dumps(parcels_geojson, ensure_ascii=False, indent=2), encoding=\"utf-8\")",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "def main() -> int:\n    args = parse_args()\n    ensure_out_dir(args.out_dir)\n    border = load_border_geometry(args.border)\n    masks = {\n        \"farmland\": load_image_mask(args.farmland_mask),\n        \"density\": load_image_mask(args.density_mask),\n        \"health\": load_image_mask(args.health_mask),\n        \"cropType\": load_image_mask(args.crop_type_mask),\n    }",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "KOSOVO_BOUNDS",
+        "kind": 5,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "KOSOVO_BOUNDS = (19.85, 41.82, 21.95, 43.32)\nDEFAULT_SEED = 918273\nDISTRICTS = [\n    {\"name\": \"Prizren\", \"abbr\": \"PRZ\", \"center\": (20.739, 42.214)},\n    {\"name\": \"Pristina\", \"abbr\": \"PRT\", \"center\": (21.165, 42.662)},\n    {\"name\": \"Peja\", \"abbr\": \"PEJ\", \"center\": (20.292, 42.660)},\n    {\"name\": \"Gjakova\", \"abbr\": \"GJK\", \"center\": (20.430, 42.381)},\n    {\"name\": \"Ferizaj\", \"abbr\": \"FRZ\", \"center\": (21.146, 42.370)},\n    {\"name\": \"Gjilan\", \"abbr\": \"GJN\", \"center\": (21.466, 42.463)},\n    {\"name\": \"Mitrovica\", \"abbr\": \"MIT\", \"center\": (20.867, 42.891)},",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "DEFAULT_SEED",
+        "kind": 5,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "DEFAULT_SEED = 918273\nDISTRICTS = [\n    {\"name\": \"Prizren\", \"abbr\": \"PRZ\", \"center\": (20.739, 42.214)},\n    {\"name\": \"Pristina\", \"abbr\": \"PRT\", \"center\": (21.165, 42.662)},\n    {\"name\": \"Peja\", \"abbr\": \"PEJ\", \"center\": (20.292, 42.660)},\n    {\"name\": \"Gjakova\", \"abbr\": \"GJK\", \"center\": (20.430, 42.381)},\n    {\"name\": \"Ferizaj\", \"abbr\": \"FRZ\", \"center\": (21.146, 42.370)},\n    {\"name\": \"Gjilan\", \"abbr\": \"GJN\", \"center\": (21.466, 42.463)},\n    {\"name\": \"Mitrovica\", \"abbr\": \"MIT\", \"center\": (20.867, 42.891)},\n    {\"name\": \"Rahovec\", \"abbr\": \"RAH\", \"center\": (20.650, 42.371)},",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "DISTRICTS",
+        "kind": 5,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "DISTRICTS = [\n    {\"name\": \"Prizren\", \"abbr\": \"PRZ\", \"center\": (20.739, 42.214)},\n    {\"name\": \"Pristina\", \"abbr\": \"PRT\", \"center\": (21.165, 42.662)},\n    {\"name\": \"Peja\", \"abbr\": \"PEJ\", \"center\": (20.292, 42.660)},\n    {\"name\": \"Gjakova\", \"abbr\": \"GJK\", \"center\": (20.430, 42.381)},\n    {\"name\": \"Ferizaj\", \"abbr\": \"FRZ\", \"center\": (21.146, 42.370)},\n    {\"name\": \"Gjilan\", \"abbr\": \"GJN\", \"center\": (21.466, 42.463)},\n    {\"name\": \"Mitrovica\", \"abbr\": \"MIT\", \"center\": (20.867, 42.891)},\n    {\"name\": \"Rahovec\", \"abbr\": \"RAH\", \"center\": (20.650, 42.371)},\n    {\"name\": \"Suhareka\", \"abbr\": \"SUH\", \"center\": (20.825, 42.355)},",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "CROP_TYPES",
+        "kind": 5,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "CROP_TYPES = [\n    \"wheat\",\n    \"corn\",\n    \"barley\",\n    \"potato\",\n    \"beans\",\n    \"vegetables\",\n    \"orchard\",\n    \"vineyard\",\n    \"pasture\",",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "LAND_USES",
+        "kind": 5,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "LAND_USES = [\"farmland\", \"pasture\", \"orchard\", \"vineyard\", \"fallow\", \"forest_edge\", \"mixed\"]\nSVG_COMMAND_RE = re.compile(r\"[MmLlHhVvZz]|-?\\d+(?:\\.\\d+)?(?:e[-+]?\\d+)?\", re.IGNORECASE)\n@dataclass\nclass Cell:\n    x0: float\n    y0: float\n    x1: float\n    y1: float\n    depth: int = 0\n    polygon: Optional[Polygon] = None",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    },
+    {
+        "label": "SVG_COMMAND_RE",
+        "kind": 5,
+        "importPath": "scripts.generate_kosovo_parcels",
+        "description": "scripts.generate_kosovo_parcels",
+        "peekOfCode": "SVG_COMMAND_RE = re.compile(r\"[MmLlHhVvZz]|-?\\d+(?:\\.\\d+)?(?:e[-+]?\\d+)?\", re.IGNORECASE)\n@dataclass\nclass Cell:\n    x0: float\n    y0: float\n    x1: float\n    y1: float\n    depth: int = 0\n    polygon: Optional[Polygon] = None\n    @property",
+        "detail": "scripts.generate_kosovo_parcels",
+        "documentation": {}
+    }
+]

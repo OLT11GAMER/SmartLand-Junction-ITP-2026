@@ -1,0 +1,47 @@
+{
+  "generatedAt": "2026-05-22T20:20:15Z",
+  "seed": 918273,
+  "mode": "grid",
+  "targetParcels": 720,
+  "borderBounds": [
+    19.85,
+    41.82,
+    21.95,
+    43.32
+  ],
+  "inputs": {
+    "border": null,
+    "farmlandMask": null,
+    "densityMask": null,
+    "healthMask": null,
+    "cropTypeMask": null
+  },
+  "summary": {
+    "parcelCount": 688,
+    "pointCount": 688,
+    "farmlandShare": 0.565,
+    "districtCounts": {
+      "Peja": 121,
+      "Mitrovica": 100,
+      "Gjilan": 86,
+      "Podujeva": 77,
+      "Gjakova": 74,
+      "Ferizaj": 64,
+      "Prizren": 54,
+      "Malisheva": 34,
+      "Pristina": 29,
+      "Lipjan": 22,
+      "Rahovec": 16,
+      "Suhareka": 11
+    },
+    "landUseCounts": {
+      "farmland": 214,
+      "fallow": 109,
+      "pasture": 92,
+      "forest_edge": 81,
+      "mixed": 80,
+      "vineyard": 58,
+      "orchard": 54
+    }
+  }
+}

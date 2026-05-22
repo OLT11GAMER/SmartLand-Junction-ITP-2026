@@ -1,0 +1,2185 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOKA — Paneli Administrativ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sage:#5a7a5c;--sage-light:#7a9e7c;--sage-pale:#e8f0e8;--sage-glow:rgba(90,122,92,0.15);
+  --earth:#8b6f47;--earth-light:#b8956a;--earth-pale:#f5ede2;
+  --forest:#2d4a2e;--forest-mid:#3d6b3f;--forest-deep:#1a2e1b;
+  --cream:#faf8f4;--white:#ffffff;
+  --stone:#6b7280;--stone-light:#9ca3af;--stone-pale:#f3f4f6;
+  --text:#1a2e1b;--text-mid:#3d5540;--text-soft:#6b8a6d;
+  --red:#dc4a3d;--red-pale:#fdf2f1;--amber:#d97706;--amber-pale:#fffbeb;
+  --border:#dde8dd;--border-mid:#c8d8c8;
+  --shadow:rgba(45,74,46,0.08);--shadow-md:rgba(45,74,46,0.14);--shadow-lg:rgba(45,74,46,0.22);
+  --radius:14px;--radius-sm:9px;--radius-lg:20px;
+  --pulse-green:#22c55e;--pulse-amber:#f59e0b;--pulse-red:#ef4444;
+  --sidebar:320px;--topbar:58px;
+}
+
+
+
+html,body{height:100%;font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--text);overflow:hidden;}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:var(--topbar);z-index:100;
+  background:var(--forest);display:flex;align-items:center;padding:0 20px;gap:16px;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.brand{display:flex;align-items:center;gap:10px;min-width:var(--sidebar);padding-right:20px;}
+.brand-hex{width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:9px;}
+.brand-hex svg{width:20px;height:20px;}
+.brand-name{font-size:18px;font-weight:800;color:#fff;letter-spacing:0.04em;}
+.brand-tag{font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:0.15em;text-transform:uppercase;margin-top:-3px;}
+
+.topbar-center{flex:1;display:flex;align-items:center;gap:12px;}
+.topbar-search{
+  display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:7px 12px;flex:1;max-width:360px;
+}
+.topbar-search input{background:none;border:none;outline:none;color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;width:100%;}
+.topbar-search input::placeholder{color:rgba(255,255,255,0.35);}
+.topbar-search svg{width:14px;height:14px;opacity:0.4;flex-shrink:0;}
+
+.topbar-pills{display:flex;gap:6px;}
+.tpill{
+  display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;
+  font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;
+  border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6);
+}
+.tpill:hover,.tpill.active{background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.25);}
+.tpill .dot{width:6px;height:6px;border-radius:50%;}
+
+/* Map filter chips */
+.map-filter{
+  position:absolute;
+bottom:16px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:12;
+  display:flex;
+  gap:6px;
+  padding:6px;
+  background:rgba(255,255,255,0.92);
+  border:1px solid var(--border);
+  border-radius:10px;
+  box-shadow:0 2px 10px var(--shadow);
+  backdrop-filter:blur(8px);
+}
+.map-filter .tpill{
+  color:var(--text-soft);
+  border:1px solid var(--border);
+  background:var(--white);
+  padding:6px 10px;
+}
+.map-filter .tpill:hover,
+.map-filter .tpill.active{
+  background:var(--forest);
+  color:#fff;
+  border-color:var(--forest);
+}
+
+
+.topbar-right{display:flex;align-items:center;gap:10px;margin-left:auto;}
+.live-badge{
+  display:flex;align-items:center;gap:6px;padding:5px 10px;
+  background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);border-radius:6px;
+}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse-dot 2s infinite;}
+.live-badge span{font-size:11px;font-weight:600;color:#22c55e;}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(0.8)}}
+
+.admin-chip{
+  display:flex;align-items:center;gap:8px;padding:5px 10px;
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;cursor:pointer;
+}
+.admin-chip span{font-size:12px;font-weight:600;color:rgba(255,255,255,0.85);}
+.admin-av{width:26px;height:26px;border-radius:50%;background:var(--sage-light);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  position:fixed;left:0;top:var(--topbar);bottom:0;width:var(--sidebar);z-index:50;
+  background:var(--white);border-right:1px solid var(--border);overflow-y:auto;
+  display:flex;flex-direction:column;
+}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-track{background:transparent;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:4px;}
+
+.sidebar-section{padding:16px 14px 8px;border-bottom:1px solid var(--border);}
+.sidebar-section:last-child{border-bottom:none;}
+.ss-label{font-size:10px;font-weight:700;color:var(--stone-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;}
+
+/* Stats row */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.stat-card{
+  background:var(--cream);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 12px;
+}
+.stat-card .sv{font-size:20px;font-weight:800;color:var(--text);line-height:1;}
+.stat-card .sl{font-size:10px;color:var(--text-soft);margin-top:3px;}
+.stat-card.warn .sv{color:var(--amber);}
+.stat-card.danger .sv{color:var(--red);}
+.stat-card.good .sv{color:var(--sage);}
+
+/* Layer nav */
+.layer-nav{display:flex;flex-direction:column;gap:2px;}
+.lnav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;
+  transition:all 0.18s;color:var(--text-soft);font-size:13px;font-weight:500;
+}
+.lnav-item:hover{background:var(--sage-pale);color:var(--text);}
+.lnav-item.active{background:var(--sage-pale);color:var(--forest);font-weight:600;}
+.lnav-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;background:var(--stone-pale);}
+.lnav-item.active .lnav-icon{background:rgba(90,122,92,0.15);}
+.lnav-badge{margin-left:auto;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;}
+.lnav-badge.r{background:var(--red-pale);color:var(--red);}
+.lnav-badge.a{background:var(--amber-pale);color:var(--amber);}
+.lnav-badge.g{background:var(--sage-pale);color:var(--sage);}
+
+/* Parcel list */
+.parcel-list{display:flex;flex-direction:column;gap:4px;}
+.pitem{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;
+  transition:all 0.15s;border:1px solid transparent;
+}
+.pitem:hover{background:var(--cream);border-color:var(--border);}
+.pitem.active{background:var(--sage-pale);border-color:var(--border-mid);}
+.pitem-pulse{
+  width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:800;flex-shrink:0;color:#fff;
+}
+.pitem-info{flex:1;min-width:0;}
+.pitem-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pitem-sub{font-size:10px;color:var(--text-soft);}
+.pitem-score{font-size:13px;font-weight:800;}
+
+/* ── MAIN ── */
+.main{
+  margin-left:var(--sidebar);margin-top:var(--topbar);
+  height:calc(100vh - var(--topbar));display:flex;flex-direction:row;overflow:hidden;
+}
+
+/* ── MAP AREA ── */
+.map-wrapper{
+  flex:1;height:100%;position:relative;background:#1a2e1b;overflow:hidden;
+}
+#leaflet-map{position:absolute;inset:0;z-index:0;pointer-events:none;}
+#kosovo-map{width:100%;height:100%;}
+
+/* SVG Kosovo map */
+#svg-map{width:100%;height:100%;position:absolute;inset:0;z-index:1;}
+.leaflet-container{background:transparent;}
+
+.map-overlay-tl{
+  position:absolute;top:12px;left:12px;z-index:10;display:flex;flex-direction:column;gap:6px;
+}
+.map-badge{
+  display:flex;align-items:center;gap:6px;padding:6px 10px;
+  background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);
+  border:1px solid var(--border);border-radius:8px;font-size:11px;font-weight:600;color:var(--text);
+  box-shadow:0 2px 8px var(--shadow);
+}
+.map-badge svg{width:12px;height:12px;opacity:0.5;}
+
+.map-overlay-tr{
+  position:absolute;top:12px;right:12px;z-index:10;display:flex;flex-direction:column;gap:6px;align-items:flex-end;
+}
+
+.map-filter-pills{
+  position:absolute;
+  bottom:16px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:20;
+
+  display:flex;
+  gap:6px;
+  padding:8px 10px;
+
+  background:rgba(255,255,255,0.92);
+  backdrop-filter:blur(8px);
+
+  border:1px solid var(--border);
+  border-radius:12px;
+
+  box-shadow:0 4px 14px rgba(0,0,0,0.12);
+}
+
+.map-controls{display:flex;gap:4px;}
+.mctrl{
+  width:32px;height:32px;border-radius:7px;background:rgba(255,255,255,0.9);
+  backdrop-filter:blur(8px);border:1px solid var(--border);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.15s;
+}
+.mctrl:hover{background:#fff;box-shadow:0 2px 8px var(--shadow-md);}
+
+.map-legend{
+  background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);
+  border:1px solid var(--border);border-radius:8px;padding:8px 12px;
+  box-shadow:0 2px 8px var(--shadow);
+}
+.map-legend .leg-title{font-size:10px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+.leg-row{display:flex;align-items:center;gap:6px;margin-bottom:3px;}
+.leg-dot{width:8px;height:8px;border-radius:50%;}
+.leg-row span{font-size:10px;color:var(--text-mid);}
+
+.map-muni-tooltip{
+  position:absolute;background:rgba(26,46,27,0.95);color:#fff;
+  padding:8px 12px;border-radius:8px;font-size:11px;pointer-events:none;
+  z-index:20;display:none;backdrop-filter:blur(4px);
+  border:1px solid rgba(255,255,255,0.1);
+}
+
+/* Kosovo municipalities rendered as SVG */
+#svg-map{width:100%;height:100%;}
+
+/* ── RIGHT PARCEL PANEL ── */
+.bottom-panels{
+  flex:0 0 350px;
+  height:100%;
+  display:block;
+  overflow:hidden;
+  background:var(--cream);
+}
+
+/* Detail panel */
+.detail-panel{
+  width:100%;height:100%;flex-shrink:0;background:var(--white);border-left:1px solid var(--border);
+  overflow-y:auto;display:flex;flex-direction:column;
+}
+.detail-panel::-webkit-scrollbar{width:4px;}
+.detail-panel::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:4px;}
+
+.dp-header{
+  padding:14px 16px;border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,var(--forest) 0%,var(--forest-mid) 100%);
+  position:sticky;top:0;z-index:5;
+}
+.dp-header .dp-id{font-size:10px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em;}
+.dp-header .dp-name{font-size:16px;font-weight:800;color:#fff;margin:2px 0;}
+.dp-header .dp-meta{font-size:12px;color:rgba(255,255,255,0.6);}
+.dp-header .dp-owner{
+  display:flex;align-items:center;gap:6px;margin-top:8px;
+  background:rgba(255,255,255,0.1);border-radius:7px;padding:6px 10px;
+}
+.dp-header .dp-owner span{font-size:12px;color:rgba(255,255,255,0.8);}
+.dp-header .dp-owner strong{color:#fff;}
+
+.dp-pulse-hero{
+  padding:16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;
+}
+.pulse-ring{
+  width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  position:relative;flex-shrink:0;
+}
+.pulse-ring::before{
+  content:'';position:absolute;inset:-3px;border-radius:50%;
+  background:conic-gradient(var(--ring-color,#22c55e) var(--ring-pct,75%), rgba(0,0,0,0.07) 0);
+}
+.pulse-ring-inner{
+  width:56px;height:56px;border-radius:50%;background:var(--white);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:1;position:relative;
+}
+.pulse-ring-inner .pv{font-size:18px;font-weight:800;line-height:1;}
+.pulse-ring-inner .pl{font-size:8px;font-weight:600;color:var(--text-soft);}
+.pulse-info .pi-label{font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:4px;}
+.pulse-info .pi-text{font-size:12px;color:var(--text-mid);line-height:1.5;}
+.pulse-info .pi-ai{
+  margin-top:6px;padding:7px 10px;background:var(--sage-pale);border-radius:7px;border-left:3px solid var(--sage);
+  font-size:11px;color:var(--text-mid);font-style:italic;line-height:1.5;
+}
+
+/* Timeline */
+.timeline-section{padding:12px 16px;border-bottom:1px solid var(--border);}
+.ts-title{font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;}
+.timeline-bars{display:flex;gap:2px;align-items:flex-end;height:40px;}
+.tbar{flex:1;border-radius:2px;transition:all 0.2s;cursor:pointer;position:relative;}
+.tbar:hover{opacity:0.8;}
+.tbar-label{display:flex;justify-content:space-between;margin-top:4px;}
+.tbar-label span{font-size:9px;color:var(--stone-light);}
+
+/* Abandonment risk */
+.risk-section{padding:12px 16px;border-bottom:1px solid var(--border);}
+.risk-meter{background:var(--stone-pale);border-radius:4px;height:8px;overflow:hidden;margin:8px 0;}
+.risk-fill{height:100%;border-radius:4px;transition:width 0.6s ease;}
+.risk-econ{
+  display:flex;justify-content:space-between;padding:8px 10px;
+  background:var(--earth-pale);border-radius:7px;border:1px solid rgba(139,111,71,0.2);
+}
+.risk-econ .re-item{text-align:center;}
+.risk-econ .re-val{font-size:14px;font-weight:800;color:var(--earth);}
+.risk-econ .re-lab{font-size:9px;color:var(--stone);text-transform:uppercase;letter-spacing:0.06em;}
+
+/* Blockchain ledger */
+.chain-section{padding:12px 16px;border-bottom:1px solid var(--border);}
+.chain-list{display:flex;flex-direction:column;gap:0;}
+.chain-item{
+  display:flex;gap:10px;position:relative;padding:8px 0;
+}
+.chain-item:not(:last-child)::after{
+  content:'';position:absolute;left:12px;top:26px;bottom:-2px;width:1px;background:var(--border-mid);
+}
+.chain-dot{
+  width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:10px;border:2px solid var(--border);background:var(--white);z-index:1;
+}
+.chain-content{flex:1;}
+.chain-action{font-size:12px;font-weight:600;color:var(--text);}
+.chain-hash{font-size:9px;color:var(--stone-light);font-family:monospace;margin-top:1px;}
+.chain-time{font-size:10px;color:var(--text-soft);}
+.chain-badge{
+  display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:4px;
+  font-size:9px;font-weight:600;background:var(--sage-pale);color:var(--sage);margin-top:2px;
+}
+.chain-badge.verified{background:var(--sage-pale);color:var(--sage);}
+
+/* Satellite */
+.sat-section{padding:12px 16px;border-bottom:1px solid var(--border);}
+.sat-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;}
+.sat-panel{border-radius:8px;overflow:hidden;background:var(--stone-pale);aspect-ratio:16/9;position:relative;}
+.sat-panel canvas{width:100%;height:100%;}
+.sat-panel-label{
+  position:absolute;bottom:5px;left:5px;right:5px;
+  background:rgba(0,0,0,0.6);border-radius:4px;padding:3px 6px;
+  font-size:9px;color:#fff;font-weight:600;
+}
+.sat-confidence{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:var(--sage-pale);border-radius:7px;border:1px solid var(--border-mid);
+}
+.sat-conf-bar{flex:1;height:6px;background:var(--border-mid);border-radius:3px;overflow:hidden;}
+.sat-conf-fill{height:100%;border-radius:3px;background:var(--sage);transition:width 0.6s;}
+.sat-advisory{
+  margin-top:8px;padding:8px 10px;background:var(--amber-pale);border-radius:7px;
+  border-left:3px solid var(--amber);font-size:11px;color:#92400e;line-height:1.5;
+}
+
+/* AI Advisor */
+.ai-section{padding:12px 16px;border-bottom:1px solid var(--border);}
+.chat-msgs{display:flex;flex-direction:column;gap:8px;max-height:160px;overflow-y:auto;margin-bottom:10px;}
+.chat-msgs::-webkit-scrollbar{width:3px;}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--border-mid);}
+.cmsg{padding:8px 10px;border-radius:8px;font-size:12px;line-height:1.5;}
+.cmsg.ai{background:var(--sage-pale);color:var(--text-mid);border-radius:8px 8px 8px 2px;}
+.cmsg.user{background:var(--forest);color:#fff;border-radius:8px 8px 2px 8px;align-self:flex-end;}
+.chat-input-row{display:flex;gap:6px;}
+.chat-input-row input{
+  flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;color:var(--text);background:var(--white);outline:none;
+}
+.chat-input-row input:focus{border-color:var(--sage);}
+.chat-send{
+  padding:8px 12px;background:var(--forest);color:#fff;border:none;border-radius:7px;
+  font-size:12px;cursor:pointer;transition:all 0.15s;
+}
+.chat-send:hover{background:var(--forest-mid);}
+
+/* Actions */
+.actions-section{padding:12px 16px;}
+.action-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.abtn{
+  padding:9px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:600;color:var(--text-mid);
+  cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.abtn:hover{background:var(--sage-pale);border-color:var(--border-mid);color:var(--forest);}
+.abtn.primary{background:var(--forest);color:#fff;border-color:var(--forest);}
+.abtn.primary:hover{background:var(--forest-mid);}
+
+/* ── LEFT INSIGHTS PANEL ── */
+.sidebar-insights-section{padding-bottom:14px;}
+.insights-panel{
+  overflow:visible;padding:0;display:flex;flex-direction:column;gap:10px;
+}
+.insights-panel::-webkit-scrollbar{width:4px;}
+.insights-panel::-webkit-scrollbar-thumb{background:var(--border-mid);}
+
+.municipality-card {
+  background: #050b12;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 20px;
+  width: 320px;
+  color: white;
+  transition: 0.3s ease;
+  cursor: pointer;
+}
+
+.municipality-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(0,255,120,0.25);
+}
+
+.municipality-card.active {
+  border: 1px solid #00ff88;
+  box-shadow: 0 0 25px rgba(0,255,136,0.12);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.card-top h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.score-box {
+  background: rgba(0,255,120,0.12);
+  color: #00ff88;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.risk-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.medium {
+  border: 1px solid orange;
+  color: orange;
+}
+
+.card-content {
+  margin-top: 20px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.75);
+}
+
+.negative {
+  color: #ff4d4d;
+  font-weight: 600;
+}
+
+.warning {
+  color: #ffb800;
+  font-weight: 600;
+}
+
+.positive {
+  color: #00ff88;
+  font-weight: 600;
+}
+
+.expanded-info {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all 0.35s ease;
+}
+
+.municipality-card.active .expanded-info {
+  max-height: 300px;
+  opacity: 1;
+  margin-top: 20px;
+}
+
+.expanded-info p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 22px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.stats-grid div {
+  text-align: center;
+}
+
+.stats-grid h4 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.stats-grid span {
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+}
+
+.ins-card{
+  background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+  padding:12px;
+}
+.ins-title{font-size:12px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.ins-title::before{content:'';width:3px;height:12px;background:var(--sage);border-radius:2px;display:inline-block;}
+
+/* Municipality risk table */
+.muni-table{width:100%;border-collapse:collapse;}
+.muni-table th{text-align:left;font-size:10px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.07em;padding:0 0 8px;border-bottom:1px solid var(--border);}
+.muni-table td{padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
+.muni-table tr:last-child td{border-bottom:none;}
+.muni-risk-bar{height:5px;border-radius:2px;background:var(--stone-pale);overflow:hidden;width:60px;}
+.muni-risk-fill{height:100%;border-radius:2px;}
+.muni-econ{font-weight:700;font-size:12px;}
+
+/* Kosovo overview stats */
+.ov-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}.ov-stat{background:var(--cream);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;}
+.ov-stat .ov-val{font-size:22px;font-weight:800;line-height:1;}
+.ov-stat .ov-lab{font-size:10px;color:var(--text-soft);margin-top:3px;}
+
+/* Trend sparklines */
+.spark-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.spark-item{background:var(--cream);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;}
+.spark-item .sp-val{font-size:16px;font-weight:800;}
+.spark-item .sp-lab{font-size:10px;color:var(--text-soft);}
+.spark-item canvas{width:100%;height:30px;display:block;margin-top:6px;}
+
+/* Active layer tabs (detail panel) */
+.layer-tabs{
+  display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto;
+  background:var(--white);padding:0 12px;position:sticky;top:0;z-index:4;
+}
+.layer-tabs::-webkit-scrollbar{display:none;}
+.ltab{
+  padding:9px 12px;font-size:11px;font-weight:600;color:var(--stone);cursor:pointer;
+  border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.15s;
+}
+.ltab.active{color:var(--forest);border-bottom-color:var(--sage);}
+.ltab:hover{color:var(--text);}
+
+/* Misc */
+.tag{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:600;}
+.tag.green{background:rgba(34,197,94,0.12);color:#15803d;}
+.tag.amber{background:rgba(245,158,11,0.12);color:#92400e;}
+.tag.red{background:rgba(239,68,68,0.12);color:#991b1b;}
+.tag.blue{background:rgba(59,130,246,0.12);color:#1e40af;}
+
+.divider-line{height:1px;background:var(--border);margin:4px 0;}
+
+/* No parcel selected state */
+.no-selection{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:var(--text-soft);text-align:center;padding:32px;
+}
+.no-selection .ns-icon{font-size:40px;margin-bottom:12px;opacity:0.4;}
+.no-selection .ns-text{font-size:13px;line-height:1.6;}
+
+/* Animations */
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:fadeSlide 0.3s ease;}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.loading-shimmer{
+  background:linear-gradient(90deg,var(--stone-pale) 25%,var(--border) 50%,var(--stone-pale) 75%);
+  background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;
+}
+
+/* Tooltip */
+.tooltip{
+  position:fixed;background:rgba(26,46,27,0.96);color:#fff;padding:6px 10px;
+  border-radius:7px;font-size:11px;pointer-events:none;z-index:1000;
+  display:none;box-shadow:0 4px 12px rgba(0,0,0,0.2);max-width:200px;line-height:1.5;
+}
+
+/* Responsive parcel map overlay markers */
+.parcel-marker{
+  position:absolute;width:14px;height:14px;border-radius:50%;
+  border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);
+  cursor:pointer;transition:all 0.15s;z-index:5;transform:translate(-50%,-50%);
+}
+.parcel-marker:hover{width:18px;height:18px;z-index:6;}
+.parcel-marker.selected{width:20px;height:20px;z-index:7;box-shadow:0 0 0 3px rgba(255,255,255,0.5),0 2px 10px rgba(0,0,0,0.4);}
+
+/* Notification bar */
+.notif{
+  position:fixed;bottom:16px;right:16px;
+  background:var(--forest);color:#fff;padding:10px 16px;border-radius:10px;
+  font-size:12px;font-weight:500;display:none;z-index:999;
+  box-shadow:0 4px 16px var(--shadow-lg);animation:fadeSlide 0.3s ease;
+  max-width:300px;line-height:1.5;
+}
+
+.toka-top-btn{
+  display:flex;
+  align-items:center;
+  gap:7px;
+
+  height:36px;
+  padding:0 12px;
+
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.12);
+
+  border-radius:8px;
+
+  color:rgba(255,255,255,0.72);
+
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:11px;
+  font-weight:600;
+
+  cursor:pointer;
+  transition:all 0.18s ease;
+}
+
+.toka-top-btn svg{
+  width:14px;
+  height:14px;
+  opacity:0.7;
+}
+
+.toka-top-btn:hover{
+  background:rgba(255,255,255,0.12);
+  border-color:rgba(255,255,255,0.2);
+  color:#fff;
+}
+
+/* Loading overlay */
+.detail-loading{
+  display:none;padding:24px;text-align:center;color:var(--text-soft);font-size:13px;
+}
+.econ-btn-card{
+  background:var(--cream);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px 18px;
+  cursor:pointer;
+  transition:all .18s ease;
+}
+
+.econ-btn-card:hover{
+  background:var(--sage-pale);
+  border-color:var(--border-mid);
+}
+
+.econ-btn-value{
+  font-size:28px;
+  font-weight:800;
+  color:#22c55e;
+  line-height:1;
+}
+
+.econ-btn-label{
+  margin-top:8px;
+  font-size:14px;
+  color:var(--text-soft);
+}
+
+.econ-btn-card{
+  display:flex;
+  align-items:center;
+  gap:12px;
+
+  background:var(--cream);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+
+  padding:12px 14px;
+
+  cursor:pointer;
+  transition:all .18s ease;
+}
+
+.econ-btn-card:hover{
+  background:var(--sage-pale);
+  border-color:var(--border-mid);
+}
+
+.econ-btn-icon{
+  width:34px;
+  height:34px;
+
+  border-radius:10px;
+
+  background:rgba(34,197,94,0.12);
+  color:#22c55e;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:18px;
+  font-weight:800;
+
+  flex-shrink:0;
+}
+
+.econ-btn-text{
+  display:flex;
+  flex-direction:column;
+}
+
+.econ-btn-title{
+  font-size:13px;
+  font-weight:700;
+  color:var(--text);
+}
+
+.econ-btn-sub{
+  font-size:11px;
+  color:var(--text-soft);
+  margin-top:2px;
+}
+
+/* ── HAMBURGER BUTTON ── */
+.hamburger{
+  display:none;
+  align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:8px;
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+  cursor:pointer;flex-shrink:0;color:#fff;font-size:18px;
+}
+
+/* ── SIDEBAR OVERLAY (mobile) ── */
+.sidebar-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:49;
+}
+.sidebar-overlay.visible{display:block;}
+
+/* ── CLOSE BUTTON inside sidebar on mobile ── */
+.sidebar-close{
+  display:none;position:absolute;top:10px;right:10px;
+  width:30px;height:30px;border-radius:7px;
+  background:var(--stone-pale);border:1px solid var(--border);
+  cursor:pointer;align-items:center;justify-content:center;
+  font-size:16px;color:var(--text-soft);z-index:2;
+}
+
+/* ── TABLET (≤1024px) ── */
+@media (max-width:1024px){
+  :root{--sidebar:260px;}
+  .brand{min-width:auto;padding-right:10px;}
+  .topbar-search{max-width:220px;}
+  .topbar-pills{display:none;}
+  .bottom-panels{flex:0 0 300px;}
+  .municipality-card{width:100%;}
+}
+
+/* ── MOBILE (≤768px) ── */
+@media (max-width:768px){
+  :root{--sidebar:290px;--topbar:54px;}
+
+  html,body{overflow:auto;}
+
+  /* Topbar adjustments */
+  .topbar{padding:0 12px;gap:10px;}
+  .brand{min-width:auto;padding-right:0;}
+  .brand-tag{display:none;}
+  .topbar-center{display:none;}
+  .topbar-pills{display:none;}
+  .live-badge span{display:none;}
+  .admin-chip span{display:none;}
+  .hamburger{display:flex;}
+
+  /* Sidebar becomes drawer */
+  .sidebar{
+    left:-100%;width:var(--sidebar);
+    transition:left 0.28s cubic-bezier(0.4,0,0.2,1);
+    z-index:200;box-shadow:4px 0 20px rgba(0,0,0,0.15);
+  }
+  .sidebar.open{left:0;}
+  .sidebar-close{display:flex;}
+
+  /* Main fills full width */
+  .main{
+    margin-left:0;
+    flex-direction:column;
+    height:auto;
+    min-height:calc(100vh - var(--topbar));
+    overflow:visible;
+  }
+
+  /* Map takes fixed height on mobile */
+  .map-wrapper{
+    flex:none;
+    height:55vw;
+    min-height:220px;
+    max-height:320px;
+    width:100%;
+  }
+
+  /* Right panel stacks below map */
+  .bottom-panels{
+    flex:none;
+    width:100%;
+    height:auto;
+    min-height:50vh;
+    overflow:visible;
+    border-top:1px solid var(--border);
+  }
+
+  .detail-panel{
+    height:auto;
+    min-height:50vh;
+    overflow-y:visible;
+  }
+
+  /* Map filter pills scroll horizontally */
+  .map-filter{
+    left:8px;right:8px;
+    transform:none;
+    overflow-x:auto;
+    white-space:nowrap;
+    flex-wrap:nowrap;
+    padding:5px 8px;
+    gap:4px;
+  }
+
+  /* Map overlay corners compact */
+  .map-overlay-tr{top:8px;right:8px;}
+  .map-overlay-tl{top:8px;left:8px;}
+  .map-legend{display:none;}
+
+  /* Stat grid 2-col stays fine */
+  .stat-grid{grid-template-columns:1fr 1fr;}
+
+  /* Parcel list max-height increase */
+  #parcel-list{max-height:none !important;}
+
+  /* Detail panel header tweaks */
+  .dp-header .dp-name{font-size:14px;}
+
+  /* Satellite compare stacks */
+  .sat-compare{grid-template-columns:1fr;}
+
+  /* Action buttons */
+  .action-btns{grid-template-columns:1fr 1fr;}
+
+  /* municipality-card full width */
+  .municipality-card{width:100%;box-sizing:border-box;}
+
+  /* Notif stays bottom-right but smaller */
+  .notif{right:8px;bottom:8px;max-width:calc(100vw - 16px);}
+}
+
+/* ── SMALL MOBILE (≤480px) ── */
+@media (max-width:480px){
+  .action-btns{grid-template-columns:1fr;}
+  .dp-pulse-hero{flex-direction:column;align-items:flex-start;gap:10px;}
+  .risk-econ{flex-direction:column;gap:8px;}
+  .risk-econ .re-item{text-align:left;}
+  .spark-row{grid-template-columns:1fr;}
+  .ov-grid{grid-template-columns:1fr 1fr;}
+}
+
+</style>
+</head>
+<body>
+
+<!-- TOOLTIP -->
+<div class="tooltip" id="tooltip"></div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif"></div>
+
+<!-- ── TOPBAR ── -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-hex">
+      <svg viewBox="0 0 24 24" fill="none">
+        <polygon points="12,2 21,7 21,17 12,22 3,17 3,7" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"/>
+        <path d="M12 8v8M9 10l3 2 3-2" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">TOKA</div>
+      <div class="brand-tag">Paneli Administrativ</div>
+    </div>
+  </div>
+
+  <div class="topbar-center">
+    <div class="topbar-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Kërko parcelë, pronar, komunë…" id="global-search">
+    </div>
+  </div>
+
+  <div class="hamburger" id="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">
+    ☰
+  </div>
+
+  <div class="topbar-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <span>Live — Kosovë</span>
+    </div>
+    <div class="admin-chip">
+      <div class="admin-av">GK</div>
+      <span>Gov. Kosovo</span>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- ── SIDEBAR ── -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-close" id="sidebar-close" onclick="closeSidebar()">✕</div>
+  <!-- Removed visible “Kosovë — Pasqyrë” summary.
+       These hidden counters are kept so the existing JavaScript keeps working. -->
+  <div style="display:none;">
+    <div id="st-total">0</div>
+    <div id="st-active">0</div>
+    <div id="st-stress">0</div>
+    <div id="st-risk">0</div>
+  </div>
+
+
+
+
+  <div class="sidebar-section sidebar-insights-section">
+    <div class="insights-panel" id="insights-panel">
+      <!-- Loaded dynamically -->
+    </div>
+  </div>
+
+  <div class="sidebar-section" style="min-height:260px;display:flex;flex-direction:column;">
+    <div class="ss-label">Parcela — <span id="parcel-count-label">Duke ngarkuar…</span></div>
+    <div class="parcel-list" id="parcel-list" style="overflow-y:auto;max-height:420px;"></div>
+  </div>
+
+  <!-- Hidden layer counters kept for JavaScript compatibility after removing Shtresat UI -->
+  <div style="display:none;">
+    <div id="lb-risk">0</div>
+    <div id="lb-mismatch">0</div>
+    <div class="lnav-item active" id="ln-pulse"></div>
+    <div class="lnav-item" id="ln-blockchain"></div>
+    <div class="lnav-item" id="ln-satellite"></div>
+    <div class="lnav-item" id="ln-advisor"></div>
+    <div class="lnav-item" id="ln-economic"></div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- MAP -->
+  <div class="map-wrapper" id="map-wrapper">
+    <div id="leaflet-map"></div>
+    <svg id="svg-map" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <!-- Kosovo map background -->
+      <defs>
+        <radialGradient id="mapGrad" cx="50%" cy="50%" r="70%">
+          <stop offset="0%" stop-color="#1e3a20"/>
+          <stop offset="100%" stop-color="#0f1f10"/>
+        </radialGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(90,122,92,0.06)" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      
+      <rect width="800" height="400" fill="url(#mapGrad)"/>
+      <rect width="800" height="400" fill="url(#grid)"/>
+      
+      <!-- Kosovo outline + municipalities (simplified artistic polygons) -->
+      <!-- Full Kosovo boundary -->
+      <path id="kosovo-border" d="
+        M 160,80 L 200,60 L 260,55 L 320,65 L 380,58 L 440,70 L 500,62 L 560,75 L 610,88 L 640,110
+        L 655,140 L 650,170 L 640,200 L 630,230 L 610,260 L 580,280 L 550,295 L 510,305
+        L 470,310 L 430,315 L 390,320 L 350,318 L 310,312 L 270,300 L 235,285 L 205,265
+        L 175,240 L 150,210 L 140,180 L 138,150 L 145,115 Z
+      " fill="rgba(45,74,46,0.35)" stroke="rgba(90,200,90,0.4)" stroke-width="1.5"/>
+
+      <!-- Municipality paths (simplified, artistic) -->
+      <g id="municipalities">
+        <!-- Prishtinë -->
+        <path class="muni" data-muni="Prishtinë" d="M 370,120 L 420,115 L 450,130 L 455,165 L 440,185 L 400,190 L 370,180 L 355,155 Z"
+          fill="rgba(90,122,92,0.3)" stroke="rgba(90,180,90,0.3)" stroke-width="0.8"/>
+        <!-- Prizren -->
+        <path class="muni" data-muni="Prizren" d="M 250,230 L 300,215 L 330,230 L 335,270 L 310,295 L 275,295 L 248,275 Z"
+          fill="rgba(90,122,92,0.3)" stroke="rgba(90,180,90,0.3)" stroke-width="0.8"/>
+        <!-- Pejë -->
+        <path class="muni" data-muni="Pejë" d="M 155,140 L 200,130 L 230,148 L 235,185 L 215,205 L 175,208 L 150,190 L 145,160 Z"
+          fill="rgba(90,122,92,0.3)" stroke="rgba(90,180,90,0.3)" stroke-width="0.8"/>
+        <!-- Mitrovicë -->
+        <path class="muni" data-muni="Mitrovicë" d="M 295,85 L 340,78 L 370,95 L 375,125 L 350,140 L 315,138 L 290,120 Z"
+          fill="rgba(90,122,92,0.3)" stroke="rgba(90,180,90,0.3)" stroke-width="0.8"/>
+        <!-- Gjilan -->
+        <path class="muni" data-muni="Gjilan" d="M 490,160 L 540,150 L 570,168 L 575,205 L 555,225 L 515,228 L 490,210 Z"
+          fill="rgba(90,122,92,0.3)" stroke="rgba(90,180,90,0.3)" stroke-width="0.8"/>
+        <!-- Ferizaj -->
+        <path class="muni" data-muni="Ferizaj" d="M 395,220 L 445,210 L 475,228 L 478,265 L 455,282 L 415,283 L 390,262 Z"
+          fill="rgba(90,122,92,0.3)" stroke="rgba(90,180,90,0.3)" stroke-width="0.8"/>
+        <!-- Gjakova -->
+        <path class="muni" data-muni="Gjakovë" d="M 185,220 L 230,210 L 258,230 L 255,268 L 232,285 L 195,283 L 172,262 Z"
+          fill="rgba(90,122,92,0.3)" stroke="rgba(90,180,90,0.3)" stroke-width="0.8"/>
+        <!-- Vushtrri -->
+        <path class="muni" data-muni="Vushtrri" d="M 330,135 L 370,125 L 395,143 L 393,175 L 370,188 L 335,185 L 318,163 Z"
+          fill="rgba(90,122,92,0.3)" stroke="rgba(90,180,90,0.3)" stroke-width="0.8"/>
+        <!-- Drenas -->
+        <path class="muni" data-muni="Drenas" d="M 310,175 L 355,165 L 375,182 L 373,212 L 350,225 L 315,222 L 298,200 Z"
+          fill="rgba(90,122,92,0.3)" stroke="rgba(90,180,90,0.3)" stroke-width="0.8"/>
+        <!-- Malishevë -->
+        <path class="muni" data-muni="Malishevë" d="M 268,195 L 312,185 L 335,203 L 330,238 L 305,252 L 268,248 L 250,225 Z"
+          fill="rgba(90,122,92,0.3)" stroke="rgba(90,180,90,0.3)" stroke-width="0.8"/>
+        <!-- Lipjan -->
+        <path class="muni" data-muni="Lipjan" d="M 380,195 L 425,188 L 448,207 L 445,242 L 420,255 L 383,252 L 366,228 Z"
+          fill="rgba(90,122,92,0.3)" stroke="rgba(90,180,90,0.3)" stroke-width="0.8"/>
+        <!-- Kaçanik -->
+        <path class="muni" data-muni="Kaçanik" d="M 440,265 L 480,255 L 502,273 L 498,305 L 472,316 L 440,312 L 422,290 Z"
+          fill="rgba(90,122,92,0.3)" stroke="rgba(90,180,90,0.3)" stroke-width="0.8"/>
+        <!-- Deçan -->
+        <path class="muni" data-muni="Deçan" d="M 188,175 L 228,168 L 252,188 L 248,222 L 225,235 L 190,232 L 170,210 Z"
+          fill="rgba(90,122,92,0.3)" stroke="rgba(90,180,90,0.3)" stroke-width="0.8"/>
+      </g>
+
+      <!-- Parcel markers will be injected here -->
+      <g id="parcel-markers"></g>
+
+      <!-- Municipality labels -->
+      <g id="muni-labels" font-family="Plus Jakarta Sans, sans-serif" fill="rgba(255,255,255,0.35)" font-size="9" font-weight="600">
+        <text x="400" y="158">Prishtinë</text>
+        <text x="278" y="260">Prizren</text>
+        <text x="167" y="175">Pejë</text>
+        <text x="313" y="110">Mitrovicë</text>
+        <text x="510" y="195">Gjilan</text>
+        <text x="415" y="250">Ferizaj</text>
+        <text x="198" y="252">Gjakovë</text>
+        <text x="343" y="162">Vushtrri</text>
+      </g>
+
+      <!-- Compass rose -->
+      <g transform="translate(740,50)">
+        <circle r="18" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+        <text x="0" y="-6" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.6)" font-family="Plus Jakarta Sans">N</text>
+        <path d="M0,-12 L3,0 L0,2 L-3,0 Z" fill="rgba(255,255,255,0.6)"/>
+        <path d="M0,12 L3,0 L0,-2 L-3,0 Z" fill="rgba(255,255,255,0.2)"/>
+      </g>
+
+      <!-- Scale bar -->
+      <g transform="translate(30,370)">
+        <line x1="0" y1="0" x2="60" y2="0" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+        <line x1="0" y1="-4" x2="0" y2="4" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+        <line x1="60" y1="-4" x2="60" y2="4" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+        <text x="30" y="-7" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.45)" font-family="Plus Jakarta Sans">50 km</text>
+      </g>
+    </svg>
+
+    <!-- Map overlays -->
+    <div class="map-overlay-tl">
+      <div class="map-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
+        Republika e Kosovës — Harta Kadastrale
+      </div>
+      <div class="map-badge" id="selected-muni-badge" style="display:none;">
+        📍 <span id="selected-muni-text">—</span>
+      </div>
+    </div>
+
+    <div class="map-filter">
+      <div class="tpill active" onclick="filterPulse('all')"><span class="dot" style="background:#64748b"></span>Të gjitha</div>
+      <div class="tpill" onclick="filterPulse('risk')"><span class="dot" style="background:var(--pulse-red)"></span>Nën Rrezik</div>
+      <div class="tpill" onclick="filterPulse('stress')"><span class="dot" style="background:var(--pulse-amber)"></span>Në Stres</div>
+      <div class="tpill" onclick="filterPulse('thriving')"><span class="dot" style="background:var(--pulse-green)"></span>Aktive</div>
+    </div>
+
+    <div class="map-overlay-tr">
+      <div class="map-controls">
+        <div class="mctrl" title="Zoom in" onclick="mapZoom(1.2)">+</div>
+        <div class="mctrl" title="Zoom out" onclick="mapZoom(0.8)">−</div>
+        <div class="mctrl" title="Reset" onclick="mapReset()">⌖</div>
+      </div>
+      <div class="map-legend">
+        <div class="leg-title">Shëndeti i Tokës</div>
+        <div class="leg-row"><div class="leg-dot" style="background:#22c55e"></div><span>Aktive (70–100)</span></div>
+        <div class="leg-row"><div class="leg-dot" style="background:#f59e0b"></div><span>Stres (40–69)</span></div>
+        <div class="leg-row"><div class="leg-dot" style="background:#ef4444"></div><span>Rrezik (0–39)</span></div>
+      </div>
+    </div>
+
+    <div class="map-muni-tooltip" id="muni-tooltip"></div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="bottom-panels">
+
+    <!-- DETAIL PANEL -->
+    <div class="detail-panel" id="detail-panel">
+      <div class="no-selection" id="no-selection">
+        <div class="ns-icon">🗺️</div>
+        <div class="ns-text">Klikoni një parcelë<br>në hartë ose listë<br>për të parë të dhënat e plota</div>
+      </div>
+      <div id="parcel-detail" style="display:none;"></div>
+    </div>
+</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+
+const MUNICIPALITIES = [
+  'Prishtinë','Prizren','Pejë','Mitrovicë','Gjilan','Ferizaj',
+  'Gjakovë','Vushtrri','Drenas','Malishevë','Lipjan','Kaçanik','Deçan','Istog'
+];
+
+const OWNERS = [
+  {name:'Agim Berisha', nid:'1234567890', muni:'Prizren', phone:'+383 44 123 456'},
+  {name:'Drita Gashi', nid:'9876543210', muni:'Prishtinë', phone:'+383 44 234 567'},
+  {name:'Blerim Musliu', nid:'1111111111', muni:'Pejë', phone:'+383 45 345 678'},
+  {name:'Fitore Krasniqi', nid:'2222222222', muni:'Ferizaj', phone:'+383 44 456 789'},
+  {name:'Mentor Halili', nid:'3333333333', muni:'Gjilan', phone:'+383 49 567 890'},
+  {name:'Valbona Hoxha', nid:'4444444444', muni:'Mitrovicë', phone:'+383 44 678 901'},
+  {name:'Shpend Ahmeti', nid:'5555555555', muni:'Prishtinë', phone:'+383 45 789 012'},
+  {name:'Lirie Berisha', nid:'6666666666', muni:'Gjakovë', phone:'+383 44 890 123'},
+  {name:'Ramadan Fejzullahu', nid:'7777777777', muni:'Vushtrri', phone:'+383 49 901 234'},
+  {name:'Mirlinda Hoti', nid:'8888888888', muni:'Prizren', phone:'+383 44 012 345'},
+];
+
+const LAND_TYPES = ['Arë','Livadh','Vresht','Kopsht','Pyll','Pemishte','Kullotë'];
+const ACTIVITIES = ['Lërim i tokës','Mbjellja e farës','Kositja','Vjelja','Plehërimi','Ujitja','Trajtimi kimik','Pastrim i kanalit','Ndërtim muri'];
+
+function hash(n) {
+  return Array.from({length:16},(_,i)=>'0123456789abcdef'[(n*31+i*7+i*i*3)%16]).join('');
+}
+
+function selectMunicipality(card) {
+
+  // remove active from all cards
+  document.querySelectorAll('.municipality-card')
+    .forEach(c => c.classList.remove('active'));
+
+  // activate clicked one
+  card.classList.add('active');
+}
+
+function genTimeSeries(baseScore) {
+  return Array.from({length:24},(_,i) => {
+    const trend = i < 12 ? 0 : (baseScore < 50 ? -2 : 1);
+    const noise = (Math.random()-0.5)*15;
+    return Math.max(5, Math.min(100, baseScore + trend*(i-12)*0.5 + noise));
+  });
+}
+
+function genBlockchain(parcelId, count=5) {
+  const acts = ['Regjistrim kadastral','Mbjellja kryesore','Kositja e parë','Lërim i tokës','Aplikim për subvencion','Hedhja e plehut','Inspektim zyrtar','Mbjellja e dytë','Deklarim aktiviteti','Ndryshim pronësie'];
+  return Array.from({length:count},(_,i) => ({
+    action: acts[(parcelId*3+i)%acts.length],
+    hash: hash(parcelId*100+i),
+    prevHash: hash(parcelId*100+i-1),
+    timestamp: new Date(Date.now() - (i*30 + Math.random()*20)*24*3600000).toLocaleDateString('sq-AL',{day:'2-digit',month:'short',year:'numeric'}),
+    verified: Math.random() > 0.1,
+    actor: Math.random() > 0.3 ? 'Pronar' : 'Inspektor'
+  }));
+}
+
+function computeLandPulse(p) {
+  // 40% inactivity, 30% seasonal deviation, 20% engagement gap, 10% history
+  const inactivity = 100 - Math.min(100, p.daysSinceActivity / 300 * 100);
+  const seasonal = p.seasonalScore;
+  const engagement = p.engagementScore;
+  const history = p.historyScore;
+  return Math.round(0.4*inactivity + 0.3*seasonal + 0.2*engagement + 0.1*history);
+}
+
+function getPulseLabel(score) {
+  if(score >= 70) return {label:'Aktive',color:'#22c55e',bg:'rgba(34,197,94,0.12)',text:'#15803d'};
+  if(score >= 40) return {label:'Nën Stres',color:'#f59e0b',bg:'rgba(245,158,11,0.12)',text:'#92400e'};
+  return {label:'Në Rrezik',color:'#ef4444',bg:'rgba(239,68,68,0.12)',text:'#991b1b'};
+}
+
+function getAbandonmentProb(pulse, daysSince) {
+  return Math.min(98, Math.round((100-pulse)*0.6 + daysSince/600*40));
+}
+
+function getAIExplanation(p) {
+  if(p.pulse >= 70) return `Parcela ka aktivitet të qëndrueshëm sezonar dhe angazhim të rregullt — shëndet i mirë tokësor.`;
+  if(p.pulse >= 50) return `Zbuluar disa mangësi aktiviteti — ${p.daysSinceActivity} ditë pa veprim të regjistruar. Këshillohet monitorim.`;
+  if(p.pulse >= 30) return `Devijim sezonal i lartë dhe boshllëk angazhimi kritik — probabilitet braktisje po rritet. Ndërhyrje e shpejtë e rekomanduar.`;
+  return `Parcela ka shënues kritikë rreziku: inaktivitet i gjatë (${p.daysSinceActivity} ditë), mospërputhje satelitore dhe histori të vështirë. Kontaktoni pronarin menjëherë.`;
+}
+
+// ── Generate 75 parcels ──
+const PARCEL_DATA = [];
+// Agim Berisha parcels (5 parcels, different states)
+const agimParcels = [
+  {id:'PRZ-001',name:'Arë Llapushnik',muni:'Prizren',type:'Arë',area:2.3,daysSinceActivity:18,seasonalScore:82,engagementScore:78,historyScore:85,satConfidence:91,satMatch:true,mapX:272,mapY:248},
+  {id:'PRZ-002',name:'Livadh Çabrati',muni:'Prizren',type:'Livadh',area:1.8,daysSinceActivity:145,seasonalScore:42,engagementScore:35,historyScore:55,satConfidence:67,satMatch:false,mapX:285,mapY:262},
+  {id:'PRZ-003',name:'Pemishte Terzi',muni:'Prizren',type:'Pemishte',area:0.9,daysSinceActivity:312,seasonalScore:18,engagementScore:12,historyScore:30,satConfidence:88,satMatch:false,mapX:298,mapY:255},
+  {id:'PRZ-004',name:'Vresht Buniaku',muni:'Prizren',type:'Vresht',area:3.1,daysSinceActivity:35,seasonalScore:75,engagementScore:70,historyScore:80,satConfidence:94,satMatch:true,mapX:265,mapY:270},
+  {id:'PRZ-005',name:'Kopsht Dragash',muni:'Prizren',type:'Kopsht',area:0.4,daysSinceActivity:67,seasonalScore:55,engagementScore:50,historyScore:60,satConfidence:72,satMatch:true,mapX:308,mapY:243},
+];
+agimParcels.forEach(p => {
+  p.owner = OWNERS[0];
+  p.pulse = computeLandPulse(p);
+  p.timeSeries = genTimeSeries(p.pulse);
+  p.blockchain = genBlockchain(PARCEL_DATA.length, 6);
+  p.abandonProb = getAbandonmentProb(p.pulse, p.daysSinceActivity);
+  p.aiExplanation = getAIExplanation(p);
+  p.isAgim = true;
+  PARCEL_DATA.push(p);
+});
+
+// Generate remaining parcels
+const muniCenters = {
+  'Prishtinë':{x:400,y:155},'Prizren':{x:280,y:258},'Pejë':{x:172,y:175},
+  'Mitrovicë':{x:320,y:108},'Gjilan':{x:522,y:193},'Ferizaj':{x:430,y:247},
+  'Gjakovë':{x:210,y:250},'Vushtrri':{x:348,y:160},'Drenas':{x:335,y:200},
+  'Malishevë':{x:292,y:220},'Lipjan':{x:405,y:222},'Kaçanik':{x:460,y:285},
+  'Deçan':{x:215,y:205},'Istog':{x:222,y:148}
+};
+const prefixes = {
+  'Prishtinë':'PRI','Prizren':'PRZ','Pejë':'PEJ','Mitrovicë':'MIT','Gjilan':'GJL',
+  'Ferizaj':'FER','Gjakovë':'GJK','Vushtrri':'VUS','Drenas':'DRE','Malishevë':'MAL',
+  'Lipjan':'LIP','Kaçanik':'KAC','Deçan':'DEC','Istog':'IST'
+};
+const muniCounts = {};
+for(let i=5; i<75; i++) {
+  const muni = MUNICIPALITIES[i%MUNICIPALITIES.length];
+  muniCounts[muni] = (muniCounts[muni]||0)+1;
+  const cnt = muniCounts[muni];
+  const owner = OWNERS[(i*7)%OWNERS.length];
+  const dsa = Math.round(Math.random()*400);
+  const seasonal = Math.round(20+Math.random()*80);
+  const eng = Math.round(15+Math.random()*85);
+  const hist = Math.round(25+Math.random()*75);
+  const ctr = muniCenters[muni] || {x:400,y:200};
+  const mx = ctr.x + (Math.random()-0.5)*50;
+  const my = ctr.y + (Math.random()-0.5)*45;
+  const p = {
+    id:`${prefixes[muni]||'KOS'}-${String(cnt).padStart(3,'0')}`,
+    name:`${LAND_TYPES[i%LAND_TYPES.length]} ${muni} ${cnt}`,
+    muni,type:LAND_TYPES[i%LAND_TYPES.length],
+    area: Math.round((0.3+Math.random()*4.5)*10)/10,
+    daysSinceActivity: dsa,
+    seasonalScore: seasonal,
+    engagementScore: eng,
+    historyScore: hist,
+    satConfidence: Math.round(55+Math.random()*45),
+    satMatch: Math.random()>0.35,
+    owner,
+    mapX: mx, mapY: my,
+    blockchain: genBlockchain(i, 4+Math.floor(Math.random()*4))
+  };
+  p.pulse = computeLandPulse(p);
+  p.timeSeries = genTimeSeries(p.pulse);
+  p.abandonProb = getAbandonmentProb(p.pulse, p.daysSinceActivity);
+  p.aiExplanation = getAIExplanation(p);
+  PARCEL_DATA.push(p);
+}
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let currentLayer = 'pulse';
+let selectedParcel = null;
+let filterMode = 'all';
+let chatHistory = [];
+let svgZoom = 1;
+let svgPanX = 0, svgPanY = 0;
+let leafletMap = null;
+let leafletLayers = {
+  landuse: null,
+  adminareas: null,
+  water: null,
+  border: null
+};
+
+const KOSOVO_BOUNDS = [[41.82, 19.85], [43.32, 21.95]];
+
+function colorForLanduse(category) {
+  if (category === 'agriculture') return { fill: '#b7d67d', stroke: '#6c8e4d' };
+  if (category === 'tree_crop') return { fill: '#d9b56f', stroke: '#a97b2f' };
+  if (category === 'woodland') return { fill: '#5f844d', stroke: '#355334' };
+  if (category === 'open') return { fill: '#d6df98', stroke: '#9da86d' };
+  if (category === 'built') return { fill: '#ccb9a0', stroke: '#948372' };
+  return { fill: '#b7d67d', stroke: '#6c8e4d' };
+}
+
+function initLeafletBackdrop() {
+  if (typeof L === 'undefined' || leafletMap) return;
+
+  leafletMap = L.map('leaflet-map', {
+    zoomControl: false,
+    attributionControl: false,
+    dragging: false,
+    scrollWheelZoom: false,
+    doubleClickZoom: false,
+    boxZoom: false,
+    keyboard: false,
+    touchZoom: false,
+    preferCanvas: true
+  });
+
+  leafletMap.fitBounds(KOSOVO_BOUNDS, { padding: [12, 12], animate: false });
+
+  const styleFeature = (feature) => {
+    const category = feature?.properties?.category || feature?.properties?.fclass || 'agriculture';
+    const colors = colorForLanduse(category);
+    return {
+      color: colors.stroke,
+      weight: 0.7,
+      fillColor: colors.fill,
+      fillOpacity: category === 'built' ? 0.18 : category === 'woodland' ? 0.22 : 0.26,
+      opacity: 0.5
+    };
+  };
+
+  Promise.all([
+    fetch('/data/kosovo-landuse.geojson').then((res) => res.json()).catch(() => null),
+    fetch('/data/kosovo-adminareas.geojson').then((res) => res.json()).catch(() => null),
+    fetch('/data/kosovo-water.geojson').then((res) => res.json()).catch(() => null),
+    fetch('/data/kosovo-bounds.json').then((res) => res.json()).catch(() => null)
+  ]).then(([landuse, adminareas, water, bounds]) => {
+    if (!leafletMap) return;
+
+    if (bounds?.bounds && Array.isArray(bounds.bounds) && bounds.bounds.length === 4) {
+      const [minLon, minLat, maxLon, maxLat] = bounds.bounds;
+      const rectangle = L.rectangle([[minLat, minLon], [maxLat, maxLon]], {
+        color: 'rgba(255,255,255,0.18)',
+        weight: 1,
+        fillOpacity: 0.03,
+        interactive: false
+      });
+      rectangle.addTo(leafletMap);
+      leafletLayers.border = rectangle;
+    }
+
+    if (landuse?.features?.length) {
+      leafletLayers.landuse = L.geoJSON(landuse, {
+        style: styleFeature,
+        interactive: false
+      }).addTo(leafletMap);
+    }
+
+    if (adminareas?.features?.length) {
+      leafletLayers.adminareas = L.geoJSON(adminareas, {
+        style: {
+          color: 'rgba(23,57,31,0.45)',
+          weight: 0.8,
+          dashArray: '3 3',
+          fillOpacity: 0
+        },
+        interactive: false
+      }).addTo(leafletMap);
+    }
+
+    if (water?.features?.length) {
+      leafletLayers.water = L.geoJSON(water, {
+        style: {
+          color: '#5b8fc2',
+          weight: 0.7,
+          fillColor: '#78aede',
+          fillOpacity: 0.18,
+          opacity: 0.55
+        },
+        interactive: false
+      }).addTo(leafletMap);
+    }
+  }).catch(() => {
+    // Keep the SVG map visible even if the extra data fails to load.
+  });
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+function init() {
+  updateStats();
+  renderParcelList();
+  initLeafletBackdrop();
+  renderMapMarkers();
+  renderInsights();
+  setupMapInteractions();
+}
+
+function updateStats() {
+  const total = PARCEL_DATA.length;
+  const active = PARCEL_DATA.filter(p=>p.pulse>=70).length;
+  const stress = PARCEL_DATA.filter(p=>p.pulse>=40&&p.pulse<70).length;
+  const risk = PARCEL_DATA.filter(p=>p.pulse<40).length;
+  const mismatch = PARCEL_DATA.filter(p=>!p.satMatch).length;
+
+  animateCounter('st-total', total);
+  animateCounter('st-active', active);
+  animateCounter('st-stress', stress);
+  animateCounter('st-risk', risk);
+  const lbRisk = document.getElementById('lb-risk');
+  const lbMismatch = document.getElementById('lb-mismatch');
+  if(lbRisk) lbRisk.textContent = risk;
+  if(lbMismatch) lbMismatch.textContent = mismatch;
+  document.getElementById('parcel-count-label').textContent = `${total} Gjithsej`;
+}
+
+function animateCounter(id, target) {
+  let cur = 0;
+  const el = document.getElementById(id);
+  const step = Math.ceil(target/30);
+  const t = setInterval(()=>{ cur=Math.min(cur+step,target); el.textContent=cur; if(cur>=target) clearInterval(t); },30);
+}
+
+function getFilteredParcels() {
+  let list = PARCEL_DATA;
+  if(filterMode === 'risk') list = list.filter(p=>p.pulse<40);
+  else if(filterMode === 'stress') list = list.filter(p=>p.pulse>=40&&p.pulse<70);
+  else if(filterMode === 'thriving') list = list.filter(p=>p.pulse>=70);
+  const q = document.getElementById('global-search').value.toLowerCase();
+  if(q) list = list.filter(p=>p.name.toLowerCase().includes(q)||p.muni.toLowerCase().includes(q)||p.owner.name.toLowerCase().includes(q)||p.id.toLowerCase().includes(q));
+  return list;
+}
+
+function renderParcelList() {
+  const list = getFilteredParcels();
+  const container = document.getElementById('parcel-list');
+  container.innerHTML = '';
+  list.slice(0,40).forEach(p => {
+    const meta = getPulseLabel(p.pulse);
+    const div = document.createElement('div');
+    div.className = 'pitem' + (selectedParcel===p?' active':'');
+    div.innerHTML = `
+      <div class="pitem-pulse" style="background:${meta.color};">${p.pulse}</div>
+      <div class="pitem-info">
+        <div class="pitem-name">${p.name}</div>
+        <div class="pitem-sub">${p.muni} · ${p.area}ha · ${p.owner.name.split(' ')[0]}</div>
+      </div>
+      <div class="pitem-score" style="color:${meta.color}">${meta.label}</div>
+    `;
+    div.onclick = () => selectParcel(p);
+    container.appendChild(div);
+  });
+}
+
+function renderMapMarkers() {
+  const g = document.getElementById('parcel-markers');
+  g.innerHTML = '';
+  const list = getFilteredParcels();
+  list.forEach(p => {
+    const meta = getPulseLabel(p.pulse);
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx', p.mapX);
+    circle.setAttribute('cy', p.mapY);
+    circle.setAttribute('r', selectedParcel===p ? '7' : '5');
+    circle.setAttribute('fill', meta.color);
+    circle.setAttribute('stroke', selectedParcel===p ? '#fff' : 'rgba(255,255,255,0.6)');
+    circle.setAttribute('stroke-width', selectedParcel===p ? '2.5' : '1.5');
+    circle.setAttribute('class', 'parcel-marker-circle');
+    circle.style.cursor = 'pointer';
+    circle.style.transition = 'all 0.15s';
+    circle.setAttribute('filter', 'url(#glow)');
+    circle.addEventListener('click', (e) => { e.stopPropagation(); selectParcel(p); });
+    circle.addEventListener('mouseenter', (e) => showTooltip(e, `<strong>${p.name}</strong><br>${p.owner.name}<br>Pulsi: ${p.pulse} — ${meta.label}`));
+    circle.addEventListener('mouseleave', () => hideTooltip());
+    g.appendChild(circle);
+
+    // Label for selected
+    if(selectedParcel === p) {
+      const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+      txt.setAttribute('x', p.mapX + 9);
+      txt.setAttribute('y', p.mapY + 4);
+      txt.setAttribute('font-size','9');
+      txt.setAttribute('fill','#fff');
+      txt.setAttribute('font-family','Plus Jakarta Sans, sans-serif');
+      txt.setAttribute('font-weight','700');
+      txt.textContent = p.id;
+      g.appendChild(txt);
+    }
+  });
+}
+
+function selectParcel(p) {
+  selectedParcel = p;
+  renderParcelList();
+  renderMapMarkers();
+  renderParcelDetail();
+  highlightMuni(p.muni);
+}
+
+function highlightMuni(muni) {
+  document.querySelectorAll('.muni').forEach(el => {
+    el.setAttribute('fill', el.dataset.muni === muni ? 'rgba(90,122,92,0.5)' : 'rgba(90,122,92,0.25)');
+    el.setAttribute('stroke', el.dataset.muni === muni ? 'rgba(90,200,90,0.7)' : 'rgba(90,180,90,0.2)');
+  });
+  const badge = document.getElementById('selected-muni-badge');
+  badge.style.display = 'flex';
+  document.getElementById('selected-muni-text').textContent = muni;
+}
+
+// ═══════════════════════════════════════════════
+// PARCEL DETAIL
+// ═══════════════════════════════════════════════
+function renderParcelDetail() {
+  const p = selectedParcel;
+  if(!p) return;
+  document.getElementById('no-selection').style.display = 'none';
+  const d = document.getElementById('parcel-detail');
+  d.style.display = 'block';
+  d.className = 'animate-in';
+
+  const meta = getPulseLabel(p.pulse);
+  const ringPct = p.pulse + '%';
+  const ringColor = meta.color;
+  const timeSeriesHTML = renderTimeSeries(p.timeSeries);
+  const blockchainHTML = renderBlockchain(p.blockchain);
+
+  d.innerHTML = `
+    <!-- Header -->
+    <div class="dp-header">
+      <div class="dp-id">${p.id} · ${p.type} · ${p.area} ha</div>
+      <div class="dp-name">${p.name}</div>
+      <div class="dp-meta">Komuna e ${p.muni}</div>
+      <div class="dp-owner">
+        <span>👤 <strong>${p.owner.name}</strong> · ${p.owner.phone}</span>
+        ${p.isAgim ? '<span class="tag green" style="margin-left:auto">Demo</span>' : ''}
+      </div>
+    </div>
+
+    <!-- Layer tabs -->
+    <div class="layer-tabs">
+      <div class="ltab active" onclick="switchDetailTab('overview',this)">Pasqyra</div>
+      <div class="ltab" onclick="switchDetailTab('blockchain',this)">⛓️ Regjistri</div>
+      <div class="ltab" onclick="switchDetailTab('satellite',this)">🛰️ Satelit</div>
+      <div class="ltab" onclick="switchDetailTab('advisor',this)">🤖 Këshilltar</div>
+    </div>
+
+    <!-- OVERVIEW TAB -->
+    <div id="dt-overview">
+      <!-- Pulse hero -->
+      <div class="dp-pulse-hero">
+        <div class="pulse-ring" style="--ring-color:${ringColor};--ring-pct:${ringPct};">
+          <div class="pulse-ring-inner">
+            <div class="pv" style="color:${ringColor}">${p.pulse}</div>
+            <div class="pl">LAND PULSE</div>
+          </div>
+        </div>
+        <div class="pulse-info">
+          <div class="pi-label" style="background:${meta.bg};color:${meta.text}">● ${meta.label}</div>
+          <div class="pi-text">${p.daysSinceActivity} ditë pa aktivitet · ${p.area} ha</div>
+          <div class="pi-ai">💡 ${p.aiExplanation}</div>
+        </div>
+      </div>
+
+      <!-- 24-month timeline -->
+      <div class="timeline-section">
+        <div class="ts-title">Historiku 24-mujor — Land Pulse</div>
+        ${timeSeriesHTML}
+      </div>
+
+      <!-- Abandonment risk -->
+      <div class="risk-section">
+        <div class="ts-title">Probabiliteti i Braktisjes</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span class="tag ${p.abandonProb>60?'red':p.abandonProb>30?'amber':'green'}">${p.abandonProb}% Probabilitet</span>
+          <span style="font-size:11px;color:var(--text-soft)">Bazuar në modelin TOKA</span>
+        </div>
+        <div class="risk-meter">
+          <div class="risk-fill" style="width:${p.abandonProb}%;background:${p.abandonProb>60?'#ef4444':p.abandonProb>30?'#f59e0b':'#22c55e'}"></div>
+        </div>
+        <div class="risk-econ">
+          <div class="re-item"><div class="re-val">€${Math.round(p.area*1200*p.abandonProb/100/1000)}K</div><div class="re-lab">Humbje proj.</div></div>
+          <div class="re-item"><div class="re-val">${p.area} ha</div><div class="re-lab">Sipërfaqe</div></div>
+          <div class="re-item"><div class="re-val">${p.daysSinceActivity}d</div><div class="re-lab">Inaktivitet</div></div>
+        </div>
+      </div>
+
+      <!-- Pulse breakdown -->
+      <div class="risk-section">
+        <div class="ts-title">Zbërthimi i Land Pulse</div>
+        ${renderPulseBreakdown(p)}
+      </div>
+
+      <!-- Actions -->
+      <div class="actions-section">
+        <div class="ts-title" style="margin-bottom:8px;">Veprimet</div>
+        <div class="action-btns">
+          <button class="abtn primary" onclick="doAction('sms','${p.id}')">📱 SMS Shqip</button>
+          <button class="abtn" onclick="doAction('contact','${p.id}')">📞 Kontakto</button>
+          <button class="abtn" onclick="doAction('flag','${p.id}')">🚩 Shëno Rrezik</button>
+          <button class="abtn" onclick="doAction('report','${p.id}')">📄 Raporti PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCKCHAIN TAB (hidden) -->
+    <div id="dt-blockchain" style="display:none;">
+      <div class="chain-section">
+        <div class="ts-title">Regjistri Blockchain i Aktiviteteve</div>
+        <div style="font-size:11px;color:var(--text-soft);margin-bottom:10px;">Çdo veprim ruhet si rekord i pandryshueshëm. Hash-et janë të lidhura zinxhir.</div>
+        ${blockchainHTML}
+      </div>
+    </div>
+
+    <!-- SATELLITE TAB (hidden) -->
+    <div id="dt-satellite" style="display:none;">
+      ${renderSatellitePanel(p)}
+    </div>
+
+    <!-- ADVISOR TAB (hidden) -->
+    <div id="dt-advisor" style="display:none;">
+      ${renderAdvisorPanel(p)}
+    </div>
+  `;
+
+  // Re-attach advisor send
+  setupAdvisor(p);
+}
+
+function renderTimeSeries(ts) {
+  const max = Math.max(...ts);
+  const bars = ts.map((v,i) => {
+    const h = Math.round((v/100)*36);
+    const color = v>=70?'#22c55e':v>=40?'#f59e0b':'#ef4444';
+    const month = ['Ja','Sh','Mr','Ap','Ma','Qe','Ko','Gj','Sh','Te','Në','Dh'][(i)%12];
+    return `<div class="tbar" style="height:${h}px;background:${color};opacity:${0.5+v/200};" title="${month}: ${Math.round(v)}"></div>`;
+  }).join('');
+  const labels = ['Jan','','','Apr','','','Kor','','','Tet','','','Jan','','','Apr','','','Kor','','','Tet','',''];
+  return `
+    <div class="timeline-bars">${bars}</div>
+    <div class="tbar-label">
+      <span>-24 muaj</span>
+      <span>-12 muaj</span>
+      <span>Sot</span>
+    </div>
+  `;
+}
+
+function renderPulseBreakdown(p) {
+  const inactivity = Math.round(100 - Math.min(100, p.daysSinceActivity/300*100));
+  const factors = [
+    {label:'Inaktiviteti (40%)', val:inactivity, weight:0.4},
+    {label:'Devijimi Sezonal (30%)', val:p.seasonalScore, weight:0.3},
+    {label:'Boshllëku Angazhimit (20%)', val:p.engagementScore, weight:0.2},
+    {label:'Historia e Rrezikut (10%)', val:p.historyScore, weight:0.1},
+  ];
+  return factors.map(f => `
+    <div style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-mid);margin-bottom:3px;">
+        <span>${f.label}</span><span style="font-weight:700">${f.val}</span>
+      </div>
+      <div style="height:5px;background:var(--stone-pale);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${f.val}%;background:${f.val>=70?'#22c55e':f.val>=40?'#f59e0b':'#ef4444'};border-radius:3px;transition:width 0.6s;"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderBlockchain(chain) {
+  return chain.map(item => `
+    <div class="chain-item">
+      <div class="chain-dot">${item.verified?'✓':'?'}</div>
+      <div class="chain-content">
+        <div class="chain-action">${item.action}</div>
+        <div class="chain-hash">🔗 ${item.hash} ← ${item.prevHash.substring(0,8)}…</div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:3px;">
+          <span class="chain-time">${item.timestamp}</span>
+          <span class="chain-badge ${item.verified?'verified':''}">${item.verified?'✓ Verifikuar':'⏳ Në pritje'}</span>
+          <span class="chain-badge" style="background:var(--earth-pale);color:var(--earth)">${item.actor}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSatellitePanel(p) {
+  const matchColor = p.satMatch ? '#22c55e' : '#f59e0b';
+  const matchText = p.satMatch ? '✓ Përputhet me raportin' : '⚠ Mospërputhje e zbuluar';
+  return `
+    <div class="sat-section">
+      <div class="ts-title">Krahasimi Satelitor Sentinel-2</div>
+      <div class="sat-compare">
+        <div class="sat-panel">
+          <canvas id="sat-farmer" width="160" height="90"></canvas>
+          <div class="sat-panel-label">📋 Raporti i Fermerit</div>
+        </div>
+        <div class="sat-panel">
+          <canvas id="sat-sentinel" width="160" height="90"></canvas>
+          <div class="sat-panel-label">🛰️ Sentinel-2 NDVI</div>
+        </div>
+      </div>
+      <div class="sat-confidence">
+        <span style="font-size:11px;font-weight:600;color:var(--text-mid);white-space:nowrap;">AI Besimi:</span>
+        <div class="sat-conf-bar">
+          <div class="sat-conf-fill" style="width:${p.satConfidence}%;background:${p.satConfidence>75?'#22c55e':p.satConfidence>50?'#f59e0b':'#ef4444'}"></div>
+        </div>
+        <span style="font-size:12px;font-weight:800;color:${matchColor}">${p.satConfidence}%</span>
+      </div>
+      <div style="font-size:11px;font-weight:600;color:${matchColor};margin:6px 0 4px;padding:5px 8px;background:${p.satMatch?'rgba(34,197,94,0.08)':'rgba(245,158,11,0.1)'};border-radius:6px;">${matchText}</div>
+      ${!p.satMatch ? `<div class="sat-advisory">⚠️ <strong>Këshillë e buta:</strong> Të dhënat satelitore tregojnë ndryshime nga aktiviteti i raportuar. Ju lutemi kontrolloni dhe përditësoni regjistrin e aktiviteteve tuaja ose kontaktoni mbështetjen teknike.</div>` : ''}
+      <div style="margin-top:10px;">
+        <div class="ts-title">Treguesit NDVI — Krahasimi</div>
+        ${renderNDVIChart(p)}
+      </div>
+    </div>
+  `;
+}
+
+function renderNDVIChart(p) {
+  const months = ['Ja','Sh','Mr','Ap','Ma','Qe','Ko','Gj','Sh','Te'];
+  const reported = months.map((_,i) => Math.round(30+Math.sin(i/2)*30 + Math.random()*15));
+  const sentinel = months.map((_,i) => Math.round(25+Math.sin(i/2)*28 + (p.satMatch?0:10) + Math.random()*12));
+  const bars = months.map((m,i) => `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;">
+      <div style="display:flex;gap:1px;align-items:flex-end;height:30px;">
+        <div style="width:6px;background:#22c55e;border-radius:1px;height:${Math.round(reported[i]*30/80)}px;opacity:0.8"></div>
+        <div style="width:6px;background:#3b82f6;border-radius:1px;height:${Math.round(sentinel[i]*30/80)}px;opacity:0.7"></div>
+      </div>
+      <span style="font-size:8px;color:var(--stone-light)">${m}</span>
+    </div>
+  `).join('');
+  return `
+    <div style="display:flex;gap:4px;align-items:flex-end;padding:4px 0;">${bars}</div>
+    <div style="display:flex;gap:12px;margin-top:4px;">
+      <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-soft)"><div style="width:8px;height:8px;background:#22c55e;border-radius:2px"></div>Fermer</div>
+      <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-soft)"><div style="width:8px;height:8px;background:#3b82f6;border-radius:2px"></div>Sentinel-2</div>
+    </div>
+  `;
+}
+
+function renderAdvisorPanel(p) {
+  const initialMsg = `Mirëdita! Jam këshilltari juaj AI për parcelën <strong>${p.name}</strong>. Land Pulse aktual është <strong>${p.pulse}/100</strong> — ${getPulseLabel(p.pulse).label}. Si mund t'ju ndihmoj sot?`;
+  return `
+    <div class="ai-section">
+      <div class="ts-title">🤖 Këshilltar AI Bujqësor — Shqip</div>
+      <div class="chat-msgs" id="chat-msgs">
+        <div class="cmsg ai">${initialMsg}</div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Pyesni diçka për parcelën tuaj…" onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" onclick="sendChat()">➤</button>
+      </div>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">
+        <div onclick="setChat('Çfarë duhet të mbjell këtë sezon?')" style="padding:4px 8px;background:var(--sage-pale);border-radius:5px;font-size:10px;cursor:pointer;color:var(--forest);">🌱 Mbjellja</div>
+        <div onclick="setChat('Si të rrit Land Pulse tim?')" style="padding:4px 8px;background:var(--sage-pale);border-radius:5px;font-size:10px;cursor:pointer;color:var(--forest);">💓 Land Pulse</div>
+        <div onclick="setChat('Cilat subvencione mund të aplikoj?')" style="padding:4px 8px;background:var(--sage-pale);border-radius:5px;font-size:10px;cursor:pointer;color:var(--forest);">💶 Subvencione</div>
+        <div onclick="setChat('Çfarë thotë sateliti për tokën time?')" style="padding:4px 8px;background:var(--sage-pale);border-radius:5px;font-size:10px;cursor:pointer;color:var(--forest);">🛰️ Satelit</div>
+      </div>
+    </div>
+  `;
+}
+
+function switchDetailTab(tab, el) {
+  document.querySelectorAll('.ltab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['overview','blockchain','satellite','advisor'].forEach(t => {
+    const el2 = document.getElementById('dt-'+t);
+    if(el2) el2.style.display = t===tab?'block':'none';
+  });
+  if(tab==='satellite') setTimeout(drawSatCanvases,100);
+  if(tab==='advisor') setupAdvisor(selectedParcel);
+}
+
+function drawSatCanvases() {
+  const p = selectedParcel;
+  if(!p) return;
+  drawNDVI('sat-farmer', p.pulse/100, '#22c55e');
+  drawNDVI('sat-sentinel', p.satMatch ? p.pulse/100 : p.pulse/100 * 0.7 + 0.1, '#3b82f6');
+}
+
+function drawNDVI(canvasId, intensity, color) {
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+  // Background
+  const bg = ctx.createLinearGradient(0,0,0,h);
+  bg.addColorStop(0,'#1a2e1b');
+  bg.addColorStop(1,'#0f1a10');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0,0,w,h);
+  // Grid cells simulating land
+  for(let x=0;x<w;x+=8) {
+    for(let y=0;y<h;y+=8) {
+      const v = Math.random()*0.4 + intensity*0.6;
+      ctx.fillStyle = `rgba(${color==='#22c55e'?'34,197,94':'59,130,246'},${v*0.8})`;
+      ctx.fillRect(x+1,y+1,6,6);
+    }
+  }
+  // Overlay patches
+  for(let i=0;i<3;i++) {
+    const px = Math.random()*w*0.6+20;
+    const py = Math.random()*h*0.6+10;
+    const r = 10+Math.random()*15;
+    const grad = ctx.createRadialGradient(px,py,0,px,py,r);
+    grad.addColorStop(0,`rgba(${color==='#22c55e'?'34,197,94':'59,130,246'},0.6)`);
+    grad.addColorStop(1,'transparent');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(px,py,r,0,Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function setupAdvisor(p) {
+  chatHistory = [];
+  const input = document.getElementById('chat-input');
+  const msgs = document.getElementById('chat-msgs');
+  if(!input||!msgs) return;
+}
+
+function setChat(msg) {
+  const input = document.getElementById('chat-input');
+  if(input) { input.value=msg; sendChat(); }
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msgs = document.getElementById('chat-msgs');
+  if(!input || !msgs) return;
+
+  const q = input.value.trim();
+  if(!q) return;
+  input.value = '';
+
+  const userMsg = document.createElement('div');
+  userMsg.className = 'cmsg user';
+  userMsg.textContent = q;
+  msgs.appendChild(userMsg);
+
+  const p = selectedParcel;
+
+  const aiMsg = document.createElement('div');
+  aiMsg.className = 'cmsg ai';
+
+  let answer = '';
+
+  if(q.toLowerCase().includes('mbjell')) {
+    answer = `Për parcelën ${p.name}, rekomandohet të kontrollohet sezoni, lagështia dhe historiku i aktivitetit para mbjelljes. Me Land Pulse ${p.pulse}/100, prioritet është mirëmbajtja dhe aktiviteti i rregullt.`;
+  } else if(q.toLowerCase().includes('pulse')) {
+    answer = `Për ta rritur Land Pulse, fermeri duhet të regjistrojë aktivitetet sezonale, të zvogëlojë ditët pa aktivitet dhe të përputhë raportimet me të dhënat satelitore.`;
+  } else if(q.toLowerCase().includes('subvenc')) {
+    answer = `Kjo parcelë mund të jetë kandidate për subvencione nëse aktiviteti bujqësor dokumentohet rregullisht dhe nuk ka mospërputhje të mëdha satelitore.`;
+  } else if(q.toLowerCase().includes('satelit')) {
+    answer = p.satMatch
+      ? `Të dhënat satelitore përputhen me raportimin e fermerit. Kjo e ul rrezikun administrativ.`
+      : `Ka mospërputhje satelitore. Rekomandohet inspektim ose kërkesë për përditësim nga fermeri.`;
+  } else {
+    answer = `Bazuar në parcelën ${p.name}, Land Pulse është ${p.pulse}/100 dhe rreziku i braktisjes është ${p.abandonProb}%. Rekomandohet monitorim dhe regjistrim i aktivitetit të fundit.`;
+  }
+
+  aiMsg.innerHTML = answer;
+  msgs.appendChild(aiMsg);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════
+// INSIGHTS PANEL
+// ═══════════════════════════════════════════════
+function renderInsights() {
+  const panel = document.getElementById('insights-panel');
+
+  // Kosovo overview
+  const total = PARCEL_DATA.length;
+  const active = PARCEL_DATA.filter(p=>p.pulse>=70).length;
+  const stress = PARCEL_DATA.filter(p=>p.pulse>=40&&p.pulse<70).length;
+  const risk = PARCEL_DATA.filter(p=>p.pulse<40).length;
+  const avgPulse = Math.round(PARCEL_DATA.reduce((s,p)=>s+p.pulse,0)/total);
+  const totalArea = PARCEL_DATA.reduce((s,p)=>s+p.area,0).toFixed(1);
+  const econRisk = PARCEL_DATA.filter(p=>p.pulse<40).reduce((s,p)=>s+p.area*1200*p.abandonProb/100,0);
+
+  // Municipality risk
+  const muniRisk = {};
+  MUNICIPALITIES.forEach(m => {
+    const ps = PARCEL_DATA.filter(p=>p.muni===m);
+    if(!ps.length) return;
+    const avgP = Math.round(ps.reduce((s,p)=>s+p.pulse,0)/ps.length);
+    const riskPs = ps.filter(p=>p.pulse<40);
+    const econLoss = riskPs.reduce((s,p)=>s+p.area*1200*p.abandonProb/100,0);
+    muniRisk[m] = {avg:avgP, count:ps.length, riskCount:riskPs.length, econLoss: Math.round(econLoss/1000)};
+  });
+  const muniSorted = Object.entries(muniRisk).sort((a,b)=>a[1].avg-b[1].avg).slice(0,8);
+
+  panel.innerHTML = `
+    <!-- Kosovo Overview -->
+
+
+    <div class="ins-card">
+      <div class="ins-title">Pasqyra e Kosovës</div>
+      <div class="ov-grid">
+        <div class="ov-stat"><div class="ov-val">${total}</div><div class="ov-lab">Parcela Gjithsej</div></div>
+        <div class="ov-stat"><div class="ov-val" style="color:var(--pulse-green)">${active}</div><div class="ov-lab">Aktive</div></div>
+        <div class="ov-stat"><div class="ov-val">${avgPulse}</div><div class="ov-lab">Pulse Mesatar</div></div>
+        <div class="ov-stat"><div class="ov-val">${totalArea} ha</div><div class="ov-lab">Sipërfaqja Gjithsej</div></div>
+        <div class="ov-stat"><div class="ov-val" style="color:var(--pulse-amber)">${stress}</div><div class="ov-lab">Nën Stres</div></div>
+        <div class="ov-stat"><div class="ov-val" style="color:var(--pulse-red)">${risk}</div><div class="ov-lab">Në Rrezik</div></div>
+      </div>
+    </div>
+
+    <!-- Municipality risk table -->
+    <div class="ins-card">
+      <div class="ins-title">Rreziku sipas Komunës</div>
+      <table class="muni-table">
+        <tr>
+          <th>Komuna</th>
+          <th>Pulse</th>
+          <th>Rreziku</th>
+          <th>Humbje €K</th>
+        </tr>
+        ${muniSorted.map(([m,d])=>`
+          <tr onclick="zoomToMuni('${m}')" style="cursor:pointer;">
+            <td><strong style="font-size:12px">${m}</strong><br><span style="font-size:10px;color:var(--text-soft)">${d.count} parcela</span></td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div class="muni-risk-bar"><div class="muni-risk-fill" style="width:${d.avg}%;background:${d.avg>=70?'#22c55e':d.avg>=40?'#f59e0b':'#ef4444'}"></div></div>
+                <span style="font-weight:700;color:${d.avg>=70?'#15803d':d.avg>=40?'#92400e':'#991b1b'}">${d.avg}</span>
+              </div>
+            </td>
+            <td><span class="tag ${d.riskCount>2?'red':d.riskCount>0?'amber':'green'}">${d.riskCount} 🔴</span></td>
+            <td><span class="muni-econ" style="color:${d.econLoss>50?'var(--red)':'var(--earth)'}">€${d.econLoss}K</span></td>
+          </tr>
+        `).join('')}
+      </table>
+    </div>
+
+    <!-- Impakti ekonomik total -->
+    <div class="ins-card">
+      <div class="ins-title">Analiza Ekonomike</div>
+      ${renderEconomicChart()}
+    </div>
+
+    <!-- Satellite mismatches -->
+    <div class="ins-card">
+      <div class="ins-title">Mospërputhjet Satelitore</div>
+      ${renderSatMismatches()}
+    </div>
+
+    <!-- Blockchain activity -->
+    <div class="ins-card">
+      <div class="ins-title">Aktiviteti i fundit — Blockchain</div>
+      ${renderRecentChain()}
+    </div>
+  `;
+}
+
+function renderEconomicChart() {
+  const munis = {};
+  PARCEL_DATA.forEach(p => {
+    if(!munis[p.muni]) munis[p.muni] = 0;
+    munis[p.muni] += p.area*1200*p.abandonProb/100;
+  });
+  const sorted = Object.entries(munis).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxVal = sorted[0][1];
+  return sorted.map(([m,v])=>`
+    <div style="margin-bottom:7px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
+        <span style="font-weight:600">${m}</span>
+        <span style="color:var(--earth);font-weight:700">€${Math.round(v/1000)}K</span>
+      </div>
+      <div style="height:5px;background:var(--stone-pale);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${Math.round(v/maxVal*100)}%;background:linear-gradient(90deg,var(--earth-light),var(--earth));border-radius:3px;"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSatMismatches() {
+  const mismatches = PARCEL_DATA.filter(p=>!p.satMatch).slice(0,5);
+  if(!mismatches.length) return '<div style="font-size:12px;color:var(--sage)">✓ Asnjë mospërputhje e zbuluar</div>';
+  return mismatches.map(p=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);" onclick="selectParcel(PARCEL_DATA.find(x=>x.id==='${p.id}'))" style="cursor:pointer;">
+      <div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;"></div>
+      <div style="flex:1;">
+        <div style="font-size:12px;font-weight:600">${p.name}</div>
+        <div style="font-size:10px;color:var(--text-soft)">${p.muni} · Besimi: ${p.satConfidence}%</div>
+      </div>
+      <div style="font-size:10px;padding:2px 6px;background:var(--amber-pale);color:var(--amber);border-radius:4px;font-weight:600;">Shiko →</div>
+    </div>
+  `).join('');
+}
+
+function renderRecentChain() {
+  const recent = [];
+  PARCEL_DATA.slice(0,5).forEach(p => {
+    if(p.blockchain && p.blockchain[0]) {
+      recent.push({...p.blockchain[0], parcelName:p.name, parcelId:p.id});
+    }
+  });
+  return recent.map(r=>`
+    <div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);align-items:center;">
+      <div style="width:7px;height:7px;border-radius:50%;background:var(--sage);flex-shrink:0;"></div>
+      <div style="flex:1;">
+        <div style="font-size:11px;font-weight:600">${r.action} — ${r.parcelName}</div>
+        <div style="font-size:9px;color:var(--stone-light);font-family:monospace">${r.hash.substring(0,20)}…</div>
+      </div>
+      <div style="font-size:9px;color:var(--text-soft)">${r.timestamp}</div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════
+// MAP INTERACTIONS
+// ═══════════════════════════════════════════════
+function setupMapInteractions() {
+  document.querySelectorAll('.muni').forEach(el => {
+    el.style.cursor = 'pointer';
+    el.style.transition = 'all 0.2s';
+    el.addEventListener('mouseenter', (e) => {
+      const muni = el.dataset.muni;
+      const ps = PARCEL_DATA.filter(p=>p.muni===muni);
+      const avg = ps.length ? Math.round(ps.reduce((s,p)=>s+p.pulse,0)/ps.length) : '-';
+      showMapTooltip(e, `<strong>${muni}</strong> · ${ps.length} parcela · Pulse: ${avg}`);
+      if(!selectedParcel || selectedParcel.muni !== muni) {
+        el.setAttribute('fill','rgba(90,122,92,0.45)');
+      }
+    });
+    el.addEventListener('mouseleave', () => {
+      hideMapTooltip();
+      if(!selectedParcel || selectedParcel.muni !== el.dataset.muni) {
+        el.setAttribute('fill','rgba(90,122,92,0.3)');
+      }
+    });
+  });
+
+  // Search
+  document.getElementById('global-search').addEventListener('input', () => {
+    renderParcelList();
+    renderMapMarkers();
+  });
+}
+
+function mapZoom(factor) {
+  svgZoom = Math.max(0.5, Math.min(3, svgZoom * factor));
+  const svg = document.getElementById('svg-map');
+  svg.style.transform = `scale(${svgZoom}) translate(${svgPanX}px,${svgPanY}px)`;
+  svg.style.transformOrigin = 'center center';
+}
+
+function mapReset() {
+  svgZoom = 1; svgPanX = 0; svgPanY = 0;
+  const svg = document.getElementById('svg-map');
+  svg.style.transform = '';
+  document.querySelectorAll('.muni').forEach(el => {
+    el.setAttribute('fill','rgba(90,122,92,0.3)');
+    el.setAttribute('stroke','rgba(90,180,90,0.3)');
+  });
+  document.getElementById('selected-muni-badge').style.display='none';
+}
+
+function zoomToMuni(muni) {
+  highlightMuni(muni);
+  const ps = PARCEL_DATA.filter(p=>p.muni===muni);
+  if(ps.length) selectParcel(ps[0]);
+}
+
+function showMapTooltip(e, html) {
+  const t = document.getElementById('muni-tooltip');
+  t.innerHTML = html;
+  t.style.display = 'block';
+  const rect = document.getElementById('map-wrapper').getBoundingClientRect();
+  t.style.left = (e.clientX - rect.left + 10) + 'px';
+  t.style.top = (e.clientY - rect.top + 10) + 'px';
+}
+function hideMapTooltip() {
+  document.getElementById('muni-tooltip').style.display = 'none';
+}
+
+function showTooltip(e, html) {
+  const t = document.getElementById('tooltip');
+  t.innerHTML = html;
+  t.style.display = 'block';
+  t.style.left = (e.clientX + 12) + 'px';
+  t.style.top = (e.clientY - 28) + 'px';
+}
+function hideTooltip() {
+  document.getElementById('tooltip').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════
+// LAYER SWITCHING
+// ═══════════════════════════════════════════════
+function setLayer(layer) {
+  currentLayer = layer;
+  document.querySelectorAll('.lnav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('ln-'+layer)?.classList.add('active');
+  // If a parcel is selected, switch its detail tab too
+  if(selectedParcel && document.getElementById('dt-overview')) {
+    const tabMap = {blockchain:'blockchain',satellite:'satellite',advisor:'advisor',pulse:'overview',economic:'overview'};
+    const target = tabMap[layer] || 'overview';
+    const tab = document.querySelector(`.ltab[onclick*="${target}"]`);
+    if(tab) switchDetailTab(target, tab);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// FILTER
+// ═══════════════════════════════════════════════
+function filterPulse(mode) {
+  filterMode = mode;
+  document.querySelectorAll('.map-filter .tpill').forEach(el=>el.classList.remove('active'));
+  if (window.event && window.event.currentTarget) {
+    window.event.currentTarget.classList.add('active');
+  }
+  renderParcelList();
+  renderMapMarkers();
+}
+
+// ═══════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════
+function doAction(type, id) {
+  const p = PARCEL_DATA.find(x=>x.id===id);
+  const notif = document.getElementById('notif');
+  const messages = {
+    sms: `📱 SMS Shqip dërguar te ${p?.owner?.name || 'pronari'}: "Toka juaj ${p?.name} ka nevojë për vëmendje. Land Pulse: ${p?.pulse}/100."`,
+    contact: `📞 Inicializuar thirrja te ${p?.owner?.name} (${p?.owner?.phone})`,
+    flag: `🚩 Parcela ${id} shënuar si rrezik i lartë. Administratori do të njoftohet.`,
+    report: `📄 Raporti PDF për ${p?.name} po gjenerohet…`,
+  };
+  notif.textContent = messages[type] || 'Veprimi u krye.';
+  notif.style.display = 'block';
+  setTimeout(()=>notif.style.display='none', 4000);
+}
+
+// ═══════════════════════════════════════════════
+// MOBILE SIDEBAR TOGGLE
+// ═══════════════════════════════════════════════
+function toggleSidebar(){
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  const isOpen = sb.classList.contains('open');
+  if(isOpen){ closeSidebar(); } else { openSidebar(); }
+}
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('visible');
+  document.body.style.overflow='hidden';
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+  document.body.style.overflow='';
+}
+
+// ═══════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════
+init();
+
+// Auto-select Agim's at-risk parcel for demo
+setTimeout(() => {
+  selectParcel(PARCEL_DATA[2]); // PRZ-003 is the most at-risk
+}, 600);
+</script>
+</body>
+</html>

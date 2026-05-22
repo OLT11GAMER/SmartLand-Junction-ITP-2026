@@ -1,1 +1,3 @@
 .git-ssh/
+node_modules/
+dist/

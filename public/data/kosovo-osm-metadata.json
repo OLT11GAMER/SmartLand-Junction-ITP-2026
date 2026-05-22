@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-05-22T21:56:31.345Z",
+  "inputRoot": "/mnt/c/Users/OLTIMERI/Downloads/kosovo-260521-free.shp",
+  "simplifyTolerance": 0.00018,
+  "sources": {
+    "landuse": "/mnt/c/Users/OLTIMERI/Downloads/kosovo-260521-free.shp/gis_osm_landuse_a_free_1.shp",
+    "adminareas": "/mnt/c/Users/OLTIMERI/Downloads/kosovo-260521-free.shp/gis_osm_adminareas_a_free_1.shp",
+    "water": "/mnt/c/Users/OLTIMERI/Downloads/kosovo-260521-free.shp/gis_osm_water_a_free_1.shp"
+  },
+  "summary": {
+    "landuse": {
+      "agriculture": 1786,
+      "tree_crop": 1307,
+      "woodland": 900,
+      "built": 700,
+      "open": 700
+    },
+    "adminareas": {
+      "admin": 292
+    },
+    "water": {
+      "water": 785
+    }
+  }
+}
