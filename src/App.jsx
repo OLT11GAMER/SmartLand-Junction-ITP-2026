@@ -326,7 +326,7 @@ function AuthView({ onAuth }) {
               <BrandLogo />
             </div>
             <div>
-              <div className="brand-name">toka ime</div>
+              <div className="brand-name">TOKA</div>
               <div className="brand-tag">Sistemi i Shëndetit të Tokës</div>
             </div>
           </div>
@@ -779,7 +779,7 @@ function FarmerDashboard({
             <BrandLogo />
           </div>
           <div>
-            <div className="brand-name">toka ime</div>
+            <div className="brand-name">TOKA</div>
             <div className="brand-tag">Sistemi i Shëndetit të Tokës</div>
           </div>
         </div>
@@ -1292,6 +1292,7 @@ export default function App() {
       [kosovoBounds[0][1], kosovoBounds[0][0]],
       [kosovoBounds[1][1], kosovoBounds[1][0]]
     ];
+    const kosovoLatLngBounds = L.latLngBounds(leafletBounds);
 
     const map = L.map(mapContainerRef.current, {
       zoomControl: false,
@@ -1299,11 +1300,21 @@ export default function App() {
       preferCanvas: true,
       zoomSnap: 0.25,
       minZoom: 7.3,
-      maxZoom: 16.8
+      maxZoom: 16.8,
+      maxBounds: kosovoLatLngBounds,
+      maxBoundsViscosity: 1.0
     });
 
     mapRef.current = map;
     map.fitBounds(leafletBounds, { padding: [32, 32], animate: false });
+
+    const clampToKosovo = () => {
+      const minZoom = map.getBoundsZoom(kosovoLatLngBounds, false);
+      map.setMinZoom(minZoom);
+      if (map.getZoom() < minZoom) {
+        map.setZoom(minZoom);
+      }
+    };
 
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 18,
@@ -1374,6 +1385,7 @@ export default function App() {
 
     const handleResize = () => {
       map.invalidateSize();
+      clampToKosovo();
     };
 
     resizeObserver.observe(mapContainerRef.current);
@@ -1386,9 +1398,10 @@ export default function App() {
     });
     const adminareasLayer = L.geoJSON(EMPTY_COLLECTION, {
       style: {
-        color: 'rgba(19,42,19,0.45)',
-        weight: 0.8,
-        dashArray: '3 3',
+        color: '#132a13',
+        weight: 1.3,
+        opacity: 0.95,
+        dashArray: '4 3',
         fillOpacity: 0
       },
       interactive: false
@@ -1461,6 +1474,7 @@ export default function App() {
       if (!map.hasLayer(landuse)) landuse.addTo(map);
       if (!map.hasLayer(adminareas)) adminareas.addTo(map);
       if (!map.hasLayer(water)) water.addTo(map);
+      adminareas.bringToFront();
 
       if (authUser?.role === 'farmer' || showDetail) {
         if (map.hasLayer(regional)) map.removeLayer(regional);
@@ -1495,7 +1509,9 @@ export default function App() {
         map.addLayer(landuseLayer);
         map.addLayer(adminareasLayer);
         map.addLayer(waterLayer);
+        adminareasLayer.bringToFront();
         syncLayerVisibility();
+        clampToKosovo();
         syncZoomState();
         setMapReady(true);
       }
@@ -1509,6 +1525,7 @@ export default function App() {
     };
 
     map.on('zoomend', syncVisibilityAndZoom);
+    map.on('moveend', clampToKosovo);
     window.addEventListener('resize', handleResize);
 
     return () => {
@@ -1516,6 +1533,7 @@ export default function App() {
       resizeObserver.disconnect();
       popupRef.current?.remove();
       map.off('zoomend', syncVisibilityAndZoom);
+      map.off('moveend', clampToKosovo);
       map.remove();
       mapRef.current = null;
       popupRef.current = null;
@@ -1595,7 +1613,7 @@ export default function App() {
             <BrandLogo />
           </div>
           <div>
-            <div className="brand-name">toka ime</div>
+            <div className="brand-name">TOKA</div>
             <div className="brand-tag">Paneli Administrativ</div>
           </div>
         </div>
@@ -1961,7 +1979,7 @@ export default function App() {
                         <span className={`tag ${selectedParcel.status === 'Critical Alert' ? 'red' : selectedParcel.status === 'Watch' ? 'amber' : 'green'}`}>
                           {Math.round((selectedParcel.abandonmentProbability ?? 0) * 100)}% Probabilitet
                         </span>
-                        <span style={{ fontSize: '11px', color: 'var(--text-soft)' }}>Bazuar në modelin toka ime</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-soft)' }}>Bazuar në modelin TOKA</span>
                       </div>
                       <div className="risk-meter">
                         <div
