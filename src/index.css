@@ -1188,6 +1188,122 @@ input {
   margin-left: auto;
 }
 
+.app-mode-switch-shell {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 260;
+}
+
+.app-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.app-mode-switch-btn,
+.mode-switcher-page {
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 10px;
+  transition: all 0.18s ease;
+}
+
+.app-mode-switch-btn.active,
+.mode-switcher-page.active {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.mode-switcher-pages {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  padding-left: 4px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.demo-shell {
+  min-height: 100vh;
+  background: var(--cream);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+
+.demo-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 220;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--forest);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.demo-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff;
+}
+
+.demo-subtitle {
+  margin-top: 2px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.demo-frame {
+  width: 100%;
+  flex: 1;
+  border: 0;
+  background: var(--white);
+}
+
+.quick-login-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.quick-login-btn {
+  border: 1px solid var(--border);
+  background: var(--sage-pale);
+  color: var(--forest);
+  border-radius: var(--radius-sm);
+  padding: 11px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.quick-login-btn:hover {
+  background: var(--forest);
+  color: #fff;
+  border-color: var(--forest);
+}
+
+.quick-login-btn.secondary {
+  background: var(--cream);
+}
+
 .live-badge {
   display: flex;
   align-items: center;
@@ -1796,23 +1912,6 @@ input {
   border-radius: 50%;
 }
 
-.map-source-badge {
-  position: absolute;
-  bottom: 16px;
-  right: 12px;
-  z-index: 20;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--text);
-  padding: 8px 12px;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px var(--shadow);
-  backdrop-filter: blur(8px);
-  max-width: 270px;
-}
-
 .map-muni-tooltip {
   position: absolute;
   top: 58px;
@@ -2273,6 +2372,20 @@ input {
   border: 1px solid var(--border);
 }
 
+.sat-panel-farmer {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.18)),
+    radial-gradient(circle at 30% 20%, rgba(115, 168, 110, 0.26), transparent 38%),
+    linear-gradient(180deg, #314d2d, #1f311f);
+}
+
+.sat-panel-satellite {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.18)),
+    radial-gradient(circle at 65% 35%, rgba(213, 181, 111, 0.26), transparent 36%),
+    linear-gradient(180deg, #444f37, #20261f);
+}
+
 .sat-panel-label {
   position: absolute;
   bottom: 5px;
@@ -2288,12 +2401,28 @@ input {
 
 .sat-confidence {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
   padding: 8px 10px;
   background: var(--sage-pale);
   border-radius: 7px;
   border: 1px solid var(--border-mid);
+}
+
+.sat-confidence-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-mid);
+}
+
+.sat-confidence-row strong {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--forest);
 }
 
 .sat-conf-bar {
@@ -2639,6 +2768,29 @@ input {
   .brand-tag,
   .topbar-center {
     display: none;
+  }
+
+  .app-mode-switch-shell {
+    top: 8px;
+    right: 8px;
+  }
+
+  .app-mode-switch {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 220px;
+  }
+
+  .mode-switcher-pages {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .quick-login-grid {
+    grid-template-columns: 1fr;
   }
 
   .live-badge span,

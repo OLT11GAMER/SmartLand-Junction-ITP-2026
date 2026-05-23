@@ -25,6 +25,12 @@ const EMPTY_COLLECTION = {
   type: 'FeatureCollection',
   features: []
 };
+const VIEW_MODE_STORAGE_KEY = 'toka_view_mode';
+const DEMO_HTML_PAGES = {
+  login: '/Old%20HTML%20version/login_updated.html',
+  farmer: '/Old%20HTML%20version/final%20farmer%20responsive.html',
+  admin: '/Old%20HTML%20version/adminnnn%20pa%20button.html'
+};
 
 const offlineTerrainStyle = {
   version: 8,
@@ -180,6 +186,64 @@ function BrandLogo() {
   );
 }
 
+function AppModeSwitch({ viewMode, setViewMode }) {
+  return (
+    <div className="app-mode-switch" role="group" aria-label="Switch between React app and HTML demo">
+      <button
+        type="button"
+        className={`app-mode-switch-btn ${viewMode === 'app' ? 'active' : ''}`}
+        onClick={() => setViewMode('app')}
+      >
+        React App
+      </button>
+      <button
+        type="button"
+        className={`app-mode-switch-btn ${viewMode === 'demo' ? 'active' : ''}`}
+        onClick={() => setViewMode('demo')}
+      >
+        HTML Demo
+      </button>
+    </div>
+  );
+}
+
+function HtmlDemoView({ demoPage, setDemoPage }) {
+  const src = DEMO_HTML_PAGES[demoPage] || DEMO_HTML_PAGES.login;
+
+  return (
+    <div className="demo-shell">
+      <div className="demo-toolbar">
+        <div>
+          <div className="demo-title">TOKA HTML Demo</div>
+          <div className="demo-subtitle">Static old HTML views connected to the React app.</div>
+        </div>
+        <div className="mode-switcher-pages">
+          {[
+            ['login', 'Login'],
+            ['farmer', 'Farmer'],
+            ['admin', 'Admin']
+          ].map(([page, label]) => (
+            <button
+              key={page}
+              type="button"
+              className={`mode-switcher-page ${demoPage === page ? 'active' : ''}`}
+              onClick={() => setDemoPage(page)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <iframe
+        key={demoPage}
+        title={`TOKA ${demoPage} demo`}
+        className="demo-frame"
+        src={src}
+      />
+    </div>
+  );
+}
+
 const AUTH_STORAGE_KEY = 'toka_user';
 
 const DEMO_ACCOUNTS = {
@@ -289,6 +353,16 @@ function AuthView({ onAuth }) {
 
   const doAdminLogin = () => {
     const record = DEMO_ACCOUNTS.admin;
+    onAuth({
+      nid: record.nid,
+      name: record.name,
+      role: record.role,
+      municipality: record.municipality
+    });
+  };
+
+  const doFarmerLogin = () => {
+    const record = DEMO_ACCOUNTS['1234567890'];
     onAuth({
       nid: record.nid,
       name: record.name,
@@ -429,6 +503,15 @@ function AuthView({ onAuth }) {
                 <span>Hyrja në TOKA</span>
                 <span>→</span>
               </button>
+
+              <div className="quick-login-grid">
+                <button className="quick-login-btn" type="button" onClick={doFarmerLogin}>
+                  Hyr si fermer
+                </button>
+                <button className="quick-login-btn secondary" type="button" onClick={doAdminLogin}>
+                  Hyr si administrator
+                </button>
+              </div>
 
               <div className="form-link">
                 Nuk keni llogari? <a onClick={() => showTab('signup')}>Regjistrohuni</a>
@@ -634,41 +717,29 @@ function renderBlockchain(chain) {
 }
 
 function SatellitePanel({ parcel }) {
-  const confidence = Math.max(18, Math.min(96, parcel.landHealthScore + 7));
+  const confidence = 56;
   return (
     <div className="sat-section">
       <div className="ts-title">Krahasimi satelitor</div>
       <div className="sat-compare">
-        <div className="sat-panel">
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.12), rgba(0,0,0,0.18)), radial-gradient(circle at 30% 20%, rgba(115, 168, 110, 0.26), transparent 38%), linear-gradient(180deg, #314d2d, #1f311f)'
-            }}
-          />
+        <div className="sat-panel sat-panel-farmer">
           <div className="sat-panel-label">Deklaruar nga fermeri</div>
         </div>
-        <div className="sat-panel">
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.12), rgba(0,0,0,0.18)), radial-gradient(circle at 65% 35%, rgba(213, 181, 111, 0.26), transparent 36%), linear-gradient(180deg, #444f37, #20261f)'
-            }}
-          />
+        <div className="sat-panel sat-panel-satellite">
           <div className="sat-panel-label">Satelit / Ndërveprim</div>
         </div>
       </div>
       <div className="sat-confidence">
-        <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-mid)' }}>Confidence</span>
+        <div className="sat-confidence-row">
+          <span>Confidence</span>
+          <strong>{confidence}%</strong>
+        </div>
         <div className="sat-conf-bar">
           <div className="sat-conf-fill" style={{ width: `${confidence}%` }} />
         </div>
-        <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-mid)' }}>{confidence}%</span>
       </div>
       <div className="sat-advisory">
-        {parcel.advisory}
+        Prioritize outreach, verify seasonal activity, and recommend crop rotation before field inspection.
       </div>
     </div>
   );
@@ -968,12 +1039,6 @@ function FarmerDashboard({
             </div>
           </div>
 
-          <div className="map-source-badge">
-            {mapReady ? (osmStatus === 'ready'
-              ? `Terrain + ${osmCounts.landuse} land-use layers`
-              : 'Loading terrain') : 'Loading map'}
-          </div>
-
           <div ref={mapContainerRef} id="leaflet-map" />
           {!mapReady && (
             <div className="detail-loading map-loading">
@@ -1152,6 +1217,20 @@ export default function App() {
   const [chatMessages, setChatMessages] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminMobileView, setAdminMobileView] = useState('map');
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem(VIEW_MODE_STORAGE_KEY) || 'app';
+    } catch (error) {
+      return 'app';
+    }
+  });
+  const [demoPage, setDemoPage] = useState(() => {
+    try {
+      return localStorage.getItem('toka_demo_page') || 'login';
+    } catch (error) {
+      return 'login';
+    }
+  });
   const [authUser, setAuthUser] = useState(() => {
     try {
       const raw = localStorage.getItem(AUTH_STORAGE_KEY);
@@ -1208,6 +1287,22 @@ export default function App() {
     const loss = detailedParcels.reduce((sum, parcel) => sum + parcel.projectedLoss, 0);
     return { critical, avgHealth, loss };
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode);
+    } catch (error) {
+      // Ignore persistence errors.
+    }
+  }, [viewMode]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('toka_demo_page', demoPage);
+    } catch (error) {
+      // Ignore persistence errors.
+    }
+  }, [demoPage]);
 
   useEffect(() => {
     if (!visibleParcels.length) return;
@@ -1576,37 +1671,67 @@ export default function App() {
     }
   }, [authUser, filteredRegionalSummary, isDetailView, parcelData, selectedParcel]);
 
+  if (viewMode === 'demo') {
+    return (
+      <>
+        <div className="app-mode-switch-shell">
+          <AppModeSwitch viewMode={viewMode} setViewMode={setViewMode} />
+        </div>
+        <HtmlDemoView
+          demoPage={demoPage}
+          setDemoPage={setDemoPage}
+        />
+      </>
+    );
+  }
+
   if (!authUser) {
-    return <AuthView onAuth={handleAuth} />;
+    return (
+      <>
+        <div className="app-mode-switch-shell">
+          <AppModeSwitch viewMode={viewMode} setViewMode={setViewMode} />
+        </div>
+        <AuthView onAuth={handleAuth} />
+      </>
+    );
   }
 
   if (authUser.role === 'farmer') {
     return (
-      <FarmerDashboard
-        authUser={authUser}
-        selectedParcel={selectedParcel}
-        setSelectedId={setSelectedId}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        filterMode={filterMode}
-        setFilterMode={setFilterMode}
-        mapContainerRef={mapContainerRef}
-        mapReady={mapReady}
-        osmStatus={osmStatus}
-        osmCounts={osmCounts}
-        zoom={zoom}
-        isDetailView={isDetailView}
-        handleLogout={handleLogout}
-        chatMessages={chatMessages}
-        chatInput={chatInput}
-        setChatInput={setChatInput}
-        sendChat={sendChat}
-      />
+      <>
+        <div className="app-mode-switch-shell">
+          <AppModeSwitch viewMode={viewMode} setViewMode={setViewMode} />
+        </div>
+        <FarmerDashboard
+          authUser={authUser}
+          selectedParcel={selectedParcel}
+          setSelectedId={setSelectedId}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          filterMode={filterMode}
+          setFilterMode={setFilterMode}
+          mapContainerRef={mapContainerRef}
+          mapReady={mapReady}
+          osmStatus={osmStatus}
+          osmCounts={osmCounts}
+          zoom={zoom}
+          isDetailView={isDetailView}
+          handleLogout={handleLogout}
+          chatMessages={chatMessages}
+          chatInput={chatInput}
+          setChatInput={setChatInput}
+          sendChat={sendChat}
+        />
+      </>
     );
   }
 
   return (
-    <div className="app-shell admin-shell">
+    <>
+      <div className="app-mode-switch-shell">
+        <AppModeSwitch viewMode={viewMode} setViewMode={setViewMode} />
+      </div>
+      <div className="app-shell admin-shell">
       <header className="topbar">
         <div className="brand">
           <div className="brand-hex">
@@ -1863,14 +1988,6 @@ export default function App() {
             </div>
           </div>
 
-          <div className="map-source-badge">
-            {mapReady
-              ? osmStatus === 'ready'
-            ? `Satellite base + ${osmCounts.landuse} land-use, ${osmCounts.adminareas} admin, ${osmCounts.water} water`
-                : 'OSM layers unavailable'
-              : 'Loading map'}
-          </div>
-
           <div className="admin-ai-filter">
             <div className="aif-title">Agriculture AI</div>
             <div className="aif-sub">Filter parcels in danger and flag risk clusters from the map.</div>
@@ -2065,6 +2182,7 @@ export default function App() {
         setActiveDetailTab('advisor');
         setAdminMobileView('detail');
       }} />
-    </div>
+      </div>
+    </>
   );
 }
