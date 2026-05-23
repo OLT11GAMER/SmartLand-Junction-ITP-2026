@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node scripts/copy_demo_html.mjs",
+    "prepreview": "node scripts/copy_demo_html.mjs",
+    "prebuild": "node scripts/copy_demo_html.mjs",
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",

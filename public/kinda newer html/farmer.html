@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toka Ime — Sistemi Shendetit te Tokes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sage:#5a7a5c;--sage-light:#7a9e7c;--sage-pale:#e8f0e8;--sage-glow:rgba(90,122,92,0.15);
+  --earth:#8b6f47;--earth-light:#b8956a;--earth-pale:#f5ede2;
+  --forest:#2d4a2e;--forest-mid:#3d6b3f;
+  --amber:#d4821a;--amber-pale:#fef3e2;
+  --red:#dc4a3d;--red-pale:#fdf2f1;--red-mid:#e8645a;
+  --cream:#faf8f4;--white:#ffffff;
+  --stone:#6b7280;--stone-light:#9ca3af;--stone-pale:#f3f4f6;
+  --text:#1a2e1b;--text-mid:#3d5540;--text-soft:#6b8a6d;
+  --border:#dde8dd;--border-mid:#c8d8c8;
+  --shadow:rgba(45,74,46,0.08);--shadow-md:rgba(45,74,46,0.14);
+  --radius:14px;--radius-sm:9px;--radius-lg:20px;
+  --nav-h:60px;
+}
+html,body{height:100%;font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--text);overflow:hidden;}
+
+.demo-nav{
+  position:fixed;top:calc(var(--nav-h) + 10px);left:50%;transform:translateX(-50%);z-index:999;
+  display:flex;gap:6px;padding:6px;background:rgba(255,255,255,0.92);
+  border:1px solid var(--border);border-radius:999px;box-shadow:0 2px 10px rgba(45,74,46,0.12);
+  backdrop-filter:blur(8px);
+}
+.demo-nav a{
+  padding:6px 10px;border-radius:999px;text-decoration:none;font-size:11px;font-weight:700;
+  color:var(--text-soft);background:var(--white);border:1px solid var(--border);transition:all 0.18s ease;
+}
+.demo-nav a:hover,.demo-nav a.active{background:var(--forest);border-color:var(--forest);color:#fff;}
+
+/* NAV */
+.nav{
+  height:var(--nav-h);display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;background:var(--forest);position:fixed;top:0;left:0;right:0;z-index:100;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.nav-brand{display:flex;align-items:center;gap:10px;}
+.nav-hex{width:34px;height:34px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;overflow:hidden;}
+.nav-hex img,.nav-hex svg{width:100%;height:100%;display:block;object-fit:cover;filter:brightness(0) invert(1);}
+.nav-name{font-size:18px;font-weight:800;color:#fff;letter-spacing:0.04em;}
+.nav-tag{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:0.15em;text-transform:uppercase;}
+.nav-center{display:flex;align-items:center;gap:6px;}
+.nav-tab{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.6);cursor:pointer;transition:all 0.2s;border:none;background:transparent;}
+.nav-tab:hover{color:#fff;background:rgba(255,255,255,0.08);}
+.nav-tab.active{color:#fff;background:rgba(255,255,255,0.15);}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.nav-user{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:var(--sage-light);border:2px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;}
+.nav-uname{font-size:13px;color:rgba(255,255,255,0.8);font-weight:600;}
+.pulse-badge{display:flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(255,255,255,0.1);border-radius:20px;border:1px solid rgba(255,255,255,0.15);}
+.pulse-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:pulse-anim 2s infinite;}
+@keyframes pulse-anim{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.3)}}
+.pulse-txt{font-size:11px;color:rgba(255,255,255,0.7);}
+
+/* LAYOUT */
+.app{display:flex;height:100vh;padding-top:var(--nav-h);}
+
+/* LEFT SIDEBAR */
+.sidebar{
+  width:320px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.sidebar-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);}
+.sidebar-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.sidebar-sub{font-size:11px;color:var(--text-soft);}
+.parcel-list{flex:1;overflow-y:auto;padding:10px;}
+.parcel-item{
+  padding:12px 14px;border-radius:12px;margin-bottom:6px;cursor:pointer;
+  border:1.5px solid transparent;transition:all 0.2s;background:var(--cream);
+}
+.parcel-item:hover{background:var(--sage-pale);border-color:var(--border-mid);}
+.parcel-item.active{background:var(--sage-pale);border-color:var(--sage);box-shadow:0 2px 8px var(--sage-glow);}
+.parcel-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.parcel-id{font-size:11px;font-weight:700;color:var(--text-soft);letter-spacing:0.06em;text-transform:uppercase;}
+.parcel-pulse-chip{
+  display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;
+}
+.chip-green{background:#dcfce7;color:#16a34a;}
+.chip-amber{background:#fef3c7;color:#d97706;}
+.chip-red{background:#fee2e2;color:#dc2626;}
+.parcel-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.parcel-loc{font-size:11px;color:var(--text-soft);}
+.parcel-stats{display:flex;gap:8px;margin-top:6px;}
+.parcel-stat{font-size:10px;color:var(--stone);background:var(--stone-pale);padding:2px 7px;border-radius:5px;}
+.stat-warn{background:#fef3c7;color:#92400e;}
+.stat-danger{background:#fee2e2;color:#991b1b;}
+
+/* MAP AREA */
+.map-container{flex:1;position:relative;overflow:hidden;}
+#map{width:100%;height:100%;}
+.map-overlay{
+  position:absolute;top:16px;right:16px;z-index:50;
+  display:flex;flex-direction:column;gap:8px;
+}
+.map-ctrl-btn{
+  width:36px;height:36px;border-radius:9px;background:var(--white);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;
+  box-shadow:0 2px 8px var(--shadow);transition:all 0.2s;
+}
+.map-ctrl-btn:hover{background:var(--sage-pale);border-color:var(--sage);}
+.map-legend{
+  position:absolute;bottom:16px;left:16px;z-index:50;
+  background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 14px;
+  box-shadow:0 4px 16px var(--shadow);
+}
+.legend-title{font-size:10px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;}
+.legend-items{display:flex;flex-direction:column;gap:5px;}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-mid);}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* RIGHT PANEL */
+.right-panel{
+  width:380px;flex-shrink:0;background:var(--white);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.panel-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--cream);}
+.ptab{
+  flex:1;padding:10px 6px;text-align:center;font-size:11px;font-weight:700;
+  color:var(--stone);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;
+  letter-spacing:0.02em;
+}
+.ptab:hover{color:var(--text);}
+.ptab.active{color:var(--sage);border-bottom-color:var(--sage);background:var(--white);}
+.panel-content{flex:1;overflow-y:auto;padding:16px;}
+
+/* PARCEL DETAIL */
+.detail-hero{
+  background:linear-gradient(135deg,var(--forest) 0%,var(--forest-mid) 100%);
+  border-radius:14px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden;
+}
+.detail-hero::after{
+  content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;
+  background:rgba(255,255,255,0.04);border-radius:50%;
+}
+.detail-hero-top{display:flex;align-items:flex-start;justify-content:space-between;}
+.detail-title{font-size:16px;font-weight:800;color:#fff;}
+.detail-subtitle{font-size:11px;color:rgba(255,255,255,0.55);margin-top:2px;}
+.pulse-ring{text-align:center;margin:14px 0 10px;}
+.pulse-number{font-size:40px;font-weight:800;color:#fff;line-height:1;}
+.pulse-label{font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;}
+.pulse-bar{height:5px;border-radius:3px;background:rgba(255,255,255,0.15);margin:10px 0 6px;}
+.pulse-fill{height:100%;border-radius:3px;transition:width 0.8s ease;}
+.pulse-status{font-size:11px;font-weight:700;text-align:right;}
+.detail-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.dmeta{background:rgba(255,255,255,0.08);border-radius:9px;padding:8px 10px;}
+.dmeta-label{font-size:10px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.06em;}
+.dmeta-val{font-size:13px;font-weight:700;color:#fff;margin-top:2px;}
+
+/* AI EXPLANATION */
+.ai-explain{
+  background:var(--sage-pale);border:1px solid var(--border-mid);border-radius:12px;
+  padding:12px 14px;margin-bottom:12px;
+}
+.ai-explain-header{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+.ai-icon{width:24px;height:24px;background:var(--sage);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700;}
+.ai-label{font-size:11px;font-weight:700;color:var(--sage);text-transform:uppercase;letter-spacing:0.08em;}
+.ai-text{font-size:12px;color:var(--text-mid);line-height:1.6;font-style:italic;}
+
+/* SCORE BREAKDOWN */
+.section-label{font-size:11px;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;}
+.score-bars{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+.score-bar-row{display:flex;align-items:center;gap:8px;}
+.score-bar-label{font-size:11px;color:var(--text-mid);width:130px;flex-shrink:0;}
+.score-bar-track{flex:1;height:6px;background:var(--stone-pale);border-radius:3px;overflow:hidden;}
+.score-bar-fill{height:100%;border-radius:3px;}
+.score-bar-val{font-size:11px;font-weight:700;color:var(--text);width:28px;text-align:right;flex-shrink:0;}
+
+/* TIMELINE */
+.timeline-wrap{margin-bottom:14px;}
+.timeline-chart{display:flex;align-items:flex-end;gap:2px;height:50px;margin-top:6px;}
+.tbar{flex:1;border-radius:2px 2px 0 0;transition:all 0.3s;cursor:pointer;position:relative;}
+.tbar:hover::after{content:attr(data-tip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:9px;padding:2px 5px;border-radius:4px;white-space:nowrap;margin-bottom:3px;z-index:10;}
+.timeline-labels{display:flex;justify-content:space-between;margin-top:3px;}
+.timeline-labels span{font-size:9px;color:var(--stone-light);}
+
+/* BLOCKCHAIN */
+.chain-wrap{margin-bottom:14px;}
+.chain-item{
+  display:flex;gap:10px;padding:9px 0;position:relative;
+}
+.chain-item:not(:last-child)::after{
+  content:'';position:absolute;left:14px;top:30px;width:1px;height:calc(100% - 8px);
+  background:linear-gradient(to bottom,var(--sage-light),var(--border));
+}
+.chain-dot{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;border:2px solid;z-index:1;
+}
+.chain-green{background:#dcfce7;color:#16a34a;border-color:#86efac;}
+.chain-amber{background:#fef3c7;color:#d97706;border-color:#fcd34d;}
+.chain-blue{background:#dbeafe;color:#2563eb;border-color:#93c5fd;}
+.chain-body{flex:1;}
+.chain-title{font-size:12px;font-weight:700;color:var(--text);}
+.chain-hash{font-size:9px;color:var(--stone-light);font-family:monospace;margin-top:1px;}
+.chain-time{font-size:10px;color:var(--text-soft);margin-top:2px;}
+.chain-verified{display:inline-flex;align-items:center;gap:3px;font-size:9px;color:#16a34a;font-weight:700;margin-top:3px;}
+
+/* SATELLITE */
+.sat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.sat-panel{border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+.sat-img{width:100%;height:80px;object-fit:cover;display:block;position:relative;}
+.sat-canvas{width:100%;height:80px;display:block;}
+.sat-label{font-size:10px;font-weight:700;padding:5px 8px;background:var(--stone-pale);color:var(--text-mid);text-align:center;}
+.confidence-bar{background:var(--sage-pale);border-radius:9px;padding:10px 12px;margin-bottom:10px;}
+.conf-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.conf-label{font-size:11px;font-weight:700;color:var(--text);}
+.conf-val{font-size:18px;font-weight:800;color:var(--sage);}
+.conf-track{height:7px;background:var(--border);border-radius:4px;}
+.conf-fill{height:100%;border-radius:4px;background:linear-gradient(to right,var(--sage),var(--sage-light));}
+
+/* AI CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:100%;}
+.chat-messages{flex:1;overflow-y:auto;padding:4px 0;display:flex;flex-direction:column;gap:10px;}
+.msg{display:flex;gap:8px;max-width:100%;}
+.msg.user{flex-direction:row-reverse;}
+.msg-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.msg-ai-av{background:var(--sage);color:#fff;}
+.msg-user-av{background:var(--earth-light);color:#fff;}
+.msg-bubble{
+  padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.6;max-width:85%;
+}
+.msg.ai .msg-bubble{background:var(--sage-pale);color:var(--text);}
+.msg.user .msg-bubble{background:var(--forest);color:#fff;}
+.chat-input-row{display:flex;gap:8px;padding-top:12px;border-top:1px solid var(--border);margin-top:8px;}
+.chat-input{
+  flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;color:var(--text);
+  outline:none;resize:none;background:var(--white);
+}
+.chat-input:focus{border-color:var(--sage);}
+.chat-send{
+  width:34px;height:34px;border-radius:9px;background:var(--forest);color:#fff;border:none;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;
+  transition:all 0.2s;flex-shrink:0;
+}
+.chat-send:hover{background:var(--forest-mid);}
+
+/* ACTIONS */
+.actions-grid{display:flex;flex-direction:column;gap:8px;margin-top:6px;}
+.action-btn{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:11px;
+  border:1.5px solid var(--border);background:var(--cream);cursor:pointer;transition:all 0.2s;
+  text-align:left;width:100%;
+}
+.action-btn:hover{background:var(--sage-pale);border-color:var(--sage);}
+.action-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.action-body{flex:1;}
+.action-title{font-size:13px;font-weight:700;color:var(--text);}
+.action-desc{font-size:11px;color:var(--text-soft);margin-top:1px;}
+.action-arrow{font-size:14px;color:var(--stone-light);}
+
+/* ABANDONMENT */
+.abandon-card{background:var(--red-pale);border:1.5px solid #fca5a5;border-radius:12px;padding:14px;margin-bottom:12px;}
+.abandon-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.abandon-icon{font-size:20px;}
+.abandon-title{font-size:13px;font-weight:700;color:var(--red);}
+.abandon-prob{font-size:28px;font-weight:800;color:var(--red);}
+.abandon-label{font-size:10px;color:var(--red-mid);text-transform:uppercase;letter-spacing:0.06em;}
+.economic-row{display:flex;gap:8px;margin-top:10px;}
+.econ-chip{flex:1;background:var(--white);border-radius:8px;padding:8px 10px;text-align:center;border:1px solid #fca5a5;}
+.econ-val{font-size:15px;font-weight:800;color:var(--text);}
+.econ-label{font-size:9px;color:var(--stone);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;}
+
+/* NO PARCEL */
+.no-parcel{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:32px;color:var(--text-soft);}
+.no-parcel-icon{font-size:48px;margin-bottom:16px;opacity:0.4;}
+.no-parcel h3{font-size:15px;font-weight:700;color:var(--text-mid);margin-bottom:6px;}
+.no-parcel p{font-size:12px;line-height:1.6;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px;}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--forest);color:#fff;padding:10px 20px;border-radius:10px;
+  font-size:13px;font-weight:600;z-index:999;transition:transform 0.3s ease;
+  box-shadow:0 4px 20px rgba(0,0,0,0.2);
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* BLUR OVERLAY FOR NEARBY PARCELS */
+.blur-hint{
+  position:absolute;bottom:70px;right:16px;z-index:50;
+  background:rgba(45,74,46,0.85);color:#fff;padding:8px 12px;border-radius:10px;
+  font-size:11px;font-weight:600;backdrop-filter:blur(4px);
+}
+
+
+/* ADMIN-STYLE AI CHAT FOR FARMER PAGE */
+.ai-section{
+  padding:12px 0;
+}
+.chat-msgs{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  max-height:300px;
+  overflow-y:auto;
+  margin-bottom:10px;
+}
+.chat-msgs::-webkit-scrollbar{width:3px;}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--border-mid);}
+.cmsg{
+  padding:8px 10px;
+  border-radius:8px;
+  font-size:12px;
+  line-height:1.5;
+}
+.cmsg.ai{
+  background:var(--sage-pale);
+  color:var(--text-mid);
+  border-radius:8px 8px 8px 2px;
+}
+.cmsg.user{
+  background:var(--forest);
+  color:#fff;
+  border-radius:8px 8px 2px 8px;
+  align-self:flex-end;
+}
+.chat-input-row{
+  display:flex;
+  gap:6px;
+  padding-top:0;
+  border-top:none;
+  margin-top:0;
+}
+.chat-input-row input{
+  flex:1;
+  padding:8px 10px;
+  border:1.5px solid var(--border);
+  border-radius:7px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:12px;
+  color:var(--text);
+  background:var(--white);
+  outline:none;
+}
+.chat-input-row input:focus{border-color:var(--sage);}
+.chat-send{
+  width:auto;
+  height:auto;
+  padding:8px 12px;
+  background:var(--forest);
+  color:#fff;
+  border:none;
+  border-radius:7px;
+  font-size:12px;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.chat-send:hover{background:var(--forest-mid);}
+.chat-suggestions{
+  margin-top:8px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px;
+}
+.chat-suggestions button{
+  padding:4px 8px;
+  background:var(--sage-pale);
+  border:1px solid var(--border-mid);
+  border-radius:5px;
+  font-size:10px;
+  cursor:pointer;
+  color:var(--forest);
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.chat-suggestions button:hover{
+  background:var(--forest);
+  color:#fff;
+}
+
+/* ===== RESPONSIVE ===== */
+
+/* Mobile bottom nav */
+.mobile-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:var(--forest);border-top:1px solid rgba(255,255,255,0.1);
+  height:56px;
+}
+.mobile-nav-inner{
+  display:flex;height:100%;
+}
+.mnav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:transparent;border:none;cursor:pointer;
+  color:rgba(255,255,255,0.55);transition:color 0.2s;padding:4px 0;
+}
+.mnav-btn.active{color:#fff;}
+.mnav-btn .mnav-icon{font-size:18px;line-height:1;}
+.mnav-btn .mnav-label{font-size:9px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
+
+/* Tablet (≤1024px): hide right panel by default, narrower sidebar */
+@media (max-width:1024px){
+  .sidebar{width:260px;}
+  .right-panel{width:320px;}
+}
+
+/* Small tablet / large phone landscape (≤768px): two-pane with bottom sheet */
+@media (max-width:768px){
+  :root{--nav-h:52px;}
+  html,body{overflow:hidden;}
+
+  /* Compact nav */
+  .nav{padding:0 14px;}
+  .nav-tag{display:none;}
+  .nav-center{display:none;}
+  .nav-uname{display:none;}
+  .pulse-txt{display:none;}
+  .pulse-badge{padding:4px 8px;}
+
+  /* App fills screen, bottom nav takes 56px */
+  .app{
+    flex-direction:column;
+    height:calc(100vh - var(--nav-h));
+    padding-top:0;
+    margin-top:var(--nav-h);
+  }
+
+  /* Each panel is a full-screen "view", toggled via JS */
+  .sidebar{
+    width:100%;border-right:none;border-bottom:1px solid var(--border);
+    position:fixed;top:var(--nav-h);left:0;right:0;bottom:56px;
+    z-index:90;
+    transition:transform 0.3s ease;
+    transform:translateX(-100%);
+  }
+  .sidebar.mobile-visible{transform:translateX(0);}
+
+  .map-container{
+    position:fixed;top:var(--nav-h);left:0;right:0;bottom:56px;
+    z-index:80;
+    transition:opacity 0.2s;
+  }
+  .map-container.mobile-hidden{opacity:0;pointer-events:none;}
+
+  .right-panel{
+    width:100%;border-left:none;
+    position:fixed;top:var(--nav-h);left:0;right:0;bottom:56px;
+    z-index:90;
+    transition:transform 0.3s ease;
+    transform:translateX(100%);
+  }
+  .right-panel.mobile-visible{transform:translateX(0);}
+
+  /* Show mobile nav */
+  .mobile-nav{display:block;}
+
+  /* Blur hint above bottom nav */
+  .blur-hint{bottom:66px;}
+  .map-legend{bottom:66px;}
+
+  /* Panel content padding */
+  .panel-content{padding:12px;}
+  .detail-hero{padding:14px;}
+  .detail-meta{grid-template-columns:1fr 1fr;}
+}
+
+/* Small phones (≤480px) */
+@media (max-width:480px){
+  :root{--nav-h:48px;}
+  .nav-name{font-size:16px;}
+  .nav-hex{width:30px;height:30px;font-size:14px;}
+
+  .panel-tabs .ptab{font-size:10px;padding:8px 4px;}
+
+  .detail-meta{grid-template-columns:1fr 1fr;}
+  .sat-grid{grid-template-columns:1fr 1fr;}
+
+  .economic-row{flex-wrap:wrap;}
+  .econ-chip{min-width:calc(50% - 4px);}
+
+  .score-bar-label{width:100px;font-size:10px;}
+
+  .action-btn{padding:10px 12px;}
+  .action-title{font-size:12px;}
+  .action-desc{font-size:10px;}
+
+  .parcel-stats{flex-wrap:wrap;gap:4px;}
+
+  /* Make chain hash shorter */
+  .chain-hash{display:none;}
+}
+
+/* Active tab indicator on mobile nav — pulse badge */
+.mnav-badge{
+  width:6px;height:6px;border-radius:50%;background:#4ade80;
+  position:absolute;top:6px;right:calc(50% - 14px);
+}
+
+.logo-wrap{
+  overflow:hidden;
+  padding:0;
+}
+
+.logo-wrap img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:9px;
+}
+.logout-btn{
+  padding:7px 14px;
+  border:none;
+  border-radius:8px;
+  background:rgba(255,255,255,0.12);
+  color:#fff;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+  transition:all 0.2s;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+
+.logout-btn:hover{
+  background:#dc2626;
+}
+</style>
+</head>
+<body>
+<div class="demo-nav" aria-label="HTML demo pages">
+  <a href="index.html">Login</a>
+  <a class="active" href="farmer.html">Farmer</a>
+  <a href="admin.html">Admin</a>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand">
+<div class="nav-hex logo-wrap">
+  <img src="/logo.svg" alt="TOKA Logo">
+</div>    <div>
+      <div class="nav-name">Toka ime</div>
+      <div class="nav-tag">Sistemi i Shëndetit të Tokës</div>
+    </div>
+  </div>
+<div class="nav-right">
+  <div class="pulse-badge">
+    <div class="pulse-dot"></div>
+    <span class="pulse-txt">3 parcela aktive</span>
+  </div>
+
+  <div class="nav-user">
+    <div class="nav-avatar">AB</div>
+    <div class="nav-uname" id="nav-username">Agim Berisha</div>
+  </div>
+
+  <button class="logout-btn" onclick="window.location.href='index.html'">
+    Dil
+  </button>
+</div>
+</nav>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title" id="parcel-count-title">Parcelet Tua — 5 gjithsej</div>
+      <div class="sidebar-sub">Klikoni për të parë detajet</div>
+    </div>
+    <div class="parcel-list" id="parcel-list"></div>
+  </div>
+
+  <!-- MAP -->
+  <div class="map-container" id="map-view">
+    <div id="map"></div>
+    <div class="map-overlay">
+      <div class="map-ctrl-btn" onclick="resetMapView()" title="Rivendos pamjen">⟳</div>
+      <div class="map-ctrl-btn" onclick="toggleSatellite()" title="Shtresa satelit" id="sat-toggle">🛰️</div>
+    </div>
+    <div class="map-legend">
+      <div class="legend-title">Land Pulse</div>
+      <div class="legend-items">
+        <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>Aktiv (70–100)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Nën stres (40–69)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Në rrezik (0–39)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(107,114,128,0.3)"></div>Parcela të tjera</div>
+      </div>
+    </div>
+    <div class="blur-hint">🔒 Parcelet e fqinjëve janë të fshehura</div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="panel-tabs">
+      <div class="ptab active" onclick="switchTab('detail')" id="tab-detail">📋 Detajet</div>
+      <div class="ptab" onclick="switchTab('satellite')" id="tab-satellite">🛰️ Satelit</div>
+      <div class="ptab" onclick="switchTab('chain')" id="tab-chain">⛓️ Histori</div>
+      <div class="ptab" onclick="switchTab('ai')" id="tab-ai">🤖 Këshilltar</div>
+    </div>
+    <div class="panel-content" id="panel-content">
+      <div class="no-parcel">
+        <div class="no-parcel-icon">🌱</div>
+        <h3>Zgjidhni një parcelë</h3>
+        <p>Klikoni mbi një parcelë në hartë ose listën majtas për të parë të dhënat e plota, historikun blockchain, dhe analizën satelitore.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-nav" id="mobile-nav">
+  <div class="mobile-nav-inner">
+    <button class="mnav-btn" id="mnav-list" onclick="mobileView('list')">
+      <span class="mnav-icon">🗂️</span>
+      <span class="mnav-label">Parcelet</span>
+    </button>
+    <button class="mnav-btn active" id="mnav-map" onclick="mobileView('map')">
+      <span class="mnav-icon">🗺️</span>
+      <span class="mnav-label">Harta</span>
+    </button>
+    <button class="mnav-btn" id="mnav-detail" onclick="mobileView('detail')">
+      <span class="mnav-icon">📋</span>
+      <span class="mnav-label">Detajet</span>
+    </button>
+  </div>
+</nav>
+
+<script>
+// ===== DATA =====
+const USER = JSON.parse(localStorage.getItem('toka_user') || '{"name":"Agim Berisha","muni":"Prizren","role":"farmer"}');
+
+const PARCELS = [
+  {
+    id:'PZ-2201-A',name:'Ara e Madhe',location:'Prizren, Lugina',
+    area:2.4,crop:'Grurë & Misër',zone:'Bujqësore',
+    pulse:78,abandon:12,
+    inactivity:20,seasonal:18,engagement:16,history:8,
+    lastActivity:'15 Prill 2025',nextAction:'Korrja — Gusht 2025',
+    aiExplain:'Kjo parcelë po tregon shëndet të mirë me aktivitet të rregullt korrjeje dhe lagështirë të mjaftueshme të tokës; monitoroni reshjet gjatë muajve të verës.',
+    blockchain:[
+      {type:'harvest',label:'Korrja e grurit',time:'15 Prill 2025',hash:'0x4f2a...c8e1',color:'chain-green'},
+      {type:'inspect',label:'Inspektim AKK',time:'2 Mars 2025',hash:'0x9b1d...a3f7',color:'chain-blue'},
+      {type:'plant',label:'Mbjellja e misrit',time:'12 Nëntor 2024',hash:'0xd5e8...2b4c',color:'chain-amber'},
+      {type:'harvest',label:'Korrja e vjeshtës',time:'20 Shtator 2024',hash:'0x7c3f...e6a2',color:'chain-green'},
+    ],
+    satellite:{reported:'Aktivitet normal bujqësor',detected:'Kultivim aktiv i grurit',confidence:87,ndviOwn:0.68,ndviAvg:0.71},
+    timeline:[65,70,72,68,75,78,80,77,74,78,76,72,70,73,76,79,78,75,80,77,79,78,80,78],
+    lat:42.215, lng:20.741,
+  },
+  {
+    id:'PZ-2202-B',name:'Livadhi i Vogël',location:'Prizren, Malësi',
+    area:0.8,crop:'Livadh / Kullotë',zone:'Bujqësore',
+    pulse:45,abandon:38,
+    inactivity:55,seasonal:35,engagement:42,history:25,
+    lastActivity:'3 Janar 2025',nextAction:'Kositja — Qershor 2025',
+    aiExplain:'Mosaktiviteti i fundit dhe boshllëku sezonal sugjerojnë mungesë të kujdesit; ndërhyrja e hershme me kositje dhe plehërim mund të parandalojë braktisjen.',
+    blockchain:[
+      {type:'inspect',label:'Inspektim rutinë',time:'3 Janar 2025',hash:'0x2e7b...d9c4',color:'chain-blue'},
+      {type:'note',label:'Shënim: mungon ujitja',time:'15 Nëntor 2024',hash:'0x6a4c...f1e8',color:'chain-amber'},
+      {type:'harvest',label:'Kositja e fundit',time:'10 Qershor 2024',hash:'0xb3d1...7a5f',color:'chain-green'},
+    ],
+    satellite:{reported:'Livadh i kositur',detected:'Bimësi e pakët, thatësi e mundshme',confidence:62,ndviOwn:0.32,ndviAvg:0.58},
+    timeline:[60,58,55,52,50,48,45,42,45,47,44,40,38,42,45,43,40,42,45,44,43,45,46,45],
+    lat:42.242, lng:20.772,
+  },
+  {
+    id:'PZ-2203-C',name:'Kopshti Familjar',location:'Prizren, Qendër',
+    area:0.3,crop:'Perime & Fruta',zone:'Banimore/Bujqësor',
+    pulse:91,abandon:4,
+    inactivity:8,seasonal:7,engagement:5,history:3,
+    lastActivity:'18 Maj 2025',nextAction:'Ujitja — javore',
+    aiExplain:'Kopsht shembullor me aktivitet intensiv dhe diversitet të lartë kulturash; vazhdo me ujitjen javore dhe shtimi i komposterit do ta mbajë tokën në gjendjen optimale.',
+    blockchain:[
+      {type:'harvest',label:'Korrja e domates',time:'18 Maj 2025',hash:'0x8f3e...c2b7',color:'chain-green'},
+      {type:'plant',label:'Mbjellja e trangujve',time:'2 Maj 2025',hash:'0x1d6a...e4f9',color:'chain-amber'},
+      {type:'plant',label:'Mbjellja e specit',time:'28 Prill 2025',hash:'0x5c9b...3d2e',color:'chain-amber'},
+      {type:'inspect',label:'Analizë toke — AKK',time:'15 Mars 2025',hash:'0xe2f7...8a1c',color:'chain-blue'},
+      {type:'harvest',label:'Korrja e vjeshtës',time:'5 Tetor 2024',hash:'0x4b8d...7f3a',color:'chain-green'},
+    ],
+    satellite:{reported:'Kopsht aktiv me perime',detected:'Bimësi e dendur, aktivitet i lartë',confidence:94,ndviOwn:0.82,ndviAvg:0.79},
+    timeline:[80,83,85,87,86,88,90,89,88,91,90,89,87,88,90,91,92,91,90,91,92,91,91,91],
+    lat:42.224, lng:20.758,
+  },
+  {
+    id:'PZ-2204-D',name:'Fusha e Jugut',location:'Prizren, Dragash',
+    area:1.9,crop:'Elb & Misër',zone:'Bujqësore',
+    pulse:32,abandon:67,
+    inactivity:75,seasonal:68,engagement:72,history:55,
+    lastActivity:'12 Gusht 2024',nextAction:'Kërkon intervenim urgjent',
+    aiExplain:'Kjo parcelë ka qenë inaktive për mbi 9 muaj dhe ka devijim të madh sezonal nga mesataret rajonale; rreziku i braktisjes është i lartë — kontaktoni zyrën komunale.',
+    blockchain:[
+      {type:'alert',label:'Alarm braktisje — sistemi',time:'1 Mars 2025',hash:'0x9e2c...5b8f',color:'chain-amber'},
+      {type:'inspect',label:'Inspektim i fundit',time:'12 Gusht 2024',hash:'0x3d7a...e1c6',color:'chain-blue'},
+      {type:'harvest',label:'Korrja e fundit',time:'20 Korrik 2024',hash:'0xf4b9...2d3e',color:'chain-green'},
+    ],
+    satellite:{reported:'Tokë bujqësore aktive',detected:'Tokë e lënë djerrë, bimësi e egër',confidence:79,ndviOwn:0.18,ndviAvg:0.62},
+    timeline:[65,60,55,50,45,40,38,35,30,32,28,25,28,30,28,25,30,32,30,28,32,31,32,32],
+    lat:42.191, lng:20.716,
+  },
+  {
+    id:'PZ-2205-E',name:'Toka e Re',location:'Prizren, Veriu',
+    area:0.6,crop:'Pemëtari',zone:'Bujqësore',
+    pulse:63,abandon:22,
+    inactivity:35,seasonal:28,engagement:30,history:18,
+    lastActivity:'22 Prill 2025',nextAction:'Trajtimi kundër sëmundjeve — Qershor',
+    aiExplain:'Orchard shows moderate pulse with some seasonal delay in treatment cycles; a fungicide application before June rains would significantly improve fruit yield prospects.',
+    blockchain:[
+      {type:'plant',label:'Trajtim pesticide',time:'22 Prill 2025',hash:'0x7a3f...d9e2',color:'chain-amber'},
+      {type:'inspect',label:'Inspektim pemësh',time:'10 Mars 2025',hash:'0x2b6c...f4a8',color:'chain-blue'},
+      {type:'harvest',label:'Korrja e frutave',time:'15 Shtator 2024',hash:'0xc8e5...1b7d',color:'chain-green'},
+    ],
+    satellite:{reported:'Pemëtari aktive',detected:'Mbulim i mesëm bimësor, stres i lehtë',confidence:74,ndviOwn:0.51,ndviAvg:0.58},
+    timeline:[55,58,60,62,58,55,60,63,62,60,63,62,60,61,63,62,63,62,63,63,62,63,63,63],
+    lat:42.233, lng:20.731,
+  }
+];
+
+let activeParcel = null;
+
+function getHealthColor(pulse){
+  if(pulse >= 75) return '#22c55e';
+  if(pulse >= 45) return '#eab308';
+  return '#ef4444';
+}
+
+const parcelLayers = [];
+
+let activeTab = 'detail';
+let map = null;
+let layers = {};
+let satelliteMode = false;
+let chatHistory = [];
+
+// ===== INIT =====
+window.onload = () => {
+  document.getElementById('nav-username').textContent = USER.name || 'Agim Berisha';
+  renderParcelList();
+  initMap();
+};
+
+function renderParcelList(){
+  const el = document.getElementById('parcel-list');
+  el.innerHTML = PARCELS.map((p,i) => {
+    const chipClass = p.pulse>=70?'chip-green':p.pulse>=40?'chip-amber':'chip-red';
+    const icon = p.pulse>=70?'✅':p.pulse>=40?'⚠️':'🔴';
+    const statClass = p.abandon>50?'stat-danger':p.abandon>25?'stat-warn':'';
+    return `<div class="parcel-item" id="pitem-${i}" onclick="selectParcel(${i})">
+      <div class="parcel-row1">
+        <div class="parcel-id">${p.id}</div>
+        <div class="parcel-pulse-chip ${chipClass}">${icon} ${p.pulse}</div>
+      </div>
+      <div class="parcel-name">${p.name}</div>
+      <div class="parcel-loc">📍 ${p.location}</div>
+      <div class="parcel-stats">
+        <span class="parcel-stat">${p.area} ha</span>
+        <span class="parcel-stat">${p.crop}</span>
+        <span class="parcel-stat ${statClass}">Braktisje: ${p.abandon}%</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function initMap(){
+  map = L.map('map', {zoomControl:false, attributionControl:false}).setView([42.215, 20.745], 13);
+  
+  L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  {
+    attribution: 'Tiles © Esri',
+    maxZoom: 19
+  }
+).addTo(map);
+  
+  // Add a blur/grey overlay for the whole area first
+  // Draw 50+ simulated nearby parcels (blurred/greyed)
+  for(let i=0; i<60; i++){
+    const lat = 42.18 + Math.random()*0.08;
+    const lng = 20.72 + Math.random()*0.07;
+    const size = 0.003 + Math.random()*0.005;
+    const poly = generateParcelShape(lat, lng, size);
+    L.polygon(poly, {
+      fillColor:'#94a3b8',fillOpacity:0.25,
+      color:'#94a3b8',weight:1,opacity:0.3,
+      interactive:false
+    }).addTo(map);
+  }
+
+  // Draw own parcels
+  PARCELS.forEach((p,i) => {
+    const color = p.pulse>=70?'#22c55e':p.pulse>=40?'#f59e0b':'#ef4444';
+    const poly = generateParcelShape(p.lat, p.lng, 0.0035 + p.area*0.0012);
+    const layer = L.polygon(poly, {
+      fillColor:color,fillOpacity:0.55,
+      color:color,weight:2.5,opacity:0.9,
+    }).addTo(map);
+    
+    layer.bindTooltip(`<b>${p.name}</b><br>Pulse: ${p.pulse} | ${p.area} ha`, {sticky:true});
+    layer.on('click', () => selectParcel(i));
+    
+    // Pulse label
+    const icon = L.divIcon({
+      className:'',
+      html:`<div style="background:${color};color:white;font-size:11px;font-weight:800;padding:2px 7px;border-radius:20px;box-shadow:0 2px 6px rgba(0,0,0,0.2);white-space:nowrap;">${p.pulse}</div>`,
+      iconAnchor:[20,12]
+    });
+    L.marker([p.lat, p.lng], {icon, interactive:false}).addTo(map);
+    
+    layers[i] = layer;
+  });
+
+  L.control.zoom({position:'bottomright'}).addTo(map);
+}
+
+function generateParcelShape(lat, lng, size){
+  const pts = [];
+  const sides = 4 + Math.floor(Math.random()*3);
+  for(let i=0; i<sides; i++){
+    const angle = (i/sides)*Math.PI*2;
+    const r = size*(0.7+Math.random()*0.6);
+    pts.push([lat + Math.sin(angle)*r, lng + Math.cos(angle)*r*1.5]);
+  }
+  return pts;
+}
+
+function resetMapView(){ map.setView([42.215, 20.745], 13); }
+
+function toggleSatellite(){
+  satelliteMode = !satelliteMode;
+  const btn = document.getElementById('sat-toggle');
+  if(satelliteMode){
+    btn.style.background='var(--sage-pale)';btn.style.borderColor='var(--sage)';
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19}).addTo(map);
+  } else {
+    btn.style.background='';btn.style.borderColor='';
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+  }
+}
+
+function selectParcel(i){
+  activeParcel = i;
+  document.querySelectorAll('.parcel-item').forEach((el,j)=>el.classList.toggle('active',j===i));
+  
+  if(layers[i]){
+    map.flyTo([PARCELS[i].lat, PARCELS[i].lng], 15, {duration:0.8});
+    layers[i].openTooltip();
+  }
+  
+  renderPanel();
+}
+
+function switchTab(tab){
+  activeTab = tab;
+  ['detail','satellite','chain','ai'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+  });
+  renderPanel();
+}
+
+function renderPanel(){
+  if(activeParcel===null) return;
+  const p = PARCELS[activeParcel];
+  const el = document.getElementById('panel-content');
+  
+  if(activeTab==='detail') el.innerHTML = renderDetail(p);
+  else if(activeTab==='satellite') el.innerHTML = renderSatellite(p);
+  else if(activeTab==='chain') el.innerHTML = renderChain(p);
+  else if(activeTab==='ai') { el.innerHTML = renderAI(p); initChat(p); }
+}
+
+function renderDetail(p){
+  const color = p.pulse>=70?'#22c55e':p.pulse>=40?'#f59e0b':'#ef4444';
+  const statusText = p.pulse>=70?'Shëndet i mirë ✓':p.pulse>=40?'Nën stres ⚠️':'Rrezik i lartë 🔴';
+  const statusColor = p.pulse>=70?'#86efac':p.pulse>=40?'#fcd34d':'#fca5a5';
+  
+  const timelineHTML = p.timeline.map((v,i)=>{
+    const h = Math.max(4, (v/100)*46);
+    const c = v>=70?'#22c55e':v>=40?'#f59e0b':'#ef4444';
+    const mo = ['Qer24','','','Tet24','','','Jan25','','','Prill25','','Maj25'][Math.floor(i/2)]||'';
+    return `<div class="tbar" style="height:${h}px;background:${c};opacity:${i===p.timeline.length-1?1:0.7}" data-tip="Muaji ${i+1}: ${v}"></div>`;
+  }).join('');
+  
+  return `
+  <div class="detail-hero">
+    <div class="detail-hero-top">
+      <div>
+        <div class="detail-title">${p.name}</div>
+        <div class="detail-subtitle">${p.id} · ${p.location}</div>
+      </div>
+      <div style="font-size:20px">🌾</div>
+    </div>
+    <div class="pulse-ring">
+      <div class="pulse-number">${p.pulse}</div>
+      <div class="pulse-label">Land Pulse Score</div>
+    </div>
+    <div class="pulse-bar"><div class="pulse-fill" style="width:${p.pulse}%;background:${color}"></div></div>
+    <div class="pulse-status" style="color:${statusColor}">${statusText}</div>
+    <div class="detail-meta">
+      <div class="dmeta"><div class="dmeta-label">Sipërfaqja</div><div class="dmeta-val">${p.area} ha</div></div>
+      <div class="dmeta"><div class="dmeta-label">Kultura</div><div class="dmeta-val">${p.crop}</div></div>
+      <div class="dmeta"><div class="dmeta-label">Aktiviteti i fundit</div><div class="dmeta-val">${p.lastActivity}</div></div>
+      <div class="dmeta"><div class="dmeta-label">Hapi tjetër</div><div class="dmeta-val">${p.nextAction}</div></div>
+    </div>
+  </div>
+
+  <div class="ai-explain">
+    <div class="ai-explain-header">
+      <div class="ai-icon">AI</div>
+      <div class="ai-label">Shpjegimi i AI</div>
+    </div>
+    <div class="ai-text">"${p.aiExplain}"</div>
+  </div>
+
+  <div class="abandon-card">
+    <div class="abandon-header"><div class="abandon-icon">💶</div><div class="abandon-title">Rrezik Ekonomik</div></div>
+    <div class="abandon-prob">€${Math.round(p.area*1200*(100-p.pulse)/100).toLocaleString()}</div>
+    <div class="abandon-label">Humbje e mundshme ekonomike / vit</div>
+    <div class="economic-row">
+      <div class="econ-chip"><div class="econ-val">${Math.round((100-p.pulse)*0.8)}%</div><div class="econ-label">Rreziku ekonomik</div></div>
+      <div class="econ-chip"><div class="econ-val">€${Math.round(p.area*1200).toLocaleString()}</div><div class="econ-label">Potenciali vjetor</div></div>
+    </div>
+  </div>
+
+  <div class="section-label">Ndarja e Pulse Score (40/30/20/10)</div>
+  <div class="score-bars">
+    <div class="score-bar-row">
+      <div class="score-bar-label">Mosaktiviteti (40%)</div>
+      <div class="score-bar-track"><div class="score-bar-fill" style="width:${100-p.inactivity}%;background:#22c55e"></div></div>
+      <div class="score-bar-val">${100-p.inactivity}</div>
+    </div>
+    <div class="score-bar-row">
+      <div class="score-bar-label">Devijimi sezonal (30%)</div>
+      <div class="score-bar-track"><div class="score-bar-fill" style="width:${100-p.seasonal}%;background:#f59e0b"></div></div>
+      <div class="score-bar-val">${100-p.seasonal}</div>
+    </div>
+    <div class="score-bar-row">
+      <div class="score-bar-label">Hendeku angazhimit (20%)</div>
+      <div class="score-bar-track"><div class="score-bar-fill" style="width:${100-p.engagement}%;background:#3b82f6"></div></div>
+      <div class="score-bar-val">${100-p.engagement}</div>
+    </div>
+    <div class="score-bar-row">
+      <div class="score-bar-label">Historiku i rrezikut (10%)</div>
+      <div class="score-bar-track"><div class="score-bar-fill" style="width:${100-p.history}%;background:#8b5cf6"></div></div>
+      <div class="score-bar-val">${100-p.history}</div>
+    </div>
+  </div>
+
+  <div class="section-label">Gjendja 24 muajt e fundit</div>
+  <div class="timeline-wrap">
+    <div class="timeline-chart">${timelineHTML}</div>
+    <div class="timeline-labels"><span>Qer 2023</span><span>Jan 2024</span><span>Qer 2024</span><span>Jan 2025</span><span>Sot</span></div>
+  </div>
+
+  <div class="section-label" style="margin-top:6px">Veprimet</div>
+  <div class="actions-grid">
+    <button class="action-btn" onclick="requestSubsidyStatus()">
+      <div class="action-icon" style="background:#dcfce7">💬</div>
+      <div class="action-body"><div class="action-title">Shiko Statusin eKosova</div><div class="action-desc">Shiko statusin e subvencioneve</div></div>
+      <div class="action-arrow">→</div>
+    </button>
+    <button class="action-btn" onclick="contactOffice()">
+      <div class="action-icon" style="background:#dbeafe">🏛️</div>
+      <div class="action-body"><div class="action-title">Kontakto Zyrën Komunale</div><div class="action-desc">Kërkesë mbështetje ose inspektim</div></div>
+      <div class="action-arrow">→</div>
+    </button>
+    <button class="action-btn" onclick="switchTab('ai')">
+      <div class="action-icon" style="background:#fef3c7">🤖</div>
+      <div class="action-body"><div class="action-title">Pyet Këshilltarin AI</div><div class="action-desc">Asistencë bujqësore në shqip</div></div>
+      <div class="action-arrow">→</div>
+    </button>
+  </div>`;
+}
+
+function renderSatellite(p){
+  const match = p.satellite.confidence>=80?'🟢 Konfirmuar':p.satellite.confidence>=60?'🟡 Devijim i lehtë':'🔴 Mospërputhje';
+  
+  return `
+  <div style="margin-bottom:12px">
+    <div class="section-label">Krahasimi Satelit × Raportimi</div>
+    <div style="font-size:11px;color:var(--text-soft);margin-bottom:10px;line-height:1.5;">
+      Sistemi krahason aktivitetin e raportuar nga fermeri me imazhet Sentinel-2 dhe modelet sezonale AI.
+    </div>
+  </div>
+  
+  <div class="sat-grid">
+    <div class="sat-panel">
+      <canvas class="sat-canvas" id="sat-reported" width="160" height="80"></canvas>
+      <div class="sat-label">📝 Raportuar nga fermeri</div>
+    </div>
+    <div class="sat-panel">
+      <canvas class="sat-canvas" id="sat-sentinel" width="160" height="80"></canvas>
+      <div class="sat-label">🛰️ Sentinel-2 AI</div>
+    </div>
+  </div>
+
+  <div class="confidence-bar">
+    <div class="conf-row">
+      <div class="conf-label">Shkalla e besueshmërisë AI</div>
+      <div class="conf-val">${p.satellite.confidence}%</div>
+    </div>
+    <div class="conf-track"><div class="conf-fill" style="width:${p.satellite.confidence}%"></div></div>
+    <div style="margin-top:6px;font-size:11px;color:var(--text-mid)">${match}</div>
+  </div>
+
+  <div style="background:var(--cream);border-radius:11px;padding:12px;margin-bottom:12px;">
+    <div class="section-label">Të dhënat NDVI (Indeksi i Vegjetacionit)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">
+      <div style="text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:${p.satellite.ndviOwn>0.5?'var(--sage)':'var(--amber)'}">${p.satellite.ndviOwn}</div>
+        <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.06em;">Parcela jote</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:var(--text-mid)">${p.satellite.ndviAvg}</div>
+        <div style="font-size:10px;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.06em;">Mesatarja rajonale</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--sage-pale);border:1px solid var(--border-mid);border-radius:11px;padding:12px;">
+    <div style="font-size:11px;font-weight:700;color:var(--sage);margin-bottom:6px;">💡 Vlerësimi i AI</div>
+    <div style="font-size:11px;color:var(--text-mid);line-height:1.6;margin-bottom:8px;">
+      <strong>Fermeri raporton:</strong> "${p.satellite.reported}"<br>
+      <strong>AI detekton:</strong> "${p.satellite.detected}"
+    </div>
+    ${p.satellite.confidence<75 ? `<div style="background:#fef3c7;border-radius:7px;padding:8px 10px;font-size:11px;color:#92400e;">
+      ⚠️ Mospërputhje e lehtë e identifikuar. Ju sugjerojmë të rifreskoni raportin ose të kontaktoni zyrën komunale për sqarim.
+    </div>` : `<div style="background:#dcfce7;border-radius:7px;padding:8px 10px;font-size:11px;color:#166534;">
+      ✅ Aktiviteti i raportuar konfirmohet nga të dhënat satelitore. Vazhdoni kështu!
+    </div>`}
+  </div>`;
+}
+
+function renderChain(p){
+  const chainHTML = p.blockchain.map(b => `
+    <div class="chain-item">
+      <div class="chain-dot ${b.color}">
+        ${b.type==='harvest'?'🌾':b.type==='plant'?'🌱':b.type==='inspect'?'🔍':b.type==='alert'?'⚠️':'📝'}
+      </div>
+      <div class="chain-body">
+        <div class="chain-title">${b.label}</div>
+        <div class="chain-hash">Hash: ${b.hash}</div>
+        <div class="chain-time">📅 ${b.time}</div>
+        <div class="chain-verified">✓ Verifikuar në blockchain — i pandryshueshëm</div>
+      </div>
+    </div>
+  `).join('');
+  
+  return `
+  <div style="margin-bottom:12px">
+    <div style="background:linear-gradient(135deg,#1e3a5f,#1e40af);border-radius:12px;padding:14px;">
+      <div style="color:rgba(255,255,255,0.6);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Regjistri Blockchain</div>
+      <div style="color:#fff;font-size:14px;font-weight:700;">Çdo veprim — i pandryshueshëm</div>
+      <div style="color:rgba(255,255,255,0.55);font-size:11px;margin-top:4px;line-height:1.5;">
+        Aktivitetet e tokës ruhen si transaksione të lidhura kriptografikisht. Asnjë rekord nuk mund të fshihet ose ndryshohet.
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <div style="background:rgba(255,255,255,0.1);border-radius:7px;padding:6px 10px;text-align:center;">
+          <div style="font-size:16px;font-weight:800;color:#fff">${p.blockchain.length}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);text-transform:uppercase">Rekordet</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:7px;padding:6px 10px;text-align:center;">
+          <div style="font-size:16px;font-weight:800;color:#4ade80">✓</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);text-transform:uppercase">Verifikuar</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);border-radius:7px;padding:6px 10px;flex:1;text-align:center;">
+          <div style="font-size:11px;font-weight:700;color:#93c5fd">Kosovo Land Chain</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);text-transform:uppercase">Testnet aktiv</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section-label">Historia e Aktivitetit</div>
+  <div class="chain-wrap">${chainHTML}</div>
+  
+  <button class="action-btn" onclick="showToast('📋 Raporti blockchain u gjenerua dhe u dërgua në email!')">
+    <div class="action-icon" style="background:#dbeafe">📄</div>
+    <div class="action-body"><div class="action-title">Shkarko Raportin Blockchain</div><div class="action-desc">PDF i firmosur kriptografikisht</div></div>
+    <div class="action-arrow">→</div>
+  </button>`;
+}
+
+function renderAI(p){
+  const status = p.pulse>=70?'në gjendje të mirë':p.pulse>=40?'nën stres':'në rrezik';
+  return `
+    <div class="ai-section">
+      <div class="section-label">🤖 Këshilltar AI Bujqësor — Shqip</div>
+
+      <div class="chat-msgs" id="chat-msgs">
+        <div class="cmsg ai">
+          Mirëdita! Jam këshilltari juaj AI për parcelën <strong>${p.name}</strong>.
+          Land Pulse aktual është <strong>${p.pulse}/100</strong> dhe parcela është <strong>${status}</strong>.
+          Si mund t'ju ndihmoj sot?
+        </div>
+      </div>
+
+      <div class="chat-input-row">
+        <input
+          type="text"
+          id="chat-input"
+          placeholder="Pyesni diçka për parcelën tuaj…"
+          onkeydown="if(event.key==='Enter')sendChat()"
+        >
+        <button class="chat-send" onclick="sendChat()">➤</button>
+      </div>
+
+      <div class="chat-suggestions">
+        <button onclick="setChat('Çfarë duhet të mbjell këtë sezon?')">🌱 Mbjellja</button>
+        <button onclick="setChat('Si ta rris Land Pulse tim?')">💓 Land Pulse</button>
+        <button onclick="setChat('A kam rrezik për braktisje?')">⚠️ Rreziku</button>
+        <button onclick="setChat('Çfarë veprimi duhet të bëj tani?')">✅ Hapi tjetër</button>
+      </div>
+    </div>`;
+}
+
+function setChat(msg){
+  const input = document.getElementById('chat-input');
+  if(!input) return;
+  input.value = msg;
+  sendChat();
+}
+
+function sendChat(){
+  const input = document.getElementById('chat-input');
+  const msgs = document.getElementById('chat-msgs');
+  if(!input || !msgs || activeParcel===null) return;
+
+  const q = input.value.trim();
+  if(!q) return;
+
+  input.value = '';
+
+  const userMsg = document.createElement('div');
+  userMsg.className = 'cmsg user';
+  userMsg.textContent = q;
+  msgs.appendChild(userMsg);
+
+  const p = PARCELS[activeParcel];
+  const aiMsg = document.createElement('div');
+  aiMsg.className = 'cmsg ai';
+
+  const lower = q.toLowerCase();
+  let answer = '';
+
+  if(lower.includes('mbjell') || lower.includes('sezon')){
+    answer = `Për parcelën ${p.name}, kontrollo lagështinë, aktivitetin e fundit dhe kulturën aktuale (${p.crop}) para mbjelljes. Me Land Pulse ${p.pulse}/100, hapi më i mirë është të vazhdosh me veprimet sezonale dhe të regjistrosh çdo aktivitet në sistem.`;
+  } else if(lower.includes('pulse')){
+    answer = `Për ta rritur Land Pulse, regjistro aktivitetet bujqësore me kohë, shmang periudha të gjata pa mirëmbajtje, bëj ujitje/kositje sipas sezonit dhe ndiq rekomandimin: ${p.nextAction}.`;
+  } else if(lower.includes('rrezik') || lower.includes('braktis')){
+    answer = `Rreziku aktual i braktisjes për ${p.name} është ${p.abandon}%. ${p.abandon>50?'Kjo kërkon ndërhyrje urgjente dhe kontakt me zyrën komunale.':p.abandon>25?'Ka shenja stresi, prandaj mirëmbajtja sezonale duhet bërë sa më shpejt.':'Rreziku është i ulët, por vazhdo me mirëmbajtje të rregullt.'}`;
+  } else if(lower.includes('veprim') || lower.includes('tani') || lower.includes('hapi')){
+    answer = `Hapi i rekomanduar tani për ${p.name} është: ${p.nextAction}. Aktiviteti i fundit ishte më ${p.lastActivity}, prandaj mbaje parcelën aktive duke regjistruar punimet e radhës.`;
+  } else {
+    answer = `Bazuar në të dhënat e parcelës ${p.name}: Land Pulse ${p.pulse}/100, kultura ${p.crop}, sipërfaqja ${p.area} ha dhe rreziku i braktisjes ${p.abandon}%. Rekomandimi kryesor i AI është: ${p.aiExplain}`;
+  }
+
+  setTimeout(() => {
+    aiMsg.innerHTML = answer;
+    msgs.appendChild(aiMsg);
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 350);
+
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+
+function switchView(v){
+  document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',['map','dashboard','blockchain'][i]===v));
+}
+
+// ===== MOBILE VIEW SWITCHING =====
+let currentMobileView = 'map';
+
+function mobileView(view){
+  if(window.innerWidth > 768) return;
+  currentMobileView = view;
+
+  const sidebar = document.querySelector('.sidebar');
+  const mapEl   = document.querySelector('.map-container');
+  const panel   = document.querySelector('.right-panel');
+
+  // Reset all
+  sidebar.classList.remove('mobile-visible');
+  mapEl.classList.remove('mobile-hidden');
+  panel.classList.remove('mobile-visible');
+
+  if(view === 'list'){
+    sidebar.classList.add('mobile-visible');
+    mapEl.classList.add('mobile-hidden');
+  } else if(view === 'map'){
+    // map already visible
+    // invalidate map size so tiles render correctly
+    setTimeout(()=>{ if(map) map.invalidateSize(); }, 50);
+  } else if(view === 'detail'){
+    panel.classList.add('mobile-visible');
+    mapEl.classList.add('mobile-hidden');
+  }
+
+  // Update bottom nav active state
+  document.querySelectorAll('.mnav-btn').forEach(b => b.classList.remove('active'));
+  const btnMap = {list:'mnav-list', map:'mnav-map', detail:'mnav-detail'};
+  document.getElementById(btnMap[view])?.classList.add('active');
+}
+
+// When a parcel is selected on mobile, auto-navigate to detail view
+const _origSelectParcel = typeof selectParcel === 'function' ? selectParcel : null;
+function selectParcelMobileWrapper(i){
+  if(_origSelectParcel) _origSelectParcel(i);
+  if(window.innerWidth <= 768){
+    setTimeout(()=>mobileView('detail'), 100);
+  }
+}
+
+// Override parcel-item clicks to use wrapper on mobile
+document.addEventListener('click', function(e){
+  const item = e.target.closest('.parcel-item');
+  if(item && window.innerWidth <= 768){
+    const idx = parseInt(item.id.replace('pitem-',''));
+    if(!isNaN(idx)){
+      selectParcel(idx);
+      setTimeout(()=>mobileView('detail'), 100);
+    }
+  }
+});
+
+// On resize, reset mobile classes if back to desktop
+window.addEventListener('resize', ()=>{
+  if(window.innerWidth > 768){
+    document.querySelector('.sidebar').classList.remove('mobile-visible');
+    document.querySelector('.map-container').classList.remove('mobile-hidden');
+    document.querySelector('.right-panel').classList.remove('mobile-visible');
+    setTimeout(()=>{ if(map) map.invalidateSize(); }, 50);
+  }
+});
+
+function requestSubsidyStatus(){
+  window.open('https://ekosova.rks-gov.net/', '_blank');
+  showToast('📄 Shërbimi i subvencioneve u hap në e-Kosova.');
+}
+
+function contactOffice(){ showToast('🏛️ Kërkesa u dërgua në Zyrën Komunale të Prizrenit.'); }
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// Draw satellite canvases after rendering
+const observer = new MutationObserver(()=>{
+  const c1 = document.getElementById('sat-reported');
+  const c2 = document.getElementById('sat-sentinel');
+  if(c1&&c2&&activeParcel!==null){
+    drawSatCanvas(c1, PARCELS[activeParcel].satellite.ndviOwn, true);
+    drawSatCanvas(c2, PARCELS[activeParcel].satellite.ndviOwn, false);
+  }
+});
+observer.observe(document.getElementById('panel-content'),{childList:true,subtree:true});
+
+function drawSatCanvas(canvas, ndvi, reported){
+  const ctx = canvas.getContext('2d');
+  const w=canvas.width, h=canvas.height;
+  ctx.clearRect(0,0,w,h);
+  // Fake satellite imagery using noise + color
+  for(let y=0;y<h;y+=2){
+    for(let x=0;x<w;x+=2){
+      const n=Math.random();
+      const base=reported?Math.min(ndvi+0.1,1):ndvi;
+      const g=Math.floor((base*0.7+n*0.3)*180+40);
+      const r=Math.floor((1-base)*120+n*30);
+      ctx.fillStyle=`rgb(${r},${g},${Math.floor(n*40+20)})`;
+      ctx.fillRect(x,y,2,2);
+    }
+  }
+  // Overlay label
+  ctx.fillStyle='rgba(0,0,0,0.4)';
+  ctx.fillRect(0,h-18,w,18);
+  ctx.fillStyle='#fff';
+  ctx.font='9px monospace';
+  ctx.fillText(`NDVI: ${ndvi} | Sentinel-2 2025`,4,h-5);
+}
+</script>
+</body>
+</html>

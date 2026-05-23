@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOKA — Identifikimi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sage:#5a7a5c;--sage-light:#7a9e7c;--sage-pale:#e8f0e8;
+  --earth:#8b6f47;--earth-light:#b8956a;--earth-pale:#f5ede2;
+  --forest:#2d4a2e;--forest-mid:#3d6b3f;
+  --cream:#faf8f4;--white:#ffffff;
+  --stone:#6b7280;--stone-light:#9ca3af;--stone-pale:#f3f4f6;
+  --text:#1a2e1b;--text-mid:#3d5540;--text-soft:#6b8a6d;
+  --red:#dc4a3d;--red-pale:#fdf2f1;
+  --border:#dde8dd;--border-mid:#c8d8c8;
+  --shadow:rgba(45,74,46,0.08);--shadow-md:rgba(45,74,46,0.14);
+  --radius:14px;--radius-sm:9px;--radius-lg:20px;
+}
+html,body{height:100%;font-family:'Plus Jakarta Sans',sans-serif;background:var(--cream);color:var(--text);overflow:auto;}
+
+.demo-nav{
+  position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:999;
+  display:flex;gap:6px;padding:6px;background:rgba(255,255,255,0.92);
+  border:1px solid var(--border);border-radius:999px;box-shadow:0 2px 10px rgba(45,74,46,0.12);
+  backdrop-filter:blur(8px);
+}
+.demo-nav a{
+  padding:6px 10px;border-radius:999px;text-decoration:none;font-size:11px;font-weight:700;
+  color:var(--text-soft);background:var(--white);border:1px solid var(--border);transition:all 0.18s ease;
+}
+.demo-nav a:hover,.demo-nav a.active{background:var(--forest);border-color:var(--forest);color:#fff;}
+
+/* LAYOUT */
+.page{display:flex;min-height:100vh;}
+
+/* LEFT PANEL — nature/brand */
+.left{
+  width:42%;background:var(--forest);position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:space-between;padding:clamp(24px,4vh,48px);
+}
+.left-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 80%,rgba(90,122,92,0.4) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 20%,rgba(61,107,63,0.3) 0%,transparent 50%),
+    linear-gradient(160deg,#2d4a2e 0%,#1a3020 50%,#0f2015 100%);
+}
+.left-texture{
+  position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234a7a4c' fill-opacity='0.06'%3E%3Ccircle cx='30' cy='30' r='1.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.left-content{position:relative;z-index:2;}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:clamp(24px,4vh,56px);}
+.brand-hex{
+  width:42px;height:42px;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:12px;
+}
+.brand-hex img,.brand-hex svg{width:24px;height:24px;display:block;object-fit:cover;filter:brightness(0) invert(1);}
+.brand-name{font-size:22px;font-weight:800;color:#ffffff;letter-spacing:0.04em;}
+.brand-tag{font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.15em;text-transform:uppercase;margin-top:-2px;}
+.left-headline{
+  font-family:'Lora',serif;font-size:32px;font-weight:600;color:#ffffff;
+  line-height:1.3;margin-bottom:20px;
+}
+.left-headline em{color:rgba(160,220,164,0.9);font-style:italic;}
+.left-sub{font-size:14px;color:rgba(255,255,255,0.55);line-height:1.7;max-width:300px;}
+
+/* FEATURE PILLS */
+.features{display:flex;flex-direction:column;gap:10px;margin-top:clamp(20px,4vh,40px);}
+.feat{
+  display:flex;align-items:center;gap:12px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;padding:11px 14px;
+}
+.feat-icon{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.feat-text{font-size:12px;color:rgba(255,255,255,0.7);line-height:1.4;}
+.feat-text strong{color:rgba(255,255,255,0.95);display:block;font-size:12px;}
+
+.left-footer{position:relative;z-index:2;display:flex;align-items:center;gap:8px;}
+.akk-badge{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;padding:8px 12px;
+}
+.akk-badge span{font-size:11px;color:rgba(255,255,255,0.5);}
+.akk-badge strong{font-size:11px;color:rgba(255,255,255,0.85);}
+
+/* RIGHT PANEL — form */
+.right{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:40px;overflow-y:auto;background:var(--cream);
+}
+.form-card{width:100%;max-width:420px;}
+.form-title{font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px;}
+.form-sub{font-size:14px;color:var(--text-soft);margin-bottom:32px;line-height:1.5;}
+
+/* TABS */
+.tabs{display:flex;background:var(--stone-pale);border-radius:var(--radius-sm);padding:4px;margin-bottom:28px;}
+.tab{flex:1;padding:8px;text-align:center;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;color:var(--stone);transition:all 0.2s;}
+.tab.active{background:var(--white);color:var(--text);box-shadow:0 1px 4px var(--shadow-md);}
+
+/* FORM ELEMENTS */
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text-mid);margin-bottom:6px;letter-spacing:0.02em;}
+.field label .req{color:var(--sage);margin-left:2px;}
+.input-wrap{position:relative;}
+.input-wrap .icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
+input,select{
+  width:100%;padding:12px 14px 12px 40px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--text);
+  background:var(--white);outline:none;transition:all 0.2s;
+  -webkit-appearance:none;appearance:none;
+}
+input::placeholder{color:var(--stone-light);}
+input:focus,select:focus{border-color:var(--sage);box-shadow:0 0 0 3px rgba(90,122,92,0.1);}
+input.no-icon,select.no-icon{padding-left:14px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* ID LOOKUP */
+.id-row{display:flex;gap:8px;}
+.id-row input{flex:1;}
+.lookup-btn{
+  padding:12px 16px;background:var(--sage);color:#fff;border:none;border-radius:var(--radius-sm);
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;
+  white-space:nowrap;transition:all 0.2s;flex-shrink:0;
+}
+.lookup-btn:hover{background:var(--forest-mid);}
+
+/* AKK RESULT */
+.akk-result{
+  background:var(--sage-pale);border:1.5px solid var(--border-mid);
+  border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:16px;
+  display:none;animation:slideIn 0.3s ease;
+}
+.akk-result.show{display:block;}
+.akk-result-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.akk-result-header span{font-size:12px;font-weight:700;color:var(--sage);text-transform:uppercase;letter-spacing:0.08em;}
+.akk-result-header .dot{width:6px;height:6px;border-radius:50%;background:var(--sage);}
+.akk-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.akk-item label{font-size:10px;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;}
+.akk-item p{font-size:13px;font-weight:600;color:var(--text);}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:10px;margin:20px 0;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.divider span{font-size:11px;color:var(--stone-light);white-space:nowrap;}
+
+/* SUBMIT */
+.submit-btn{
+  width:100%;padding:14px;background:var(--forest);color:#fff;border:none;
+  border-radius:var(--radius-sm);font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  letter-spacing:0.02em;margin-top:8px;
+}
+.submit-btn:hover{background:var(--forest-mid);transform:translateY(-1px);box-shadow:0 4px 16px rgba(45,74,46,0.25);}
+.submit-btn:active{transform:translateY(0);}
+
+/* LINKS */
+.form-link{text-align:center;margin-top:16px;font-size:13px;color:var(--text-soft);}
+.form-link a{color:var(--sage);font-weight:600;text-decoration:none;cursor:pointer;}
+.form-link a:hover{color:var(--forest);}
+
+/* ADMIN LINK */
+.admin-link{
+  text-align:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--border);
+  font-size:12px;color:var(--stone-light);
+}
+.admin-link a{color:var(--stone);font-weight:600;text-decoration:none;cursor:pointer;}
+
+/* LOADING STATE */
+.lookup-btn.loading{background:var(--stone-light);pointer-events:none;}
+
+/* ERROR */
+.error-msg{color:var(--red);font-size:12px;margin-top:5px;display:none;}
+.error-msg.show{display:block;}
+
+/* ANIMATIONS */
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.form-card{animation:fadeIn 0.4s ease;}
+
+@media (max-width: 900px){
+  .page{flex-direction:column;}
+  .left{width:100%;height:auto;}
+  .right{padding:24px;}
+}
+@media (max-height: 700px){
+  .left-headline{font-size:28px;}
+  .features{gap:8px;}
+}
+
+
+@media (max-width: 900px){
+  .page{flex-direction:column;}
+  .left{width:100%;height:auto;}
+  .right{padding:24px;overflow:visible;}
+}
+
+</style>
+</head>
+<body>
+<div class="demo-nav" aria-label="HTML demo pages">
+  <a class="active" href="index.html">Login</a>
+  <a href="farmer.html">Farmer</a>
+  <a href="admin.html">Admin</a>
+</div>
+<div class="page">
+
+  <!-- LEFT -->
+  <div class="left">
+    <div class="left-bg"></div>
+    <div class="left-texture"></div>
+
+    <div class="left-content">
+      <div class="brand">
+        <div class="brand-hex">
+          <img src="/logo.svg" alt="TOKA">
+        </div>
+        <div>
+          <div class="brand-name">TOKA</div>
+          <div class="brand-tag">Sistemi i Shëndetit të Tokës</div>
+        </div>
+      </div>
+
+      <div class="left-headline">
+        Toka juaj ka<br>një <em>histori</em> të gjallë
+      </div>
+      <div class="left-sub">Sistemi TOKA mbron tokën kosovare duke ndjekur gjendjen e çdo parcele në kohë reale — para se të jetë shumë vonë.</div>
+
+      <div class="features">
+        <div class="feat">
+          <div class="feat-icon">⛓</div>
+          <div class="feat-text"><strong>Regjistër i pandryshueshem</strong>Çdo aktivitet i tokës ruhet në blockchain — i sigurt, i verifikueshëm, përgjithmonë.</div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">🛰</div>
+          <div class="feat-text"><strong>Verifikim satelitor</strong>Sentinel-2 konfirmon gjendjen e tokës çdo muaj automatikisht.</div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">💬</div>
+          <div class="feat-text"><strong>Këshillues AI në shqip</strong>Pyesni gjithçka rreth tokës suaj, çdo ditë, falas.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="left-footer">
+      <div class="akk-badge">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="3" stroke="rgba(255,255,255,0.5)" stroke-width="1.2"/><path d="M5 9l3 3 5-5" stroke="rgba(160,220,164,0.8)" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div><span>E lidhur me </span><strong>AKK — Agjencia Kadastrale e Kosovës</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="form-card">
+
+      <!-- LOGIN FORM -->
+      <div id="login-form">
+        <div class="form-title">Mirë se kthyet</div>
+        <div class="form-sub">Hyni me numrin tuaj personal të identitetit dhe fjalëkalimin e regjistruar.</div>
+
+        <div class="tabs">
+          <div class="tab active" onclick="showTab('login')">Hyrje</div>
+          <div class="tab" onclick="showTab('signup')">Regjistrim i Ri</div>
+        </div>
+
+        <div class="field">
+          <label>Numri Personal (NID) <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="icon">🪪</span>
+            <input type="text" id="login-nid" placeholder="p.sh. 1234567890" maxlength="10">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Fjalëkalimi <span class="req">*</span></label>
+          <div class="input-wrap">
+            <span class="icon">🔒</span>
+            <input type="password" id="login-pw" placeholder="Shkruani fjalëkalimin tuaj">
+          </div>
+          <div class="error-msg" id="login-error">NID ose fjalëkalimi është gabim. Provoni përsëri.</div>
+        </div>
+
+        <button class="submit-btn" onclick="window.location.href='farmer.html'">
+          <span>Hyrja në TOKA</span>
+          <span>→</span>
+        </button>
+
+        <div class="form-link">Nuk keni llogari? <a onclick="showTab('signup')">Regjistrohuni</a></div>
+        <div class="admin-link">Punonjes i Autoriteve Lokale/Institucioneve? <a onclick="doAdminLogin()">Hyni si Administrator →</a></div>
+      </div>
+
+      <!-- SIGNUP FORM -->
+      <div id="signup-form" style="display:none;">
+        <div class="form-title">Regjistrim i Ri</div>
+        <div class="form-sub">Shkruani numrin tuaj personal. Ne do të marrim informacionin nga baza e të dhënave të <strong>AKK</strong>.</div>
+
+        <div class="tabs">
+          <div class="tab" onclick="showTab('login')">Hyrje</div>
+          <div class="tab active" onclick="showTab('signup')">Regjistrim i Ri</div>
+        </div>
+
+        <!-- STEP 1: NID Lookup -->
+        <div id="step1">
+          <div class="field">
+            <label>Numri Personal (NID) <span class="req">*</span></label>
+            <div class="id-row">
+              <div class="input-wrap" style="flex:1">
+                <span class="icon">🪪</span>
+                <input type="text" id="signup-nid" placeholder="10 shifra" maxlength="10">
+              </div>
+              <button class="lookup-btn" id="lookup-btn" onclick="lookupAKK()">Kërko AKK</button>
+            </div>
+            <div class="error-msg" id="lookup-error">NID nuk u gjet në bazën e të dhënave të AKK. Kontrolloni dhe provoni përsëri.</div>
+          </div>
+
+          <!-- AKK Result Card -->
+          <div class="akk-result" id="akk-result">
+            <div class="akk-result-header">
+              <div class="dot"></div>
+              <span>Gjendja nga AKK — Verifikuar</span>
+            </div>
+            <div class="akk-grid">
+              <div class="akk-item"><label>Emri</label><p id="akk-name">–</p></div>
+              <div class="akk-item"><label>NID</label><p id="akk-nid">–</p></div>
+              <div class="akk-item"><label>Komuna</label><p id="akk-muni">–</p></div>
+              <div class="akk-item"><label>Parcela</label><p id="akk-parcels">–</p></div>
+              <div class="akk-item"><label>Sipërfaqja</label><p id="akk-area">–</p></div>
+              <div class="akk-item"><label>Statusi</label><p id="akk-status" style="color:var(--sage)">–</p></div>
+            </div>
+          </div>
+
+          <div id="step2-fields" style="display:none;">
+            <div class="divider"><span>Plotësoni të dhënat tuaja</span></div>
+
+            <div class="field">
+              <label>Email <span class="req">*</span></label>
+              <div class="input-wrap">
+                <span class="icon">✉️</span>
+                <input type="email" id="signup-email" placeholder="emri@shembull.com">
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label>Fjalëkalimi <span class="req">*</span></label>
+                <div class="input-wrap">
+                  <span class="icon">🔒</span>
+                  <input type="password" id="signup-pw" placeholder="Min. 8 karaktere">
+                </div>
+              </div>
+              <div class="field">
+                <label>Konfirmo <span class="req">*</span></label>
+                <div class="input-wrap">
+                  <span class="icon">🔒</span>
+                  <input type="password" id="signup-pw2" placeholder="Përsërit">
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Numri i telefonit</label>
+              <div class="input-wrap">
+                <span class="icon">📱</span>
+                <input type="tel" id="signup-phone" placeholder="+383 4X XXX XXX">
+              </div>
+            </div>
+
+            <button class="submit-btn" onclick="doSignup()">
+              <span>Krijo Llogarinë</span>
+              <span>✓</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-link" style="margin-top:16px;">Keni llogari? <a onclick="showTab('login')">Hyni këtu</a></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// Simulated AKK database
+const AKK_DB = {
+  '1234567890': {name:'Agim Berisha', nid:'1234567890', muni:'Prizren', parcels:3, area:'4.7 ha', status:'Aktiv'},
+  '9876543210': {name:'Drita Gashi', nid:'9876543210', muni:'Prishtinë', parcels:1, area:'1.2 ha', status:'Aktiv'},
+  '1111111111': {name:'Blerim Musliu', nid:'1111111111', muni:'Pejë', parcels:2, area:'3.1 ha', status:'Aktiv'},
+  'admin': {role:'admin'}
+};
+
+function showTab(t) {
+  document.getElementById('login-form').style.display = t==='login'?'block':'none';
+  document.getElementById('signup-form').style.display = t==='signup'?'block':'none';
+}
+
+function lookupAKK() {
+  const nid = document.getElementById('signup-nid').value.trim();
+  const btn = document.getElementById('lookup-btn');
+  const err = document.getElementById('lookup-error');
+  err.classList.remove('show');
+
+  if (!nid || nid.length < 4) return;
+
+  btn.textContent = 'Duke kërkuar…';
+  btn.classList.add('loading');
+
+  setTimeout(() => {
+    btn.textContent = 'Kërko AKK';
+    btn.classList.remove('loading');
+
+    const rec = AKK_DB[nid];
+    if (!rec || rec.role === 'admin') {
+      err.classList.add('show');
+      document.getElementById('akk-result').classList.remove('show');
+      document.getElementById('step2-fields').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('akk-name').textContent = rec.name;
+    document.getElementById('akk-nid').textContent = rec.nid;
+    document.getElementById('akk-muni').textContent = rec.muni;
+    document.getElementById('akk-parcels').textContent = rec.parcels + ' parcela';
+    document.getElementById('akk-area').textContent = rec.area;
+    document.getElementById('akk-status').textContent = rec.status;
+
+    document.getElementById('akk-result').classList.add('show');
+    document.getElementById('step2-fields').style.display = 'block';
+  }, 1200);
+}
+
+function doSignup() {
+  const nid = document.getElementById('signup-nid').value.trim();
+  const rec = AKK_DB[nid];
+  if (!rec) return;
+  localStorage.setItem('toka_user', JSON.stringify({...rec, loggedIn: true, role:'farmer'}));
+  window.location.href = 'farmer.html';
+}
+
+function doLogin() {
+  const nid = document.getElementById('login-nid').value.trim();
+  const err = document.getElementById('login-error');
+  err.classList.remove('show');
+
+  if (nid === 'admin') {
+    localStorage.setItem('toka_user', JSON.stringify({role:'admin', name:'Admin Komunal', loggedIn:true}));
+    window.location.href = 'admin.html';
+    return;
+  }
+
+  const rec = AKK_DB[nid];
+  if (!rec) { err.classList.add('show'); return; }
+  localStorage.setItem('toka_user', JSON.stringify({...rec, loggedIn:true, role:'farmer'}));
+  window.location.href = 'farmer.html';
+}
+
+function doAdminLogin() {
+  document.getElementById('login-nid').value = 'admin';
+  doLogin();
+}
+
+// Demo: auto-fill for quick testing
+document.getElementById('login-nid').addEventListener('focus', function(){
+  if(!this.value) this.placeholder = 'Demo: 1234567890';
+});
+</script>
+</body>
+</html>
