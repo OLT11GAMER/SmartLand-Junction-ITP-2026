@@ -39,6 +39,31 @@ html,body{height:100%;font-family:'Plus Jakarta Sans',sans-serif;background:var(
 }
 .demo-nav a:hover,.demo-nav a.active{background:var(--forest);border-color:var(--forest);color:#fff;}
 
+@media (max-width: 768px){
+  .demo-nav{
+    top:6px;
+    padding:4px;
+    gap:4px;
+    max-width:calc(100vw - 12px);
+    overflow-x:auto;
+    scrollbar-width:none;
+    transform:translateX(-50%) scale(0.84);
+    transform-origin:top center;
+  }
+  .demo-nav::-webkit-scrollbar{display:none;}
+  .demo-nav a{
+    padding:5px 8px;
+    font-size:10px;
+  }
+}
+
+@media (max-width: 480px){
+  .demo-nav{
+    transform:translateX(-50%) translateY(-44%) scale(0.76);
+    opacity:0.82;
+  }
+}
+
 /* ── TOPBAR ── */
 .topbar{
   position:fixed;top:0;left:0;right:0;height:var(--topbar);z-index:1000;
@@ -46,8 +71,12 @@ html,body{height:100%;font-family:'Plus Jakarta Sans',sans-serif;background:var(
   border-bottom:1px solid rgba(255,255,255,0.07);
 }
 .brand{display:flex;align-items:center;gap:10px;min-width:var(--sidebar);padding-right:20px;}
-.brand-hex{width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:9px;background-image:url('/logo.svg');background-size:contain;background-repeat:no-repeat;background-position:center;}
-.brand-hex img,.brand-hex svg{width:20px;height:20px;display:none;object-fit:cover;filter:brightness(0) invert(1);}
+.brand-hex{
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);
+  border-radius:9px;overflow:hidden;
+}
+.brand-hex img,.brand-hex svg{width:100%;height:100%;display:block;object-fit:cover;filter:brightness(0) invert(1);}
 .brand-name{font-size:18px;font-weight:800;color:#fff;letter-spacing:0.04em;}
 .brand-tag{font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:0.15em;text-transform:uppercase;margin-top:-3px;}
 
@@ -138,64 +167,129 @@ bottom:16px;
 }
 .hamburger-btn span{display:block;width:16px;height:2px;background:#fff;border-radius:1px;transition:all 0.2s;}
 
+/* Mobile bottom nav */
+.mobile-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:var(--forest);border-top:1px solid rgba(255,255,255,0.1);
+  height:56px;
+}
+.mobile-nav-inner{
+  display:flex;height:100%;
+}
+.mnav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  background:transparent;border:none;cursor:pointer;
+  color:rgba(255,255,255,0.55);transition:color 0.2s;padding:4px 0;
+}
+.mnav-btn.active{color:#fff;}
+.mnav-btn .mnav-icon{font-size:18px;line-height:1;}
+.mnav-btn .mnav-label{font-size:9px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
+
 @media(max-width:768px){
   .hamburger-btn{display:flex;}
+  .topbar{
+    padding:0 14px;
+    gap:10px;
+  }
+  .brand{
+    min-width:auto;
+    padding-right:0;
+  }
+  .brand-tag,
+  .topbar-center{
+    display:none;
+  }
+  .topbar-search{
+    max-width:180px;
+  }
+  .topbar-pills{
+    display:none;
+  }
+  .live-badge span,
+  .admin-chip span{
+    display:none;
+  }
+
+  .sidebar-overlay{
+    top:var(--topbar);
+    bottom:56px;
+  }
 
   /* Sidebar slides in as overlay — no space reserved */
   .sidebar{
     transform:translateX(-100%);
     transition:transform 0.3s cubic-bezier(0.22,1,0.36,1);
     width:min(300px, 85vw);
+    bottom:56px;
   }
   .sidebar.open{transform:translateX(0);}
+  .sidebar.mobile-visible{transform:translateX(0);}
 
-  /* Main: full width, vertical stack */
   .main{
     margin-left:0;
-    flex-direction:column;
+    margin-top:var(--topbar);
     height:calc(100vh - var(--topbar));
+    display:block;
   }
 
-  /* Map: explicit fixed height so Leaflet has a concrete size to render into */
   .map-wrapper{
-    flex:none;
-    width:100%;
-    height:55vh;
-    min-height:55vh;
-  }
-
-  /* Right panel: remaining space */
-  .bottom-panels{
-    flex:1;
-    width:100%;
+    position:fixed;
+    inset:var(--topbar) 0 56px 0;
+    width:auto;
     height:auto;
     min-height:0;
-    border-top:1px solid var(--border);
-    border-left:none;
+    z-index:80;
+    transition:opacity 0.2s;
+  }
+  .map-wrapper.mobile-hidden{
+    opacity:0;
+    pointer-events:none;
+  }
+
+  .bottom-panels{
+    position:fixed;
+    top:var(--topbar);
+    right:0;
+    bottom:56px;
+    width:min(380px, 100%);
+    height:auto;
+    min-height:0;
+    border-left:1px solid var(--border);
+    transform:translateX(100%);
+    transition:transform 0.3s ease;
+    z-index:90;
+    box-shadow:-8px 0 24px rgba(0,0,0,0.12);
+  }
+  .bottom-panels.mobile-visible{
+    transform:translateX(0);
   }
   .detail-panel{
     height:100%;
+    min-height:0;
   }
 
   .brand{min-width:auto;}
   .topbar-search{max-width:180px;}
-  .topbar-pills{display:none;}
 
   .map-filter{bottom:8px;gap:4px;padding:4px;}
   .map-filter .tpill{padding:5px 8px;font-size:10px;}
   .map-legend{display:none;}
+
+  .mobile-nav{
+    display:block;
+  }
+
 }
 
 @media(max-width:480px){
   .topbar-search{display:none;}
-  .live-badge{display:none;}
   .map-overlay-tl{top:8px;left:8px;}
   .map-overlay-tr{top:8px;right:8px;}
   .map-filter .tpill span.dot{display:none;}
-  .admin-chip span{display:none;}
-
-  /* Even on tiny phones give the map a solid height */
-  .map-wrapper{height:50vh;min-height:50vh;}
+  .map-wrapper{
+    bottom:56px;
+  }
 }
 
 /* Tablet — sidebar still visible but narrower */
@@ -829,6 +923,81 @@ bottom:16px;
   background:#dc2626;
   border-color:#dc2626;
 }
+
+/* Final mobile admin layout override.
+   This must stay after the base desktop rules so source order does not undo it. */
+@media(max-width:768px){
+  html,
+  body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+  }
+
+  .main{
+    position:fixed;
+    inset:var(--topbar) 0 56px 0;
+    margin:0;
+    display:block;
+    width:auto;
+    height:auto;
+    min-height:0;
+    overflow:hidden;
+  }
+
+  .map-wrapper{
+    position:absolute;
+    inset:0;
+    width:auto;
+    height:auto;
+    min-height:0;
+    max-height:none;
+    z-index:80;
+  }
+
+  .map-wrapper.mobile-hidden{
+    opacity:0;
+    pointer-events:none;
+  }
+
+  .bottom-panels{
+    position:fixed;
+    top:var(--topbar);
+    right:0;
+    bottom:56px;
+    left:auto;
+    width:min(380px, 100%);
+    height:auto;
+    min-height:0;
+    overflow:hidden;
+    transform:translateX(100%);
+    transition:transform 0.3s ease;
+    z-index:90;
+    box-shadow:-8px 0 24px rgba(0,0,0,0.12);
+  }
+
+  .bottom-panels.mobile-visible{
+    transform:translateX(0);
+  }
+
+  .detail-panel{
+    height:100%;
+    min-height:0;
+    overflow-y:auto;
+  }
+
+  body.detail-fullscreen .bottom-panels{
+    left:0;
+    width:100%;
+    bottom:0;
+    transform:translateX(0);
+    box-shadow:none;
+  }
+
+  body.detail-fullscreen .mobile-nav{
+    display:none;
+  }
+}
 </style>
 </head>
 <body>
@@ -902,7 +1071,7 @@ bottom:16px;
     </div>
   </div>
 
-  <div class="sidebar-section" style="min-height:260px;display:flex;flex-direction:column;">
+  <div class="sidebar-section sidebar-parcels-section" style="min-height:260px;display:flex;flex-direction:column;">
     <div class="ss-label">Parcela — <span id="parcel-count-label">Duke ngarkuar…</span></div>
     <div class="parcel-list" id="parcel-list" style="overflow-y:auto;max-height:420px;"></div>
   </div>
@@ -962,7 +1131,7 @@ bottom:16px;
   </div>
 
   <!-- BOTTOM -->
-  <div class="bottom-panels">
+  <div class="bottom-panels" id="bottom-panels">
 
     <!-- DETAIL PANEL -->
     <div class="detail-panel" id="detail-panel">
@@ -974,6 +1143,23 @@ bottom:16px;
     </div>
 </div>
 </div>
+
+<nav class="mobile-nav" id="mobile-nav">
+  <div class="mobile-nav-inner">
+    <button class="mnav-btn" id="mnav-list" onclick="mobileView('list')">
+      <span class="mnav-icon">🗂️</span>
+      <span class="mnav-label">List</span>
+    </button>
+    <button class="mnav-btn active" id="mnav-map" onclick="mobileView('map')">
+      <span class="mnav-icon">🗺️</span>
+      <span class="mnav-label">Harta</span>
+    </button>
+    <button class="mnav-btn" id="mnav-detail" onclick="mobileView('detail')">
+      <span class="mnav-icon">📋</span>
+      <span class="mnav-label">Detaje</span>
+    </button>
+  </div>
+</nav>
 
 <script>
 // ═══════════════════════════════════════════════
@@ -1274,6 +1460,9 @@ function selectParcel(p) {
   if(leafletMap && p.lat && p.lng) {
     leafletMap.flyTo([p.lat, p.lng], 12, {duration: 0.8});
   }
+  if(window.innerWidth <= 768){
+    setTimeout(() => mobileView('detail'), 100);
+  }
 }
 
 function highlightMuni(muni) {
@@ -1543,6 +1732,36 @@ function switchDetailTab(tab, el) {
   });
   if(tab==='satellite') setTimeout(drawSatCanvases,100);
   if(tab==='advisor') setupAdvisor(selectedParcel);
+}
+
+function mobileView(view){
+  if(window.innerWidth > 768) return;
+  const sidebar = document.querySelector('.sidebar');
+  const mapEl = document.getElementById('map-wrapper');
+  const panels = document.getElementById('bottom-panels');
+
+  sidebar.classList.remove('open');
+  sidebar.classList.remove('mobile-visible');
+  mapEl.classList.remove('mobile-hidden');
+  panels.classList.remove('mobile-visible');
+  document.body.classList.remove('detail-fullscreen');
+
+  if(view === 'list'){
+    sidebar.classList.add('mobile-visible');
+    mapEl.classList.add('mobile-hidden');
+  } else if(view === 'detail'){
+    panels.classList.add('mobile-visible');
+    mapEl.classList.add('mobile-hidden');
+    document.body.classList.add('detail-fullscreen');
+  } else if(view === 'map'){
+    setTimeout(() => {
+      if(leafletMap) leafletMap.invalidateSize();
+    }, 50);
+  }
+
+  document.querySelectorAll('.mnav-btn').forEach(btn => btn.classList.remove('active'));
+  const btnMap = {list:'mnav-list', map:'mnav-map', detail:'mnav-detail'};
+  document.getElementById(btnMap[view])?.classList.add('active');
 }
 
 function drawSatCanvases() {
@@ -1828,10 +2047,10 @@ function initLeafletMap() {
   // Force invalidateSize at multiple points to handle any layout that wasn't settled at init time
   // (critical on mobile where flex layout may not have final dimensions yet)
   requestAnimationFrame(() => {
-    leafletMap.invalidateSize();
-    setTimeout(() => leafletMap.invalidateSize(), 100);
-    setTimeout(() => leafletMap.invalidateSize(), 400);
-    setTimeout(() => leafletMap.invalidateSize(), 800);
+    if(leafletMap) leafletMap.invalidateSize();
+    setTimeout(() => { if(leafletMap) leafletMap.invalidateSize(); }, 100);
+    setTimeout(() => { if(leafletMap) leafletMap.invalidateSize(); }, 400);
+    setTimeout(() => { if(leafletMap) leafletMap.invalidateSize(); }, 800);
   });
 }
 
@@ -1950,8 +2169,17 @@ let _resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(_resizeTimer);
   _resizeTimer = setTimeout(() => {
-    if(leafletMap) {
-      leafletMap.invalidateSize();
+    if(leafletMap) leafletMap.invalidateSize();
+    if(window.innerWidth > 768){
+      document.querySelector('.sidebar')?.classList.remove('mobile-visible');
+      document.getElementById('map-wrapper')?.classList.remove('mobile-hidden');
+      document.getElementById('bottom-panels')?.classList.remove('mobile-visible');
+      document.querySelectorAll('.mnav-btn').forEach(btn => btn.classList.remove('active'));
+    } else {
+      const active = document.querySelector('.mnav-btn.active')?.id;
+      if(active === 'mnav-list') mobileView('list');
+      else if(active === 'mnav-detail') mobileView('detail');
+      else mobileView('map');
     }
   }, 100);
 });
@@ -1960,6 +2188,10 @@ window.addEventListener('resize', () => {
 // START
 // ═══════════════════════════════════════════════
 init();
+
+if(window.innerWidth <= 768){
+  mobileView('map');
+}
 
 // Auto-select Agim's at-risk parcel for demo
 setTimeout(() => {

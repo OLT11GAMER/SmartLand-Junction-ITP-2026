@@ -1367,6 +1367,8 @@ input {
   color: var(--text);
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
 .demo-toolbar {
@@ -1380,6 +1382,13 @@ input {
   padding: 12px 16px;
   background: var(--forest);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.22s ease, opacity 0.22s ease;
+}
+
+.demo-toolbar.is-collapsed {
+  transform: translateY(-110%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .demo-title {
@@ -1400,6 +1409,24 @@ input {
   flex: 1;
   border: 0;
   background: var(--white);
+}
+
+.demo-toolbar-toggle {
+  display: none;
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 240;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(45, 74, 46, 0.92);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 10px 24px rgba(13, 28, 15, 0.16);
+  backdrop-filter: blur(10px);
 }
 
 .quick-login-grid {
@@ -2884,6 +2911,96 @@ input {
   font-weight: 600;
 }
 
+.toka-parcel-panel {
+  width: min(260px, calc(100vw - 28px));
+  margin: 0 12px 12px 0;
+  padding: 0;
+}
+
+.toka-parcel-panel .parcel-panel {
+  display: grid;
+  gap: 8px;
+  padding: 10px 11px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(17, 42, 19, 0.12);
+  box-shadow: 0 12px 28px rgba(17, 42, 19, 0.16);
+  backdrop-filter: blur(10px);
+}
+
+.parcel-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.parcel-panel-id {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--forest);
+  line-height: 1.15;
+}
+
+.parcel-panel-sub {
+  margin-top: 2px;
+  color: var(--text-mid);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.parcel-panel-badge {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: var(--sage-pale);
+  border: 1px solid var(--border);
+  color: var(--forest);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.parcel-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.parcel-panel-stat {
+  padding: 7px 8px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(241, 248, 238, 0.95), rgba(255, 255, 255, 0.96));
+  border: 1px solid rgba(23, 57, 31, 0.1);
+}
+
+.parcel-panel-stat .label {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--text-soft);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.parcel-panel-stat strong {
+  color: var(--text);
+  font-size: 11px;
+}
+
+.parcel-panel-note {
+  padding: 8px 9px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, rgba(31, 146, 59, 0.1), rgba(27, 94, 32, 0.05));
+  border: 1px solid rgba(31, 146, 59, 0.14);
+  color: var(--forest);
+  font-size: 10px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
 .panel-scroll {
   scrollbar-width: thin;
   scrollbar-color: rgba(31, 146, 59, 0.28) transparent;
@@ -2991,12 +3108,55 @@ input {
     max-width: 220px;
   }
 
+  .app-switch-cluster {
+    gap: 6px;
+  }
+
+  .app-mode-switch,
+  .demo-role-switch {
+    padding: 3px;
+  }
+
+  .app-mode-switch-btn,
+  .demo-role-switch-btn {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+
   .mode-switcher-pages {
     margin-left: 0;
     padding-left: 0;
     border-left: none;
     width: 100%;
     justify-content: flex-end;
+  }
+
+  .demo-toolbar-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .demo-toolbar {
+    position: fixed;
+    top: 56px;
+    left: 10px;
+    right: 10px;
+    z-index: 235;
+    border-radius: 18px;
+    box-shadow: 0 16px 34px rgba(13, 28, 15, 0.26);
+  }
+
+  .demo-toolbar.is-collapsed {
+    transform: translateY(-120%);
+  }
+
+  .demo-title {
+    font-size: 15px;
+  }
+
+  .demo-subtitle {
+    max-width: 220px;
   }
 
   .quick-login-grid {
@@ -3141,7 +3301,12 @@ input {
   }
 
   .admin-shell .main {
+    position: fixed;
+    inset: var(--topbar) 0 56px 0;
+    margin: 0;
     display: block;
+    height: auto;
+    overflow: hidden;
   }
 
   .admin-shell .bottom-panels {
@@ -3160,15 +3325,35 @@ input {
     transform: translateX(0);
   }
 
-  .admin-shell .map-wrapper {
+  .admin-shell.admin-detail-open .bottom-panels {
+    left: 0;
+    right: 0;
     width: 100%;
-    height: calc(100vh - var(--topbar) - 56px);
+    bottom: 0;
+    transform: translateX(0);
+    box-shadow: none;
+  }
+
+  .admin-shell .map-wrapper {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: auto;
     min-height: 0;
     max-height: none;
   }
 
   .admin-shell .sidebar {
     bottom: 56px;
+  }
+
+  .admin-shell {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .admin-shell.admin-detail-open .mobile-nav {
+    display: none;
   }
 
   .mobile-nav {

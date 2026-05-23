@@ -34,6 +34,31 @@ html,body{height:100%;font-family:'Plus Jakarta Sans',sans-serif;background:var(
 }
 .demo-nav a:hover,.demo-nav a.active{background:var(--forest);border-color:var(--forest);color:#fff;}
 
+@media (max-width: 768px){
+  .demo-nav{
+    top:6px;
+    padding:4px;
+    gap:4px;
+    max-width:calc(100vw - 12px);
+    overflow-x:auto;
+    scrollbar-width:none;
+    transform:translateX(-50%) scale(0.84);
+    transform-origin:top center;
+  }
+  .demo-nav::-webkit-scrollbar{display:none;}
+  .demo-nav a{
+    padding:5px 8px;
+    font-size:10px;
+  }
+}
+
+@media (max-width: 480px){
+  .demo-nav{
+    transform:translateX(-50%) translateY(-44%) scale(0.76);
+    opacity:0.82;
+  }
+}
+
 /* LAYOUT */
 .page{display:flex;min-height:100vh;}
 

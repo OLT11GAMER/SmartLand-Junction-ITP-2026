@@ -22,6 +22,7 @@ import {
 
 const DETAIL_ZOOM = 11.5;
 const SAMPLE_PARCEL_ID = 'KOS-LPJ-000613';
+const HIDDEN_POPUP_PARCEL_IDS = new Set(['KOS-LPJ-000699']);
 const EMPTY_COLLECTION = {
   type: 'FeatureCollection',
   features: []
@@ -33,6 +34,49 @@ const DEMO_HTML_PAGES = {
   farmer: '/kinda%20newer%20html/farmer.html',
   admin: '/kinda%20newer%20html/admin.html'
 };
+
+function geoJsonBoundsToLatLng(bounds) {
+  return L.latLngBounds(bounds.map(([lng, lat]) => [lat, lng]));
+}
+
+const KOSOVO_LAT_LNG_BOUNDS = geoJsonBoundsToLatLng(kosovoBounds);
+
+function geoJsonPolygonToLatLngs(coordinates) {
+  if (!coordinates) return [];
+  if (typeof coordinates[0] === 'number' && typeof coordinates[1] === 'number') {
+    return [coordinates[1], coordinates[0]];
+  }
+
+  return coordinates.map((child) => geoJsonPolygonToLatLngs(child));
+}
+
+function expandLatLngBounds(bounds, scale = 2) {
+  const southWest = bounds.getSouthWest();
+  const northEast = bounds.getNorthEast();
+  const center = bounds.getCenter();
+  const latHalf = Math.abs(northEast.lat - southWest.lat) * scale / 2;
+  const lngHalf = Math.abs(northEast.lng - southWest.lng) * scale / 2;
+
+  return L.latLngBounds([
+    [center.lat - latHalf, center.lng - lngHalf],
+    [center.lat + latHalf, center.lng + lngHalf]
+  ]);
+}
+
+function buildKosovoOutsideMask(feature) {
+  const outerBounds = expandLatLngBounds(KOSOVO_LAT_LNG_BOUNDS, 2);
+  const southWest = outerBounds.getSouthWest();
+  const northEast = outerBounds.getNorthEast();
+  const outerRing = [
+    [southWest.lat, southWest.lng],
+    [southWest.lat, northEast.lng],
+    [northEast.lat, northEast.lng],
+    [northEast.lat, southWest.lng],
+    [southWest.lat, southWest.lng]
+  ];
+  const holeRing = geoJsonPolygonToLatLngs(feature?.geometry?.coordinates?.[0]);
+  return holeRing.length ? [outerRing, holeRing] : [outerRing];
+}
 
 const offlineTerrainStyle = {
   version: 8,
@@ -88,7 +132,7 @@ function parcelBounds(parcel) {
 }
 
 function buildParcelPopup(parcel) {
-  if (!parcel) return '';
+  if (!parcel || HIDDEN_POPUP_PARCEL_IDS.has(parcel.id)) return '';
 
   const confidence = parcel.status === 'Healthy' ? 92 : parcel.status === 'Watch' ? 74 : 56;
   const sourceLabel = parcel.id === SAMPLE_PARCEL_ID ? 'Prime example' : 'Live parcel';
@@ -123,6 +167,45 @@ function buildParcelPopup(parcel) {
       <div class="parcel-popup-note">
         Prioritize outreach, verify seasonal activity, and recommend crop rotation before field inspection.
       </div>
+    </div>
+  `;
+}
+
+function buildParcelPanel(parcel) {
+  if (!parcel || HIDDEN_POPUP_PARCEL_IDS.has(parcel.id)) return '';
+
+  const confidence = parcel.status === 'Healthy' ? 92 : parcel.status === 'Watch' ? 74 : 56;
+  const statusLabel = parcel.status === 'Healthy' ? 'Aligned' : parcel.status === 'Watch' ? 'Review' : 'Mismatch';
+  const note = parcel.advisory || 'Prioritize outreach, verify seasonal activity, and recommend crop rotation before field inspection.';
+
+  return `
+    <div class="parcel-panel">
+      <div class="parcel-panel-head">
+        <div>
+          <div class="parcel-panel-id">${parcel.id}</div>
+          <div class="parcel-panel-sub">${parcel.municipality} · ${parcel.currentCrop}</div>
+        </div>
+        <div class="parcel-panel-badge">${parcel.id === SAMPLE_PARCEL_ID ? 'Prime example' : 'Live parcel'}</div>
+      </div>
+      <div class="parcel-panel-grid">
+        <div class="parcel-panel-stat">
+          <span class="label">Owner</span>
+          <strong>${parcel.owner}</strong>
+        </div>
+        <div class="parcel-panel-stat">
+          <span class="label">Status</span>
+          <strong>${statusLabel}</strong>
+        </div>
+        <div class="parcel-panel-stat">
+          <span class="label">Confidence</span>
+          <strong>${confidence}%</strong>
+        </div>
+        <div class="parcel-panel-stat">
+          <span class="label">Land Pulse</span>
+          <strong>${parcel.landHealthScore}/100</strong>
+        </div>
+      </div>
+      <div class="parcel-panel-note">${note}</div>
     </div>
   `;
 }
@@ -239,11 +322,24 @@ function DemoRoleSwitch({ authUser, onSelectRole }) {
 }
 
 function HtmlDemoView({ demoPage, setDemoPage }) {
+  const [toolbarOpen, setToolbarOpen] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return !window.matchMedia('(max-width: 860px)').matches;
+  });
   const src = DEMO_HTML_PAGES[demoPage] || DEMO_HTML_PAGES.login;
 
   return (
-    <div className="demo-shell">
-      <div className="demo-toolbar">
+    <div className={`demo-shell ${toolbarOpen ? 'demo-shell-open' : 'demo-shell-collapsed'}`}>
+      <button
+        type="button"
+        className="demo-toolbar-toggle"
+        onClick={() => setToolbarOpen((value) => !value)}
+        aria-expanded={toolbarOpen}
+        aria-controls="demo-toolbar"
+      >
+        {toolbarOpen ? 'Hide demo controls' : 'Demo'}
+      </button>
+      <div className={`demo-toolbar ${toolbarOpen ? 'is-open' : 'is-collapsed'}`} id="demo-toolbar">
         <div>
           <div className="demo-title">TOKA HTML Demo</div>
           <div className="demo-subtitle">Static old HTML views connected to the React app.</div>
@@ -881,7 +977,7 @@ function FarmerDashboard({
   focusParcel,
   searchTerm,
   setSearchTerm,
-  filteredParcels,
+  filteredParcels = [],
   filterMode,
   setFilterMode,
   mapContainerRef,
@@ -1404,7 +1500,7 @@ export default function App() {
       mapRef.current?.fitBounds(bounds, { padding: [36, 36], duration: 700 });
       return;
     }
-    mapRef.current?.fitBounds(kosovoBounds, { padding: 36, duration: 700 });
+    mapRef.current?.fitBounds(KOSOVO_LAT_LNG_BOUNDS, { padding: 36, duration: 700 });
   };
 
   const sendChat = () => {
@@ -1501,39 +1597,64 @@ export default function App() {
 
   useEffect(() => () => clearAdminAiTimers(), []);
 
+  const syncParcelPanel = (parcel) => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const panelContent = buildParcelPanel(parcel);
+    if (!panelContent) {
+      popupRef.current?.remove();
+      popupRef.current = null;
+      return;
+    }
+
+    if (!popupRef.current) {
+      popupRef.current = L.control({ position: 'bottomright' });
+      popupRef.current.onAdd = () => {
+        const container = L.DomUtil.create('div', 'toka-parcel-panel');
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
+        return container;
+      };
+      popupRef.current.addTo(map);
+    }
+
+    const container = popupRef.current.getContainer();
+    if (container) {
+      container.innerHTML = panelContent;
+    }
+  };
+
   const focusParcel = (parcel, options = {}) => {
     if (!parcel) return;
 
     const bounds = parcelBounds(parcel);
     setSelectedId(parcel.id);
-    popupRef.current?.remove();
     if (bounds) {
       mapRef.current?.fitBounds(bounds, {
         padding: options.padding ?? [36, 36],
         duration: options.duration ?? 700
       });
     }
-    if (options.openPopup !== false && mapRef.current) {
-      popupRef.current = L.popup({
-        closeButton: false,
-        closeOnClick: false,
-        autoClose: false,
-        className: 'toka-popup'
-      })
-        .setLatLng([parcel.centroid[1], parcel.centroid[0]])
-        .setContent(buildParcelPopup(parcel))
-        .openOn(mapRef.current);
+
+    if (options.openPopup === false) {
+      popupRef.current?.remove();
+      popupRef.current = null;
+      return;
     }
+
+    syncParcelPanel(parcel);
   };
 
   useEffect(() => {
     if (!mapContainerRef.current) return undefined;
+    if (mapRef.current) return undefined;
 
     const leafletBounds = [
       [kosovoBounds[0][1], kosovoBounds[0][0]],
       [kosovoBounds[1][1], kosovoBounds[1][0]]
     ];
-    const kosovoLatLngBounds = L.latLngBounds(leafletBounds);
+    const kosovoLatLngBounds = geoJsonBoundsToLatLng(kosovoBounds);
 
     const map = L.map(mapContainerRef.current, {
       zoomControl: false,
@@ -1542,7 +1663,7 @@ export default function App() {
       zoomSnap: 0.25,
       minZoom: 7.3,
       maxZoom: 16.8,
-      maxBounds: kosovoLatLngBounds,
+      maxBounds: KOSOVO_LAT_LNG_BOUNDS,
       maxBoundsViscosity: 1.0
     });
 
@@ -1610,16 +1731,7 @@ export default function App() {
     const showParcelPopup = (parcel) => {
       if (!parcel) return;
 
-      popupRef.current?.remove();
-      popupRef.current = L.popup({
-        closeButton: false,
-        closeOnClick: false,
-        autoClose: false,
-        className: 'toka-popup'
-      })
-        .setLatLng([parcel.centroid[1], parcel.centroid[0]])
-        .setContent(buildParcelPopup(parcel))
-        .openOn(map);
+      syncParcelPanel(parcel);
     };
 
     const handleResize = () => {
@@ -1637,10 +1749,9 @@ export default function App() {
     });
     const adminareasLayer = L.geoJSON(EMPTY_COLLECTION, {
       style: {
-        color: '#132a13',
-        weight: 1.3,
-        opacity: 0.95,
-        dashArray: '4 3',
+        color: '#0f2a13',
+        weight: 2.2,
+        opacity: 1,
         fillOpacity: 0
       },
       interactive: false
@@ -1653,6 +1764,13 @@ export default function App() {
         fillOpacity: 0.2,
         opacity: 0.65
       },
+      interactive: false
+    });
+    const outsideMaskLayer = L.polygon([], {
+      color: 'transparent',
+      weight: 0,
+      fillColor: '#d9ecd0',
+      fillOpacity: 0.48,
       interactive: false
     });
     const regionalLayer = L.geoJSON(filteredRegionalSummary, {
@@ -1698,20 +1816,23 @@ export default function App() {
       landuse: landuseLayer,
       adminareas: adminareasLayer,
       water: waterLayer,
+      outsideMask: outsideMaskLayer,
       regional: regionalLayer,
       parcels: parcelsLayer
     };
 
     const syncLayerVisibility = () => {
-      const { landuse, adminareas, water, regional, parcels } = layersRef.current;
-      if (!landuse || !adminareas || !water || !regional || !parcels) return;
+      const { landuse, adminareas, water, outsideMask, regional, parcels } = layersRef.current;
+      if (!landuse || !adminareas || !water || !outsideMask || !regional || !parcels) return;
 
       if (!map.hasLayer(landuse)) landuse.addTo(map);
-      if (!map.hasLayer(adminareas)) adminareas.addTo(map);
       if (!map.hasLayer(water)) water.addTo(map);
-      adminareas.bringToFront();
+      if (!map.hasLayer(outsideMask)) outsideMask.addTo(map);
+      if (!map.hasLayer(adminareas)) adminareas.addTo(map);
       if (map.hasLayer(regional)) map.removeLayer(regional);
       if (!map.hasLayer(parcels)) parcels.addTo(map);
+      outsideMask.bringToFront();
+      adminareas.bringToFront();
       parcels.bringToFront();
     };
 
@@ -1724,8 +1845,13 @@ export default function App() {
         ]);
 
         landuseLayer.clearLayers().addData(landuse);
-        adminareasLayer.clearLayers().addData(adminareas);
         waterLayer.clearLayers().addData(water);
+
+        const kosovoFeature = adminareas.features?.find((feature) => String(feature?.properties?.name || '').includes('Kosova / Kosovo'));
+        if (kosovoFeature) {
+          adminareasLayer.clearLayers().addData(kosovoFeature);
+          outsideMaskLayer.setLatLngs(buildKosovoOutsideMask(kosovoFeature));
+        }
 
         setOsmCounts({
           landuse: landuse.features?.length ?? 0,
@@ -1737,8 +1863,10 @@ export default function App() {
         setOsmStatus('unavailable');
       } finally {
         map.addLayer(landuseLayer);
-        map.addLayer(adminareasLayer);
         map.addLayer(waterLayer);
+        map.addLayer(outsideMaskLayer);
+        map.addLayer(adminareasLayer);
+        outsideMaskLayer.bringToFront();
         adminareasLayer.bringToFront();
         syncLayerVisibility();
         clampToKosovo();
@@ -1771,6 +1899,7 @@ export default function App() {
         landuse: null,
         adminareas: null,
         water: null,
+        outsideMask: null,
         regional: null,
         parcels: null
       };
@@ -1789,18 +1918,10 @@ export default function App() {
     parcels.addData(parcelData);
 
     if (selectedParcel) {
-      popupRef.current?.remove();
-      popupRef.current = L.popup({
-        closeButton: false,
-        closeOnClick: false,
-        autoClose: false,
-        className: 'toka-popup'
-      })
-        .setLatLng([selectedParcel.centroid[1], selectedParcel.centroid[0]])
-        .setContent(buildParcelPopup(selectedParcel))
-        .openOn(map);
+      syncParcelPanel(selectedParcel);
     } else {
       popupRef.current?.remove();
+      popupRef.current = null;
     }
   }, [authUser, filteredRegionalSummary, parcelData, selectedParcel]);
 
@@ -1840,6 +1961,7 @@ export default function App() {
           focusParcel={focusParcel}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
+          filteredParcels={filteredParcels}
           filterMode={filterMode}
           setFilterMode={setFilterMode}
           mapContainerRef={mapContainerRef}
@@ -1864,7 +1986,7 @@ export default function App() {
         <AppModeSwitch viewMode={viewMode} setViewMode={setViewMode} />
         <DemoRoleSwitch authUser={authUser} onSelectRole={handleDemoRole} />
       </div>
-      <div className="app-shell admin-shell">
+      <div className={`app-shell admin-shell ${adminMobileView === 'detail' ? 'admin-detail-open' : ''}`}>
       <header className="topbar">
         <div className="brand">
           <div className="brand-hex">

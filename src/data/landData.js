@@ -14,6 +14,7 @@ export const demoOwner = {
 };
 
 export const kosovoBounds = [
+  // GeoJSON order: [westLng, southLat] then [eastLng, northLat]
   [19.85, 41.82],
   [21.95, 43.32]
 ];
