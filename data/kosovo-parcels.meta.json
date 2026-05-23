@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-05-22T20:20:15Z",
+  "generatedAt": "2026-05-23T00:29:43Z",
   "seed": 918273,
-  "mode": "grid",
-  "targetParcels": 720,
+  "mode": "irregular",
+  "targetParcels": 3500,
   "borderBounds": [
     19.85,
     41.82,
@@ -14,34 +14,37 @@
     "farmlandMask": null,
     "densityMask": null,
     "healthMask": null,
-    "cropTypeMask": null
+    "cropTypeMask": null,
+    "sustainabilityMask": "/home/oltimeri/projects/SmartLand-Junction-ITP-2026/sustainability.png",
+    "landuse": "/home/oltimeri/projects/SmartLand-Junction-ITP-2026/public/data/kosovo-landuse.geojson"
   },
   "summary": {
-    "parcelCount": 688,
-    "pointCount": 688,
-    "farmlandShare": 0.565,
+    "parcelCount": 393,
+    "pointCount": 393,
+    "hexCount": 92,
+    "farmlandShare": 0.588,
     "districtCounts": {
-      "Peja": 121,
-      "Mitrovica": 100,
-      "Gjilan": 86,
-      "Podujeva": 77,
-      "Gjakova": 74,
-      "Ferizaj": 64,
-      "Prizren": 54,
-      "Malisheva": 34,
-      "Pristina": 29,
-      "Lipjan": 22,
-      "Rahovec": 16,
+      "Gjilan": 53,
+      "Mitrovica": 44,
+      "Pristina": 43,
+      "Ferizaj": 40,
+      "Lipjan": 40,
+      "Podujeva": 35,
+      "Malisheva": 29,
+      "Rahovec": 28,
+      "Peja": 27,
+      "Gjakova": 25,
+      "Prizren": 18,
       "Suhareka": 11
     },
     "landUseCounts": {
-      "farmland": 214,
-      "fallow": 109,
-      "pasture": 92,
-      "forest_edge": 81,
-      "mixed": 80,
-      "vineyard": 58,
-      "orchard": 54
+      "farmland": 139,
+      "fallow": 66,
+      "pasture": 51,
+      "forest_edge": 38,
+      "mixed": 37,
+      "orchard": 37,
+      "vineyard": 25
     }
   }
 }

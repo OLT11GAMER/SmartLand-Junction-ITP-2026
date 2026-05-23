@@ -25,17 +25,54 @@ const DISTRICTS = [
 ];
 
 const CROPS = ['wheat', 'corn', 'barley', 'potato', 'beans', 'vegetables', 'orchard', 'vineyard', 'pasture'];
+const FARMLAND_CATEGORIES = new Set(['agriculture', 'tree_crop']);
+const OWNER_POOLS = {
+  Prizren: [
+    { id: 'OWN-AGIM', name: 'Agim Berisha', phone: '+383 44 200 181' },
+    { id: 'OWN-PRZ-02', name: 'Arben Krasniqi', phone: '+383 44 600 118' },
+    { id: 'OWN-PRZ-03', name: 'Lirije Gashi', phone: '+383 44 720 412' }
+  ],
+  Pristina: [
+    { id: 'OWN-DRITA', name: 'Drita Gashi', phone: '+383 44 355 240' },
+    { id: 'OWN-PRT-02', name: 'Mentor Shala', phone: '+383 44 540 921' },
+    { id: 'OWN-PRT-03', name: 'Vesa Hoxha', phone: '+383 44 510 712' }
+  ],
+  Peja: [
+    { id: 'OWN-BLERIM', name: 'Blerim Musliu', phone: '+383 44 411 903' },
+    { id: 'OWN-PEJ-02', name: 'Ilir Hoxha', phone: '+383 44 490 137' }
+  ],
+  Gjakova: [
+    { id: 'OWN-GJK-01', name: 'Blerina Gashi', phone: '+383 44 392 108' },
+    { id: 'OWN-GJK-02', name: 'Naim Berisha', phone: '+383 44 322 771' }
+  ],
+  Ferizaj: [
+    { id: 'OWN-FRZ-01', name: 'Naim Gashi', phone: '+383 44 322 771' },
+    { id: 'OWN-FRZ-02', name: 'Arta Berisha', phone: '+383 44 301 122' }
+  ],
+  Gjilan: [
+    { id: 'OWN-GJN-01', name: 'Driton Morina', phone: '+383 44 500 022' },
+    { id: 'OWN-GJN-02', name: 'Shpresa Halimi', phone: '+383 44 433 802' }
+  ],
+  Mitrovica: [
+    { id: 'OWN-MIT-01', name: 'Besim Tahiri', phone: '+383 44 280 118' },
+    { id: 'OWN-MIT-02', name: 'Valon Hyseni', phone: '+383 44 411 903' }
+  ]
+};
 
 function parseArgs(argv) {
   const args = {
     seed: DEFAULT_SEED,
-    mode: 'grid',
-    targetParcels: 720,
+    mode: 'irregular',
+    targetParcels: 3500,
     border: null,
+    landuse: 'public/data/kosovo-landuse.geojson',
     farmlandMask: null,
     densityMask: null,
     healthMask: null,
     cropTypeMask: null,
+    sustainabilityMask: 'sustainability.png',
+    hexCellSideKm: 6,
+    appModule: 'src/data/generatedLandData.js',
     outDir: 'data'
   };
 
@@ -46,10 +83,14 @@ function parseArgs(argv) {
     else if (token === '--mode') args.mode = next();
     else if (token === '--target-parcels') args.targetParcels = Number(next());
     else if (token === '--border') args.border = next();
+    else if (token === '--landuse') args.landuse = next();
     else if (token === '--farmland-mask') args.farmlandMask = next();
     else if (token === '--density-mask') args.densityMask = next();
     else if (token === '--health-mask') args.healthMask = next();
     else if (token === '--crop-type-mask') args.cropTypeMask = next();
+    else if (token === '--sustainability-mask') args.sustainabilityMask = next();
+    else if (token === '--hex-cell-side-km') args.hexCellSideKm = Number(next());
+    else if (token === '--app-module') args.appModule = next();
     else if (token === '--out-dir') args.outDir = next();
   }
 
@@ -133,6 +174,32 @@ function localPointToGeo(point) {
   return localRingToGeoRing([point])[0];
 }
 
+function geoPointToLocal([lon, lat]) {
+  const [minLon, minLat, maxLon, maxLat] = KOSOVO_BOUNDS;
+  return [
+    (lon - minLon) / (maxLon - minLon),
+    (maxLat - lat) / (maxLat - minLat)
+  ];
+}
+
+function geoGeometryToLocal(geometry) {
+  if (geometry.type === 'Polygon') {
+    return {
+      type: 'Polygon',
+      coordinates: geometry.coordinates.map((ring) => ring.map(geoPointToLocal))
+    };
+  }
+
+  if (geometry.type === 'MultiPolygon') {
+    return {
+      type: 'MultiPolygon',
+      coordinates: geometry.coordinates.map((polygon) => polygon.map((ring) => ring.map(geoPointToLocal)))
+    };
+  }
+
+  return null;
+}
+
 function geoAreaHaFromRing(ring) {
   const feature = turf.polygon([ring]);
   return Math.round((turf.area(feature) / 10000) * 100) / 100;
@@ -143,6 +210,12 @@ function loadPngMask(filePath) {
   if (!fs.existsSync(filePath)) return null;
   const png = PNG.sync.read(fs.readFileSync(filePath));
   return { data: png.data, width: png.width, height: png.height };
+}
+
+function resolveExistingPath(candidate) {
+  if (!candidate) return null;
+  const absolute = path.isAbsolute(candidate) ? candidate : path.resolve(candidate);
+  return fs.existsSync(absolute) ? absolute : null;
 }
 
 function proceduralMask(name, x, y, seed) {
@@ -353,6 +426,77 @@ function loadBorderGeometry(borderPath) {
   throw new Error(`Unsupported border format: ${borderPath}`);
 }
 
+function loadFarmlandFeatures(landusePath) {
+  const resolved = resolveExistingPath(landusePath);
+  if (!resolved) return [];
+  const data = JSON.parse(fs.readFileSync(resolved, 'utf8'));
+  const features = (data.features || []).filter((feature) => {
+    const category = feature?.properties?.category;
+    return feature?.geometry && FARMLAND_CATEGORIES.has(category);
+  });
+
+  return features
+    .map((feature) => {
+      const localGeometry = geoGeometryToLocal(feature.geometry);
+      if (!localGeometry) return null;
+      return turf.feature(localGeometry, {
+        category: feature.properties.category,
+        fclass: feature.properties.fclass
+      });
+    })
+    .filter(Boolean);
+}
+
+function buildFeatureIndex(features, gridSize = 28) {
+  const bins = new Map();
+  for (const feature of features) {
+    const bbox = turf.bbox(feature);
+    feature.properties = {
+      ...(feature.properties || {}),
+      localBBox: bbox
+    };
+    const minX = clamp(Math.floor(bbox[0] * gridSize), 0, gridSize - 1);
+    const maxX = clamp(Math.floor(bbox[2] * gridSize), 0, gridSize - 1);
+    const minY = clamp(Math.floor(bbox[1] * gridSize), 0, gridSize - 1);
+    const maxY = clamp(Math.floor(bbox[3] * gridSize), 0, gridSize - 1);
+    for (let gx = minX; gx <= maxX; gx += 1) {
+      for (let gy = minY; gy <= maxY; gy += 1) {
+        const key = `${gx}:${gy}`;
+        if (!bins.has(key)) bins.set(key, []);
+        bins.get(key).push(feature);
+      }
+    }
+  }
+
+  return { bins, gridSize };
+}
+
+function lookupIndexedFeatures(index, bbox) {
+  if (!index) return [];
+  const minX = clamp(Math.floor(bbox[0] * index.gridSize), 0, index.gridSize - 1);
+  const maxX = clamp(Math.floor(bbox[2] * index.gridSize), 0, index.gridSize - 1);
+  const minY = clamp(Math.floor(bbox[1] * index.gridSize), 0, index.gridSize - 1);
+  const maxY = clamp(Math.floor(bbox[3] * index.gridSize), 0, index.gridSize - 1);
+  const seen = new Set();
+  const results = [];
+  for (let gx = minX; gx <= maxX; gx += 1) {
+    for (let gy = minY; gy <= maxY; gy += 1) {
+      const bucket = index.bins.get(`${gx}:${gy}`) || [];
+      for (const feature of bucket) {
+        const id = feature.properties?.osm_id || feature.properties?.fclass || `${feature.properties?.localBBox}`;
+        if (seen.has(feature)) continue;
+        seen.add(feature);
+        results.push(feature);
+      }
+    }
+  }
+  return results;
+}
+
+function bboxesOverlap(a, b) {
+  return a[0] <= b[2] && a[2] >= b[0] && a[1] <= b[3] && a[3] >= b[1];
+}
+
 function convertGridToCells(rows, cols) {
   const xEdges = Array.from({ length: cols + 1 }, (_, index) => index / cols);
   const yEdges = Array.from({ length: rows + 1 }, (_, index) => index / rows);
@@ -369,6 +513,97 @@ function convertGridToCells(rows, cols) {
     }
   }
   return cells;
+}
+
+function chooseRectSize(sizes, bias, rng) {
+  const weighted = sizes.map((size) => {
+    const normalized = size / Math.max(...sizes);
+    const preference = bias >= 0.62 ? (1.2 - normalized * 0.7) : (0.55 + normalized * 0.9);
+    return [size, Math.max(0.05, preference)];
+  });
+  return weightedChoice(weighted, rng);
+}
+
+function createBooleanGrid(cols, rows) {
+  return Array.from({ length: cols }, () => Array.from({ length: rows }, () => 1));
+}
+
+function canPlaceRect(occupancy, x, y, width, height, cols, rows) {
+  if (x + width > cols || y + height > rows) return false;
+  for (let cx = x; cx < x + width; cx += 1) {
+    for (let cy = y; cy < y + height; cy += 1) {
+      if (!occupancy[cx][cy]) return false;
+    }
+  }
+  return true;
+}
+
+function markRect(occupancy, x, y, width, height) {
+  for (let cx = x; cx < x + width; cx += 1) {
+    for (let cy = y; cy < y + height; cy += 1) {
+      occupancy[cx][cy] = 0;
+    }
+  }
+}
+
+function constructIrregularGridCells(targetParcels, masks, rng) {
+  const targetCells = Math.max(targetParcels * 2.2, 1400);
+  const cols = Math.max(26, Math.round(Math.sqrt(targetCells * 1.15)));
+  const rows = Math.max(22, Math.round(targetCells / cols));
+  const occupancy = createBooleanGrid(cols, rows);
+  const rects = [];
+  const widthChoices = [1, 1, 2, 2, 3, 3, 4, 5];
+  const heightChoices = [1, 1, 2, 2, 3, 4];
+
+  function placePass(sizesX, sizesY, enforceFill = false) {
+    for (let y = 0; y < rows; y += 1) {
+      for (let x = 0; x < cols; x += 1) {
+        if (!occupancy[x][y]) continue;
+        const centerX = (x + 0.5) / cols;
+        const centerY = (y + 0.5) / rows;
+        const farmland = sampleMask(masks.farmland, 'farmland', centerX, centerY, 0);
+        const density = sampleMask(masks.density, 'density', centerX, centerY, 0);
+        const sustainability = sampleMask(masks.sustainability, 'sustainability', centerX, centerY, 0);
+        const bias = clamp((density * 0.45) + (farmland * 0.35) + (sustainability * 0.2), 0, 1);
+        const placementChance = clamp(0.30 + farmland * 0.4 + density * 0.2 + sustainability * 0.15, 0.18, 0.98);
+        if (!enforceFill && rng() > placementChance) continue;
+
+        let width = chooseRectSize(sizesX, bias, rng);
+        let height = chooseRectSize(sizesY, bias, rng);
+        if (density > 0.68 && rng() < 0.6) {
+          width = Math.min(width, 2);
+          height = Math.min(height, 2);
+        } else if (density < 0.3 && rng() < 0.5) {
+          width = Math.min(Math.max(width, 2), 5);
+          height = Math.min(Math.max(height, 2), 4);
+        }
+
+        if (!canPlaceRect(occupancy, x, y, width, height, cols, rows)) {
+          if (enforceFill && canPlaceRect(occupancy, x, y, 1, 1, cols, rows)) {
+            width = 1;
+            height = 1;
+          } else {
+            continue;
+          }
+        }
+
+        markRect(occupancy, x, y, width, height);
+        rects.push({ x, y, width, height, cols, rows, kind: 'irregular' });
+      }
+    }
+  }
+
+  placePass(widthChoices, heightChoices, false);
+  placePass([1, 2, 2, 3], [1, 2, 2], false);
+  placePass([1], [1], true);
+
+  return rects.map((rect) => ({
+    x0: rect.x / cols,
+    y0: rect.y / rows,
+    x1: (rect.x + rect.width) / cols,
+    y1: (rect.y + rect.height) / rows,
+    kind: 'irregular'
+  }));
 }
 
 function splitCell(cell, farmland, density, rng) {
@@ -521,6 +756,77 @@ function chooseLandUse(isFarmland, farmlandMask, densityMask, slopeRisk, rng) {
   ], rng);
 }
 
+function statusForScore(score) {
+  if (score >= 75) return 'Healthy';
+  if (score >= 50) return 'Watch';
+  return 'Critical Alert';
+}
+
+function colorForStatus(status) {
+  if (status === 'Healthy') return '#3c7b45';
+  if (status === 'Watch') return '#d4a84f';
+  return '#c6473c';
+}
+
+function hashValue(input) {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function chooseOwner(district, centroid, isFarmland) {
+  const pool = OWNER_POOLS[district.name] || OWNER_POOLS.Prizren;
+  const cluster = Math.abs(Math.round((centroid[0] * 1000) + (centroid[1] * 1000)));
+  const owner = pool[cluster % pool.length];
+  return {
+    ownerId: owner.id,
+    owner: owner.name,
+    phone: owner.phone,
+    role: isFarmland ? 'Land Owner' : 'Inactive Holder'
+  };
+}
+
+function buildTimeline(seed, score, jitterSeed) {
+  const rng = createRng(seed + jitterSeed);
+  return Array.from({ length: 8 }, (_, index) => {
+    const month = ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][index];
+    const seasonal = Math.sin((index / 7) * Math.PI) * 18;
+    const value = Math.round(clamp(score - 12 + seasonal + (rng() - 0.5) * 18, 8, 99));
+    return {
+      month,
+      ndvi: value,
+      activity: Math.round(clamp(value + (rng() - 0.5) * 14, 5, 100))
+    };
+  });
+}
+
+function buildLedger(parcelId, owner, status, seed) {
+  const actions = [
+    'Farmer crop declaration',
+    'Satellite seasonal check',
+    'Municipality risk review',
+    'Compliance advisory generated'
+  ];
+  let previousHash = 'genesis';
+  return actions.map((action, index) => {
+    const date = new Date(2026, 1 + index, 4 + (seed % 18), 9 + index, 14);
+    const hash = `0x${hashValue(`${parcelId}|${owner}|${action}|${previousHash}|${date.toISOString()}`).toString(16).padStart(8, '0')}`;
+    const record = {
+      id: `${parcelId}-BLK-${index + 1}`,
+      timestamp: date.toISOString(),
+      action,
+      status,
+      previousHash,
+      hash
+    };
+    previousHash = hash;
+    return record;
+  });
+}
+
 function transformLocalGeometryToGeo(geometry) {
   if (geometry.type === 'Polygon') {
     return {
@@ -567,7 +873,8 @@ function sampleMaskBundle(masks, x, y, seed) {
     farmland: round(sampleMask(masks.farmland, 'farmland', x, y, seed)),
     density: round(sampleMask(masks.density, 'density', x, y, seed)),
     health: round(sampleMask(masks.health, 'health', x, y, seed)),
-    cropType: round(sampleMask(masks.cropType, 'cropType', x, y, seed))
+    cropType: round(sampleMask(masks.cropType, 'cropType', x, y, seed)),
+    sustainability: round(sampleMask(masks.sustainability, 'sustainability', x, y, seed))
   };
 }
 
@@ -592,31 +899,32 @@ function buildFeature(index, cell, localFeature, masks, seed, rng, mode) {
   const densityMask = samples.reduce((sum, sample) => sum + sample.density, 0) / samples.length;
   const healthMask = samples.reduce((sum, sample) => sum + sample.health, 0) / samples.length;
   const cropMask = samples.reduce((sum, sample) => sum + sample.cropType, 0) / samples.length;
+  const sustainabilityMask = samples.reduce((sum, sample) => sum + sample.sustainability, 0) / samples.length;
 
   const geoCentroid = localPointToGeo([cx, cy]);
   const district = districtForPoint(geoCentroid[0], geoCentroid[1]);
-  const farmlandProbability = clamp(0.15 + farmlandMask * 0.70 + densityMask * 0.15, 0.03, 0.97);
+  const farmlandProbability = clamp(0.12 + farmlandMask * 0.62 + densityMask * 0.14 + sustainabilityMask * 0.12, 0.03, 0.97);
   const isFarmland = rng() < farmlandProbability;
 
   const slopeNoise = proceduralMask('slope', cx, cy, seed + 17);
   const waterNoise = proceduralMask('water', cx, cy, seed + 31);
   const soilNoise = proceduralMask('soil', cx, cy, seed + 47);
 
-  const slopeRisk = Math.round(clamp((1 - farmlandMask * 0.55 - densityMask * 0.15 + slopeNoise * 0.6) * 100, 0, 100));
-  const waterAccess = Math.round(clamp((densityMask * 0.55 + healthMask * 0.25 + waterNoise * 0.20) * 100, 0, 100));
-  const soilQuality = Math.round(clamp((farmlandMask * 0.45 + healthMask * 0.25 + soilNoise * 0.30) * 100, 0, 100));
+  const slopeRisk = Math.round(clamp((1 - farmlandMask * 0.48 - densityMask * 0.12 - sustainabilityMask * 0.08 + slopeNoise * 0.58) * 100, 0, 100));
+  const waterAccess = Math.round(clamp((densityMask * 0.42 + healthMask * 0.18 + sustainabilityMask * 0.18 + waterNoise * 0.22) * 100, 0, 100));
+  const soilQuality = Math.round(clamp((farmlandMask * 0.3 + healthMask * 0.16 + sustainabilityMask * 0.3 + soilNoise * 0.24) * 100, 0, 100));
 
   const cropType = chooseCropType(isFarmland, district.name, cropMask, rng);
   const landUse = chooseLandUse(isFarmland, farmlandMask, densityMask, slopeRisk, rng);
-  const cropSuitability = clamp((cropMask * 0.6 + farmlandMask * 0.4) * 100, 0, 100);
-  const farmScore = Math.round(clamp(farmlandMask * 55 + cropSuitability * 0.25 + waterAccess * 0.1 + rng() * 10, 0, 100));
-  const harvestHealth = Math.round(clamp(20 + healthMask * 60 + waterAccess * 0.15 - slopeRisk * 0.25 + rng() * 10, 0, 100));
+  const cropSuitability = clamp((cropMask * 0.35 + farmlandMask * 0.25 + sustainabilityMask * 0.4) * 100, 0, 100);
+  const farmScore = Math.round(clamp(farmlandMask * 34 + cropSuitability * 0.22 + waterAccess * 0.15 + soilQuality * 0.12 + rng() * 12, 0, 100));
+  const harvestHealth = Math.round(clamp(18 + healthMask * 36 + sustainabilityMask * 18 + waterAccess * 0.16 - slopeRisk * 0.18 + rng() * 12, 0, 100));
 
   const localArea = ringArea(localFeature.geometry.coordinates[0]);
   const bbox = turf.bbox(localFeature);
   const bboxArea = Math.max(1e-6, (bbox[2] - bbox[0]) * (bbox[3] - bbox[1]));
   const clipRatio = clamp(localArea / bboxArea, 0, 1);
-  const confidence = clamp(1 - (1 - clipRatio) * 0.35 - Math.abs(farmlandMask - cropMask) * 0.15 + rng() * 0.05, 0, 1);
+  const confidence = clamp(1 - (1 - clipRatio) * 0.38 - Math.abs(farmlandMask - cropMask) * 0.12 - Math.abs(healthMask - sustainabilityMask) * 0.08 + rng() * 0.05, 0, 1);
   const rotation = Math.round((rng() * 15 - 7.5) * 100) / 100;
   const jitter = Math.round((0.02 + rng() * 0.16) * 1000) / 1000;
   const shapeType = mode === 'voronoi'
@@ -629,7 +937,20 @@ function buildFeature(index, cell, localFeature, masks, seed, rng, mode) {
   const geoFeature = turf.feature(geoGeometry);
   const areaHa = Math.round((turf.area(geoFeature) / 10000) * 100) / 100;
   const parcelId = `KOS-${district.abbr}-${String(index).padStart(6, '0')}`;
-  const status = harvestHealth >= 75 ? 'Healthy' : harvestHealth >= 50 ? 'Watch' : 'Critical Alert';
+  const status = statusForScore(harvestHealth);
+  const ownerRecord = chooseOwner(district, geoCentroid, isFarmland);
+  const hectares = Math.max(0.12, Math.round(areaHa * 10) / 10);
+  const monocultureYears = Math.max(1, Math.round(1 + cropSuitability / 28 + rng() * 2));
+  const abandonmentProbability = clamp(((100 - harvestHealth) / 100) * 0.72 + (slopeRisk / 100) * 0.08 + (1 - sustainabilityMask) * 0.12, 0.04, 0.94);
+  const complianceRisk = Math.round(clamp((100 - harvestHealth) * 0.45 + monocultureYears * 7 + (1 - confidence) * 16, 3, 98));
+  const projectedLoss = Math.round(Math.max(60, hectares * (900 + cropSuitability * 8 + waterAccess * 5) * abandonmentProbability));
+  const timeline = buildTimeline(seed, harvestHealth, index * 17);
+  const ledger = buildLedger(parcelId, ownerRecord.owner, status, seed + index);
+  const advisory = harvestHealth < 50
+    ? 'Prioritize outreach, verify seasonal activity, and recommend crop rotation before field inspection.'
+    : harvestHealth < 74
+      ? 'Send a crop rotation suggestion and monitor the next satellite seasonal signal.'
+      : 'Parcel is operating normally; keep routine seasonal monitoring active.';
 
   return {
     parcelFeature: {
@@ -638,23 +959,40 @@ function buildFeature(index, cell, localFeature, masks, seed, rng, mode) {
         id: parcelId,
         parcelIndex: index,
         district: district.name,
+        municipality: district.name,
+        ownerId: ownerRecord.ownerId,
+        owner: ownerRecord.owner,
+        phone: ownerRecord.phone,
         centroid: [round(geoCentroid[0]), round(geoCentroid[1])],
         areaHa,
+        hectares,
         shapeType,
         landUse,
         cropType,
+        currentCrop: cropType.charAt(0).toUpperCase() + cropType.slice(1),
         isFarmland: Boolean(isFarmland),
         farmScore,
+        landHealthScore: harvestHealth,
         harvestHealth,
         soilQuality,
         waterAccess,
         slopeRisk,
+        status,
+        color: colorForStatus(status),
+        projectedLoss,
+        complianceRisk,
+        monocultureYears,
+        abandonmentProbability: round(abandonmentProbability),
+        advisory,
+        ledger,
+        cropHistory: timeline,
         confidence: round(confidence),
         maskValues: {
           farmland: round(farmlandMask),
           density: round(densityMask),
           health: round(healthMask),
-          cropType: round(cropMask)
+          cropType: round(cropMask),
+          sustainability: round(sustainabilityMask)
         },
         noise: {
           seed,
@@ -671,9 +1009,16 @@ function buildFeature(index, cell, localFeature, masks, seed, rng, mode) {
         id: parcelId,
         parcelId,
         district: district.name,
+        municipality: district.name,
         status,
+        color: colorForStatus(status),
         isFarmland: Boolean(isFarmland),
-        farmScore
+        farmScore,
+        harvestHealth,
+        ownerId: ownerRecord.ownerId,
+        owner: ownerRecord.owner,
+        currentCrop: cropType,
+        detailId: parcelId
       },
       geometry: {
         type: 'Point',
@@ -687,7 +1032,46 @@ function createBorderFeature(borderGeometry) {
   return turf.feature(borderGeometry);
 }
 
+function clipToFarmland(localFeature, farmlandIndex) {
+  if (!farmlandIndex?.features?.length) return localFeature;
+  const bbox = turf.bbox(localFeature);
+  const candidates = lookupIndexedFeatures(farmlandIndex.index, bbox).filter((feature) => {
+    const featureBBox = feature.properties?.localBBox;
+    return featureBBox && bboxesOverlap(featureBBox, bbox);
+  });
+  if (!candidates.length) return null;
+
+  let best = null;
+  let bestArea = 0;
+  for (const candidate of candidates) {
+    const clipped = turf.intersect(turf.featureCollection([localFeature, candidate]));
+    if (!clipped?.geometry) continue;
+    const area = turf.area(turf.feature(transformLocalGeometryToGeo(clipped.geometry)));
+    if (area > bestArea) {
+      best = clipped;
+      bestArea = area;
+    }
+  }
+  return bestArea > 0 ? best : null;
+}
+
 function buildCells(borderFeature, masks, args, rng) {
+  if (args.mode === 'irregular') {
+    return constructIrregularGridCells(args.targetParcels, masks, rng).map((cell) => {
+      const ring = [
+        [cell.x0, cell.y0],
+        [cell.x1, cell.y0],
+        [cell.x1, cell.y1],
+        [cell.x0, cell.y1],
+        [cell.x0, cell.y0]
+      ];
+      return {
+        ...cell,
+        localFeature: turf.polygon([ring])
+      };
+    });
+  }
+
   if (args.mode === 'voronoi') {
     return buildVoronoiCells(args.targetParcels, rng).map((cell) => ({
       ...cell,
@@ -710,7 +1094,64 @@ function buildCells(borderFeature, masks, args, rng) {
   });
 }
 
-function generateData(borderFeature, masks, args) {
+function buildHexSummary(parcelFeatures, cellSideKm) {
+  const source = turf.featureCollection(parcelFeatures);
+  const bbox = turf.bbox(source);
+  const hexes = turf.hexGrid(bbox, cellSideKm, { units: 'kilometers' }).features;
+  const centroids = parcelFeatures.map((feature) => ({
+    feature,
+    point: turf.point(feature.properties.centroid)
+  }));
+  const summaryFeatures = [];
+
+  for (let i = 0; i < hexes.length; i += 1) {
+    const hex = hexes[i];
+    const matched = centroids.filter(({ point }) => turf.booleanPointInPolygon(point, hex));
+    if (!matched.length) continue;
+
+    const parcelCount = matched.length;
+    const avgHealth = Math.round(matched.reduce((sum, item) => sum + item.feature.properties.landHealthScore, 0) / parcelCount);
+    const avgFarmScore = Math.round(matched.reduce((sum, item) => sum + item.feature.properties.farmScore, 0) / parcelCount);
+    const avgRisk = Math.round(matched.reduce((sum, item) => sum + item.feature.properties.complianceRisk, 0) / parcelCount);
+    const cropCounts = new Map();
+    for (const { feature } of matched) {
+      cropCounts.set(feature.properties.currentCrop, (cropCounts.get(feature.properties.currentCrop) || 0) + 1);
+    }
+    const dominantCrop = [...cropCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || 'Mixed';
+    const sampleParcel = matched[0].feature.properties.id;
+    const status = statusForScore(avgHealth);
+
+    hex.properties = {
+      id: `HEX-${String(i + 1).padStart(4, '0')}`,
+      parcelCount,
+      avgHealth,
+      avgFarmScore,
+      avgRisk,
+      dominantCrop,
+      status,
+      color: colorForStatus(status),
+      detailId: sampleParcel
+    };
+    summaryFeatures.push(hex);
+  }
+
+  return {
+    type: 'FeatureCollection',
+    features: summaryFeatures
+  };
+}
+
+function buildAppModule(parcelFeatures, hexSummary, modulePath) {
+  const detailedParcels = parcelFeatures.map((feature) => ({
+    ...feature.properties,
+    geometry: feature.geometry
+  }));
+  const moduleText = `export const detailedParcels = ${JSON.stringify(detailedParcels, null, 2)};\n\nexport const regionalSummaryData = ${JSON.stringify(hexSummary, null, 2)};\n`;
+  fs.mkdirSync(path.dirname(modulePath), { recursive: true });
+  fs.writeFileSync(modulePath, moduleText);
+}
+
+function generateData(borderFeature, farmlandIndex, masks, args) {
   const rng = createRng(args.seed);
   const cells = buildCells(borderFeature, masks, args, rng);
   const parcelFeatures = [];
@@ -718,7 +1159,9 @@ function generateData(borderFeature, masks, args) {
 
   for (let i = 0; i < cells.length; i += 1) {
     const cell = cells[i];
-    const clipped = clipToBorder(cell.localFeature, borderFeature);
+    const farmlandClipped = clipToFarmland(cell.localFeature, farmlandIndex);
+    if (!farmlandClipped) continue;
+    const clipped = clipToBorder(farmlandClipped, borderFeature);
     if (!clipped) continue;
     const geometry = clipped.geometry;
     if (!geometry) continue;
@@ -733,10 +1176,11 @@ function generateData(borderFeature, masks, args) {
     pointFeatures.push(pointFeature);
   }
 
-  return { parcelFeatures, pointFeatures };
+  const hexSummary = buildHexSummary(parcelFeatures, args.hexCellSideKm);
+  return { parcelFeatures, pointFeatures, hexSummary };
 }
 
-function buildMetadata(parcelFeatures, pointFeatures, args, maskSources) {
+function buildMetadata(parcelFeatures, pointFeatures, hexSummary, args, maskSources) {
   const districtCounts = new Map();
   const landUseCounts = new Map();
   let farmlandCount = 0;
@@ -751,6 +1195,7 @@ function buildMetadata(parcelFeatures, pointFeatures, args, maskSources) {
   const summary = {
     parcelCount: parcelFeatures.length,
     pointCount: pointFeatures.length,
+    hexCount: hexSummary.features.length,
     farmlandShare: Math.round((farmlandCount / Math.max(1, parcelFeatures.length)) * 1000) / 1000,
     districtCounts: Object.fromEntries([...districtCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))),
     landUseCounts: Object.fromEntries([...landUseCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])))
@@ -767,7 +1212,9 @@ function buildMetadata(parcelFeatures, pointFeatures, args, maskSources) {
       farmlandMask: maskSources.farmlandMask || null,
       densityMask: maskSources.densityMask || null,
       healthMask: maskSources.healthMask || null,
-      cropTypeMask: maskSources.cropTypeMask || null
+      cropTypeMask: maskSources.cropTypeMask || null,
+      sustainabilityMask: maskSources.sustainabilityMask || null,
+      landuse: maskSources.landuse || null
     },
     summary
   };
@@ -777,7 +1224,7 @@ function ensureOutDir(outDir) {
   fs.mkdirSync(outDir, { recursive: true });
 }
 
-function writeOutputs(outDir, parcelFeatures, pointFeatures, metadata) {
+function writeOutputs(outDir, parcelFeatures, pointFeatures, hexSummary, metadata) {
   const parcelsGeoJSON = {
     type: 'FeatureCollection',
     features: parcelFeatures
@@ -790,34 +1237,47 @@ function writeOutputs(outDir, parcelFeatures, pointFeatures, metadata) {
   fs.writeFileSync(path.join(outDir, 'kosovo-parcels.geojson'), `${JSON.stringify(parcelsGeoJSON, null, 2)}\n`);
   fs.writeFileSync(path.join(outDir, 'kosovo-parcels.meta.json'), `${JSON.stringify(metadata, null, 2)}\n`);
   fs.writeFileSync(path.join(outDir, 'kosovo-parcels-points.geojson'), `${JSON.stringify(pointsGeoJSON, null, 2)}\n`);
+  fs.writeFileSync(path.join(outDir, 'kosovo-hex-summary.geojson'), `${JSON.stringify(hexSummary, null, 2)}\n`);
   fs.writeFileSync(path.join(outDir, 'kosovo-bounds.json'), `${JSON.stringify({ bounds: KOSOVO_BOUNDS, crs: 'EPSG:4326' }, null, 2)}\n`);
 }
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const outDir = path.resolve(args.outDir);
+  const appModulePath = path.resolve(args.appModule);
+  const landusePath = resolveExistingPath(args.landuse);
+  const sustainabilityMaskPath = resolveExistingPath(args.sustainabilityMask);
   ensureOutDir(outDir);
 
   const borderGeometry = loadBorderGeometry(args.border);
   const borderFeature = createBorderFeature(borderGeometry);
+  const farmlandFeatures = loadFarmlandFeatures(landusePath);
+  const farmlandIndex = {
+    features: farmlandFeatures,
+    index: buildFeatureIndex(farmlandFeatures)
+  };
   const masks = {
     farmland: loadPngMask(args.farmlandMask),
     density: loadPngMask(args.densityMask),
     health: loadPngMask(args.healthMask),
-    cropType: loadPngMask(args.cropTypeMask)
+    cropType: loadPngMask(args.cropTypeMask),
+    sustainability: loadPngMask(sustainabilityMaskPath)
   };
 
-  const { parcelFeatures, pointFeatures } = generateData(borderFeature, masks, args);
-  const metadata = buildMetadata(parcelFeatures, pointFeatures, args, {
+  const { parcelFeatures, pointFeatures, hexSummary } = generateData(borderFeature, farmlandIndex, masks, args);
+  const metadata = buildMetadata(parcelFeatures, pointFeatures, hexSummary, args, {
     border: args.border,
+    landuse: landusePath,
     farmlandMask: args.farmlandMask,
     densityMask: args.densityMask,
     healthMask: args.healthMask,
-    cropTypeMask: args.cropTypeMask
+    cropTypeMask: args.cropTypeMask,
+    sustainabilityMask: sustainabilityMaskPath
   });
 
-  writeOutputs(outDir, parcelFeatures, pointFeatures, metadata);
-  console.log(`Generated ${parcelFeatures.length} parcels and ${pointFeatures.length} points into ${outDir}`);
+  writeOutputs(outDir, parcelFeatures, pointFeatures, hexSummary, metadata);
+  buildAppModule(parcelFeatures, hexSummary, appModulePath);
+  console.log(`Generated ${parcelFeatures.length} parcels, ${pointFeatures.length} points, and ${hexSummary.features.length} hexes into ${outDir}`);
   console.log(`Mode: ${args.mode} | Seed: ${args.seed}`);
 }
 

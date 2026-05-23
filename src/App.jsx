@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import {
   AlertTriangle,
   Compass,
@@ -8,7 +9,6 @@ import {
   Layers3,
   MapPinned,
   ShieldCheck,
-  Sprout,
   Search,
   UserRound
 } from 'lucide-react';
@@ -17,7 +17,7 @@ import {
   detailedParcels,
   kosovoBounds,
   municipalityStats,
-  regionalPointData
+  regionalSummaryData
 } from './data/landData';
 
 const DETAIL_ZOOM = 11.5;
@@ -85,31 +85,31 @@ function StatusPill({ status }) {
 
 function StatCard({ icon: Icon, label, value, sub }) {
   return (
-    <div className="border border-[#dbe4d5] bg-white/86 p-4 shadow-sm">
+    <div className="border border-[var(--border)] bg-white/86 p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-[11px] font-extrabold uppercase tracking-wide text-[#71806d]">{label}</div>
-          <div className="mt-2 text-2xl font-extrabold text-[#17391f]">{value}</div>
+          <div className="text-[11px] font-extrabold uppercase tracking-wide text-[var(--text-soft)]">{label}</div>
+          <div className="mt-2 text-2xl font-extrabold text-[var(--forest)]">{value}</div>
         </div>
-        <div className="grid h-10 w-10 place-items-center bg-[#eef5e9] text-[#3c7b45]">
+        <div className="grid h-10 w-10 place-items-center bg-[var(--sage-pale)] text-[var(--sage)]">
           <Icon size={19} />
         </div>
       </div>
-      <div className="mt-2 text-xs leading-5 text-[#667463]">{sub}</div>
+      <div className="mt-2 text-xs leading-5 text-[var(--text-mid)]">{sub}</div>
     </div>
   );
 }
 
 function Legend() {
   return (
-    <div className="absolute bottom-4 left-4 z-10 border border-[#dbe4d5] bg-white/92 p-3 shadow-lg backdrop-blur">
-      <div className="mb-2 text-[11px] font-extrabold uppercase tracking-wide text-[#667463]">Parcel status</div>
+    <div className="absolute bottom-4 left-4 z-10 border border-[var(--border)] bg-white/92 p-3 shadow-lg backdrop-blur">
+      <div className="mb-2 text-[11px] font-extrabold uppercase tracking-wide text-[var(--text-soft)]">Parcel status</div>
       {[
-        ['#3c7b45', 'Healthy'],
-        ['#d4a84f', 'Watch'],
-        ['#c6473c', 'Critical Alert']
+        ['#1f923b', 'Healthy'],
+        ['#48acf0', 'Watch'],
+        ['#4b1b07', 'Critical Alert']
       ].map(([color, label]) => (
-        <div key={label} className="flex items-center gap-2 py-1 text-xs font-semibold text-[#17391f]">
+        <div key={label} className="flex items-center gap-2 py-1 text-xs font-semibold text-[var(--forest)]">
           <span className="h-3 w-3 border border-black/10" style={{ backgroundColor: color }} />
           {label}
         </div>
@@ -120,9 +120,436 @@ function Legend() {
 
 function MapBadge({ label, value }) {
   return (
-    <div className="border border-[#dbe4d5] bg-white/92 px-3 py-2 text-xs font-bold text-[#17391f] shadow-lg backdrop-blur">
-      <div className="text-[10px] font-extrabold uppercase tracking-wide text-[#71806d]">{label}</div>
+    <div className="border border-[var(--border)] bg-white/92 px-3 py-2 text-xs font-bold text-[var(--forest)] shadow-lg backdrop-blur">
+      <div className="text-[10px] font-extrabold uppercase tracking-wide text-[var(--text-soft)]">{label}</div>
       <div className="mt-0.5">{value}</div>
+    </div>
+  );
+}
+
+function BrandLogo() {
+  return (
+    <svg viewBox="0 0 72 72" aria-hidden="true">
+      <defs>
+        <linearGradient id="logoField" x1="0%" x2="100%" y1="0%" y2="100%">
+          <stop offset="0%" stopColor="#1f923b" />
+          <stop offset="100%" stopColor="#48acf0" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M36 7c7 0 11 5 16 8 5 3 11 4 13 10 2 5 0 10 3 15 3 5 4 11 1 16-3 5-10 7-15 11-5 4-9 8-15 10-6 2-12-1-18-3-6-2-13-4-16-10-3-5-1-11-2-17-1-6-5-12-2-18 3-5 9-8 15-10 5-2 9-6 15-7 2-1 3-1 5-1Z"
+        fill="#1f923b"
+        opacity="0.95"
+      />
+      <path
+        d="M16 47c7-3 14-4 20-4s14 1 20 4"
+        fill="none"
+        stroke="#132a13"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M20 51c6 2 10 4 16 7 6-3 10-5 16-7"
+        fill="none"
+        stroke="#4b1b07"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M30 18c0 8 1 13 2 18"
+        fill="none"
+        stroke="#132a13"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M42 18c0 8-1 13-2 18"
+        fill="none"
+        stroke="#132a13"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M36 16c-4 4-8 6-11 7 5 5 9 8 11 9 2-1 6-4 11-9-3-1-7-3-11-7Z"
+        fill="#f4fcd9"
+      />
+      <path d="M36 34v13" stroke="#132a13" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M26 30c3 1 7 4 10 7" stroke="#48acf0" strokeWidth="2" strokeLinecap="round" />
+      <path d="M46 30c-3 1-7 4-10 7" stroke="#48acf0" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+const AUTH_STORAGE_KEY = 'toka_user';
+
+const DEMO_ACCOUNTS = {
+  '1234567890': {
+    nid: '1234567890',
+    password: 'toka123',
+    name: 'Agim Berisha',
+    municipality: 'Prizren',
+    role: 'farmer',
+    parcels: '3 parcels',
+    area: '4.7 ha',
+    status: 'Aktiv'
+  },
+  '9876543210': {
+    nid: '9876543210',
+    password: 'toka123',
+    name: 'Drita Gashi',
+    municipality: 'Prishtinë',
+    role: 'farmer',
+    parcels: '1 parcel',
+    area: '1.2 ha',
+    status: 'Aktiv'
+  },
+  admin: {
+    nid: 'admin',
+    password: 'admin123',
+    name: 'Admin Komunal',
+    municipality: 'Kosovo',
+    role: 'admin',
+    parcels: 'All parcels',
+    area: 'National view',
+    status: 'Administrator'
+  }
+};
+
+const DEMO_AKK = {
+  '1234567890': DEMO_ACCOUNTS['1234567890'],
+  '9876543210': DEMO_ACCOUNTS['9876543210'],
+  '1111111111': {
+    nid: '1111111111',
+    name: 'Blerim Musliu',
+    municipality: 'Pejë',
+    role: 'farmer',
+    parcels: '2 parcels',
+    area: '3.1 ha',
+    status: 'Aktiv'
+  }
+};
+
+function AuthView({ onAuth }) {
+  const [tab, setTab] = useState('login');
+  const [loginNid, setLoginNid] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [signupNid, setSignupNid] = useState('');
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupPassword2, setSignupPassword2] = useState('');
+  const [signupPhone, setSignupPhone] = useState('');
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState('');
+  const [akkRecord, setAkkRecord] = useState(null);
+  const [step2Visible, setStep2Visible] = useState(false);
+
+  const showTab = (nextTab) => {
+    setTab(nextTab);
+    setLoginError('');
+  };
+
+  const lookupAKK = () => {
+    const nid = signupNid.trim();
+    setLookupError('');
+    if (nid.length < 4) return;
+
+    setLookupLoading(true);
+    window.setTimeout(() => {
+      const record = DEMO_AKK[nid];
+      setLookupLoading(false);
+      if (!record) {
+        setLookupError('NID nuk u gjet në bazën e të dhënave të AKK. Kontrolloni dhe provoni përsëri.');
+        setAkkRecord(null);
+        setStep2Visible(false);
+        return;
+      }
+
+      setAkkRecord(record);
+      setStep2Visible(true);
+      setLookupError('');
+    }, 700);
+  };
+
+  const doLogin = () => {
+    const nid = loginNid.trim();
+    const record = DEMO_ACCOUNTS[nid];
+    if (!record || record.password !== loginPassword) {
+      setLoginError('NID ose fjalëkalimi është gabim. Provoni përsëri.');
+      return;
+    }
+
+    onAuth({
+      nid: record.nid,
+      name: record.name,
+      role: record.role,
+      municipality: record.municipality
+    });
+  };
+
+  const doAdminLogin = () => {
+    const record = DEMO_ACCOUNTS.admin;
+    onAuth({
+      nid: record.nid,
+      name: record.name,
+      role: record.role,
+      municipality: record.municipality
+    });
+  };
+
+  const doSignup = () => {
+    if (!akkRecord) return;
+    if (!signupEmail.trim() || !signupPassword.trim() || !signupPassword2.trim()) return;
+    if (signupPassword !== signupPassword2) {
+      setLoginError('Fjalëkalimet nuk përputhen.');
+      setTab('login');
+      return;
+    }
+
+    onAuth({
+      nid: akkRecord.nid,
+      name: akkRecord.name,
+      role: 'farmer',
+      municipality: akkRecord.municipality
+    });
+  };
+
+  return (
+    <div className="auth-page">
+      <div className="auth-left">
+        <div className="left-bg" />
+        <div className="left-texture" />
+
+        <div className="left-content">
+          <div className="brand">
+            <div className="brand-hex">
+              <BrandLogo />
+            </div>
+            <div>
+              <div className="brand-name">toka ime</div>
+              <div className="brand-tag">Sistemi i Shëndetit të Tokës</div>
+            </div>
+          </div>
+
+          <div className="left-headline">
+            Toka juaj ka<br />një <em>histori</em> të gjallë
+          </div>
+          <div className="left-sub">
+            Sistemi TOKA mbron tokën kosovare duke ndjekur gjendjen e çdo parcele në kohë reale.
+          </div>
+
+          <div className="features">
+            <div className="feat">
+              <div className="feat-icon">⛓</div>
+              <div className="feat-text">
+                <strong>Regjistër i pandryshueshëm</strong>
+                Çdo aktivitet i tokës ruhet dhe mund të verifikohet më vonë.
+              </div>
+            </div>
+            <div className="feat">
+              <div className="feat-icon">🛰</div>
+              <div className="feat-text">
+                <strong>Verifikim satelitor</strong>
+                Mbikëqyrje vizuale për të dalluar stresin dhe ndryshimet e parcelave.
+              </div>
+            </div>
+            <div className="feat">
+              <div className="feat-icon">💬</div>
+              <div className="feat-text">
+                <strong>Këshillues AI në shqip</strong>
+                Pyesni gjithçka rreth tokës suaj nga një ndërfaqe e thjeshtë.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="left-footer">
+          <div className="akk-badge">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <rect x="2" y="2" width="14" height="14" rx="3" stroke="rgba(255,255,255,0.5)" strokeWidth="1.2" />
+              <path d="M5 9l3 3 5-5" stroke="rgba(160,220,164,0.8)" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <div>
+              <span>E lidhur me </span>
+              <strong>AKK — Agjencia Kadastrale e Kosovës</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="auth-right">
+        <div className="form-card">
+          <div className="form-title">{tab === 'login' ? 'Mirë se kthyet' : 'Regjistrim i Ri'}</div>
+          <div className="form-sub">
+            {tab === 'login'
+              ? 'Hyni me numrin tuaj personal të identitetit dhe fjalëkalimin e regjistruar.'
+              : 'Shkruani numrin tuaj personal. Ne do të marrim informacionin nga baza e të dhënave të AKK.'}
+          </div>
+
+          <div className="tabs">
+            <div className={`tab ${tab === 'login' ? 'active' : ''}`} onClick={() => showTab('login')}>
+              Hyrje
+            </div>
+            <div className={`tab ${tab === 'signup' ? 'active' : ''}`} onClick={() => showTab('signup')}>
+              Regjistrim i Ri
+            </div>
+          </div>
+
+          {tab === 'login' ? (
+            <div>
+              <div className="field">
+                <label>Numri Personal (NID) <span className="req">*</span></label>
+                <div className="input-wrap">
+                  <span className="icon">🪪</span>
+                  <input
+                    type="text"
+                    value={loginNid}
+                    onChange={(event) => setLoginNid(event.target.value)}
+                    placeholder="p.sh. 1234567890"
+                    maxLength={10}
+                  />
+                </div>
+              </div>
+
+              <div className="field">
+                <label>Fjalëkalimi <span className="req">*</span></label>
+                <div className="input-wrap">
+                  <span className="icon">🔒</span>
+                  <input
+                    type="password"
+                    value={loginPassword}
+                    onChange={(event) => setLoginPassword(event.target.value)}
+                    placeholder="Shkruani fjalëkalimin tuaj"
+                  />
+                </div>
+                <div className={`error-msg ${loginError ? 'show' : ''}`}>{loginError || 'NID ose fjalëkalimi është gabim. Provoni përsëri.'}</div>
+              </div>
+
+              <button className="submit-btn" type="button" onClick={doLogin}>
+                <span>Hyrja në TOKA</span>
+                <span>→</span>
+              </button>
+
+              <div className="form-link">
+                Nuk keni llogari? <a onClick={() => showTab('signup')}>Regjistrohuni</a>
+              </div>
+              <div className="admin-link">
+                Punonjës i Autoriteteve Lokale/Institucioneve? <a onClick={doAdminLogin}>Hyni si Administrator →</a>
+              </div>
+              <div className="admin-link" style={{ borderTop: 'none', marginTop: '12px', paddingTop: 0 }}>
+                Demo ferma: 1234567890 / toka123
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="field">
+                <label>Numri Personal (NID) <span className="req">*</span></label>
+                <div className="id-row">
+                  <div className="input-wrap" style={{ flex: 1 }}>
+                    <span className="icon">🪪</span>
+                    <input
+                      type="text"
+                      value={signupNid}
+                      onChange={(event) => setSignupNid(event.target.value)}
+                      placeholder="10 shifra"
+                      maxLength={10}
+                    />
+                  </div>
+                  <button
+                    className={`lookup-btn ${lookupLoading ? 'loading' : ''}`}
+                    type="button"
+                    onClick={lookupAKK}
+                  >
+                    {lookupLoading ? 'Duke kërkuar…' : 'Kërko AKK'}
+                  </button>
+                </div>
+                <div className={`error-msg ${lookupError ? 'show' : ''}`}>{lookupError || 'NID nuk u gjet në bazën e të dhënave të AKK. Kontrolloni dhe provoni përsëri.'}</div>
+              </div>
+
+              {akkRecord && step2Visible && (
+                <>
+                  <div className="akk-result show">
+                    <div className="akk-result-header">
+                      <div className="dot" />
+                      <span>Gjendja nga AKK — Verifikuar</span>
+                    </div>
+                    <div className="akk-grid">
+                      <div className="akk-item"><label>Emri</label><p>{akkRecord.name}</p></div>
+                      <div className="akk-item"><label>NID</label><p>{akkRecord.nid}</p></div>
+                      <div className="akk-item"><label>Komuna</label><p>{akkRecord.municipality}</p></div>
+                      <div className="akk-item"><label>Parcela</label><p>{akkRecord.parcels || '—'}</p></div>
+                      <div className="akk-item"><label>Sipërfaqja</label><p>{akkRecord.area || '—'}</p></div>
+                      <div className="akk-item"><label>Statusi</label><p style={{ color: 'var(--sage)' }}>{akkRecord.status || 'Aktiv'}</p></div>
+                    </div>
+                  </div>
+
+                  <div id="step2-fields">
+                    <div className="divider"><span>Plotësoni të dhënat tuaja</span></div>
+                    <div className="field">
+                      <label>Email <span className="req">*</span></label>
+                      <div className="input-wrap">
+                        <span className="icon">✉️</span>
+                        <input
+                          type="email"
+                          value={signupEmail}
+                          onChange={(event) => setSignupEmail(event.target.value)}
+                          placeholder="emri@shembull.com"
+                        />
+                      </div>
+                    </div>
+                    <div className="field-row">
+                      <div className="field">
+                        <label>Fjalëkalimi <span className="req">*</span></label>
+                        <div className="input-wrap">
+                          <span className="icon">🔒</span>
+                          <input
+                            type="password"
+                            value={signupPassword}
+                            onChange={(event) => setSignupPassword(event.target.value)}
+                            placeholder="Min. 8 karaktere"
+                          />
+                        </div>
+                      </div>
+                      <div className="field">
+                        <label>Konfirmo <span className="req">*</span></label>
+                        <div className="input-wrap">
+                          <span className="icon">🔒</span>
+                          <input
+                            type="password"
+                            value={signupPassword2}
+                            onChange={(event) => setSignupPassword2(event.target.value)}
+                            placeholder="Përsërit"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="field">
+                      <label>Numri i telefonit</label>
+                      <div className="input-wrap">
+                        <span className="icon">📱</span>
+                        <input
+                          type="tel"
+                          value={signupPhone}
+                          onChange={(event) => setSignupPhone(event.target.value)}
+                          placeholder="+383 4X XXX XXX"
+                        />
+                      </div>
+                    </div>
+                    <button className="submit-btn" type="button" onClick={doSignup}>
+                      <span>Krijo Llogarinë</span>
+                      <span>✓</span>
+                    </button>
+                  </div>
+                </>
+              )}
+
+              <div className="form-link" style={{ marginTop: '16px' }}>
+                Keni llogari? <a onClick={() => showTab('login')}>Hyni këtu</a>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -287,10 +714,432 @@ function AdvisorPanel({ parcel, chatMessages, chatInput, setChatInput, sendChat 
   );
 }
 
+function FloatingChatButton({ label, onClick }) {
+  return (
+    <button className="chatbot-fab" type="button" onClick={onClick} aria-label={label}>
+      <span className="chatbot-fab-icon">🤖</span>
+      <span className="chatbot-fab-text">{label}</span>
+    </button>
+  );
+}
+
+function FarmerDashboard({
+  authUser,
+  selectedParcel,
+  setSelectedId,
+  searchTerm,
+  setSearchTerm,
+  filterMode,
+  setFilterMode,
+  mapContainerRef,
+  mapReady,
+  osmStatus,
+  osmCounts,
+  zoom,
+  isDetailView,
+  handleLogout,
+  chatMessages,
+  chatInput,
+  setChatInput,
+  sendChat
+}) {
+  const [mobileView, setMobileView] = useState('map');
+  const [activeTab, setActiveTab] = useState('detail');
+
+  const farmerParcels = useMemo(() => {
+    return detailedParcels.filter((parcel) => parcel.owner === authUser.name);
+  }, [authUser.name]);
+
+  const filteredFarmerParcels = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return farmerParcels.filter((parcel) => {
+      const pulse = parcel.landHealthScore ?? parcel.farmScore ?? 0;
+      if (filterMode === 'risk' && pulse >= 40) return false;
+      if (filterMode === 'stress' && (pulse < 40 || pulse >= 70)) return false;
+      if (filterMode === 'thriving' && pulse < 70) return false;
+      if (!query) return true;
+      return [parcel.id, parcel.owner, parcel.municipality, parcel.currentCrop, parcel.status]
+        .some((field) => String(field).toLowerCase().includes(query));
+    });
+  }, [farmerParcels, filterMode, searchTerm]);
+
+  useEffect(() => {
+    if (!farmerParcels.length) return;
+    const stillOwned = farmerParcels.some((parcel) => parcel.id === selectedParcel.id);
+    if (!stillOwned) {
+      setSelectedId(farmerParcels[0].id);
+    }
+  }, [farmerParcels, selectedParcel.id, setSelectedId]);
+
+  return (
+    <div className="app-shell farmer-shell">
+      <header className="topbar">
+        <div className="brand">
+          <div className="brand-hex">
+            <BrandLogo />
+          </div>
+          <div>
+            <div className="brand-name">toka ime</div>
+            <div className="brand-tag">Sistemi i Shëndetit të Tokës</div>
+          </div>
+        </div>
+
+        <div className="topbar-center">
+          <div className="topbar-search">
+            <Search size={14} />
+            <input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Kërko parcelë, komuna…"
+            />
+          </div>
+        </div>
+
+        <button className="hamburger" type="button" onClick={() => setMobileView('list')} aria-label="Open panels">
+          ☰
+        </button>
+
+        <div className="topbar-right">
+          <div className="live-badge">
+            <div className="live-dot" />
+            <span>Live — Farmer View</span>
+          </div>
+          <div className="admin-chip">
+            <div className="admin-av">{authUser.name.slice(0, 2).toUpperCase()}</div>
+            <span>{authUser.name}</span>
+          </div>
+          <button className="toka-top-btn" type="button" onClick={handleLogout}>
+            Dil
+          </button>
+        </div>
+      </header>
+
+      <div
+        className={`sidebar-overlay ${mobileView === 'list' ? 'visible' : ''}`}
+        onClick={() => setMobileView('map')}
+        role="presentation"
+      />
+
+      <aside className={`sidebar ${mobileView === 'list' ? 'open' : ''}`}>
+        <button className="sidebar-close" type="button" onClick={() => setMobileView('map')}>
+          ✕
+        </button>
+        <div className="sidebar-section">
+          <div className="stat-grid">
+            <div className="stat-card good">
+              <div className="sv">{farmerParcels.length}</div>
+              <div className="sl">Your parcels</div>
+            </div>
+            <div className="stat-card good">
+              <div className="sv">{Math.round(farmerParcels.reduce((sum, parcel) => sum + parcel.landHealthScore, 0) / Math.max(1, farmerParcels.length))}</div>
+              <div className="sl">Avg health</div>
+            </div>
+            <div className="stat-card danger">
+              <div className="sv">{farmerParcels.filter((parcel) => parcel.status === 'Critical Alert').length}</div>
+              <div className="sl">Alerts</div>
+            </div>
+            <div className="stat-card warn">
+              <div className="sv">{formatter.format(farmerParcels.reduce((sum, parcel) => sum + parcel.projectedLoss, 0))}</div>
+              <div className="sl">Projected loss</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="sidebar-section sidebar-insights-section">
+          <div className="insights-panel">
+            <div className="municipality-card active">
+              <div className="card-top">
+                <div>
+                  <div className="brand-tag" style={{ color: 'rgba(255,255,255,0.4)' }}>Toka ime</div>
+                  <h3>{selectedParcel.municipality}</h3>
+                </div>
+                <div className="score-box">{selectedParcel.landHealthScore}</div>
+              </div>
+              <div className={`risk-badge ${selectedParcel.status === 'Healthy' ? 'positive' : selectedParcel.status === 'Watch' ? 'medium' : 'negative'}`}>
+                {selectedParcel.status}
+              </div>
+              <div className="card-content">
+                <div className="info-row"><span>Current crop</span><span className="positive">{selectedParcel.currentCrop}</span></div>
+                <div className="info-row"><span>Owner</span><span>{selectedParcel.owner}</span></div>
+                <div className="info-row"><span>Projected loss</span><span>{formatter.format(selectedParcel.projectedLoss)}</span></div>
+                <div className="expanded-info">
+                  <p>{selectedParcel.advisory}</p>
+                </div>
+              </div>
+            </div>
+            <div className="ins-card">
+              <div className="ins-title">
+                <MapPinned size={13} />
+                Your parcels
+              </div>
+              <table className="muni-table">
+                <thead>
+                  <tr>
+                    <th>Parcel</th>
+                    <th>Crop</th>
+                    <th>Pulse</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredFarmerParcels.slice(0, 5).map((parcel) => (
+                    <tr key={parcel.id}>
+                      <td>{parcel.id}</td>
+                      <td>{parcel.currentCrop}</td>
+                      <td>{parcel.landHealthScore}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div className="sidebar-section">
+          <div className="ss-label">Parcelet tuaja</div>
+          <div className="parcel-list">
+            {filteredFarmerParcels.map((parcel) => {
+              const color = parcel.status === 'Healthy' ? '#22c55e' : parcel.status === 'Watch' ? '#f59e0b' : '#ef4444';
+              return (
+                <div
+                  key={parcel.id}
+                  className={`pitem ${selectedParcel.id === parcel.id ? 'active' : ''}`}
+                  onClick={() => {
+                    setSelectedId(parcel.id);
+                    setMobileView('map');
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <div className="pitem-pulse" style={{ background: color }}>{parcel.landHealthScore}</div>
+                  <div className="pitem-info">
+                    <div className="pitem-name">{parcel.id}</div>
+                    <div className="pitem-sub">{parcel.municipality} · {parcel.hectares} ha</div>
+                  </div>
+                  <div className="pitem-score" style={{ color }}>{parcel.status === 'Healthy' ? 'Aktive' : parcel.status === 'Watch' ? 'Stres' : 'Rrezik'}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </aside>
+
+      <main className="main farmer-main">
+        <section className="map-wrapper" id="map-wrapper">
+          <div className="map-overlay-tl">
+            <div className="map-badge">
+              <Eye size={12} />
+              Kosovo farm view
+            </div>
+            <div className="map-badge">
+              📍 <span>{selectedParcel.municipality}</span>
+            </div>
+          </div>
+
+          <div className="map-filter">
+            <div className={`tpill ${filterMode === 'all' ? 'active' : ''}`} onClick={() => setFilterMode('all')}>
+              <span className="dot" style={{ background: '#64748b' }} />
+              All
+            </div>
+            <div className={`tpill ${filterMode === 'risk' ? 'active' : ''}`} onClick={() => setFilterMode('risk')}>
+              <span className="dot" style={{ background: 'var(--pulse-red)' }} />
+              Risk
+            </div>
+            <div className={`tpill ${filterMode === 'stress' ? 'active' : ''}`} onClick={() => setFilterMode('stress')}>
+              <span className="dot" style={{ background: 'var(--pulse-amber)' }} />
+              Stress
+            </div>
+            <div className={`tpill ${filterMode === 'thriving' ? 'active' : ''}`} onClick={() => setFilterMode('thriving')}>
+              <span className="dot" style={{ background: 'var(--pulse-green)' }} />
+              Active
+            </div>
+          </div>
+
+          <div className="map-overlay-tr">
+            <div className="map-controls">
+              <div className="mctrl" title="Zoom in" onClick={() => mapRef.current?.zoomIn()}>+</div>
+              <div className="mctrl" title="Zoom out" onClick={() => mapRef.current?.zoomOut()}>−</div>
+              <div className="mctrl" title="Reset" onClick={() => mapRef.current?.fitBounds([[41.82, 19.85], [43.32, 21.95]], { padding: 36, duration: 700 })}>⌖</div>
+            </div>
+            <div className="map-legend">
+              <div className="leg-title">Land Pulse</div>
+              <div className="leg-row"><div className="leg-dot" style={{ background: '#22c55e' }} /><span>Active (70–100)</span></div>
+              <div className="leg-row"><div className="leg-dot" style={{ background: '#f59e0b' }} /><span>Stress (40–69)</span></div>
+              <div className="leg-row"><div className="leg-dot" style={{ background: '#ef4444' }} /><span>Risk (0–39)</span></div>
+            </div>
+          </div>
+
+          <div className="map-source-badge">
+            {mapReady ? (osmStatus === 'ready'
+              ? `Terrain + ${osmCounts.landuse} land-use layers`
+              : 'Loading terrain') : 'Loading map'}
+          </div>
+
+          <div ref={mapContainerRef} id="leaflet-map" />
+          {!mapReady && (
+            <div className="detail-loading map-loading">
+              <div>Loading map</div>
+            </div>
+          )}
+
+          <button className="farm-map-fab" type="button" onClick={() => setMobileView((value) => (value === 'map' ? 'list' : 'map'))}>
+            {mobileView === 'map' ? 'Parcelet' : 'Harta'}
+          </button>
+          <button className="farm-map-fab secondary" type="button" onClick={() => setMobileView('detail')}>
+            Detajet
+          </button>
+        </section>
+
+        <div className={`right-panel farmer-right ${mobileView === 'detail' ? 'mobile-visible' : ''}`}>
+          <div className="panel-tabs">
+            <div className={`ptab ${activeTab === 'detail' ? 'active' : ''}`} onClick={() => setActiveTab('detail')}>📋 Detajet</div>
+            <div className={`ptab ${activeTab === 'satellite' ? 'active' : ''}`} onClick={() => setActiveTab('satellite')}>🛰️ Satelit</div>
+            <div className={`ptab ${activeTab === 'chain' ? 'active' : ''}`} onClick={() => setActiveTab('chain')}>⛓️ Histori</div>
+            <div className={`ptab ${activeTab === 'ai' ? 'active' : ''}`} onClick={() => setActiveTab('ai')}>🤖 Këshilltar</div>
+          </div>
+          <div className="panel-content">
+            {activeTab === 'detail' && (
+              <>
+                <div className="detail-hero">
+                  <div className="detail-hero-top">
+                    <div>
+                      <div className="detail-title">{selectedParcel.id}</div>
+                      <div className="detail-subtitle">{selectedParcel.municipality} · {selectedParcel.hectares} ha</div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                      <StatusPill status={selectedParcel.status} />
+                      <button className="ai-launch-btn" type="button" onClick={() => setActiveTab('ai')}>
+                        🤖 Këshilltari AI
+                      </button>
+                    </div>
+                  </div>
+                  <div className="pulse-ring">
+                    <div className="pulse-number">{selectedParcel.landHealthScore}</div>
+                    <div className="pulse-label">LAND PULSE</div>
+                  </div>
+                  <div className="pulse-bar">
+                    <div className="pulse-fill" style={{ width: `${selectedParcel.landHealthScore}%`, background: selectedParcel.status === 'Healthy' ? '#22c55e' : selectedParcel.status === 'Watch' ? '#f59e0b' : '#ef4444' }} />
+                  </div>
+                  <div className="pulse-status">{selectedParcel.status}</div>
+                  <div className="detail-meta">
+                    <div className="dmeta"><div className="dmeta-label">Current crop</div><div className="dmeta-val">{selectedParcel.currentCrop}</div></div>
+                    <div className="dmeta"><div className="dmeta-label">Owner</div><div className="dmeta-val">{selectedParcel.owner}</div></div>
+                  </div>
+                </div>
+                <div className="farmer-summary-grid">
+                  <div className="farmer-summary-card">
+                    <div className="fsc-label">Next action</div>
+                    <div className="fsc-value">{selectedParcel.monocultureYears > 4 ? 'Rotate crop' : 'Maintain schedule'}</div>
+                  </div>
+                  <div className="farmer-summary-card">
+                    <div className="fsc-label">Satellite match</div>
+                    <div className="fsc-value">{selectedParcel.status === 'Healthy' ? 'Aligned' : 'Review'}</div>
+                  </div>
+                  <div className="farmer-summary-card">
+                    <div className="fsc-label">Risk</div>
+                    <div className="fsc-value">{Math.round((selectedParcel.abandonmentProbability ?? 0) * 100)}%</div>
+                  </div>
+                </div>
+                <div className="ai-explain">
+                  <div className="ai-explain-header">
+                    <div className="ai-icon">AI</div>
+                    <div className="ai-label">Farm advisory</div>
+                  </div>
+                  <div className="ai-text">{selectedParcel.advisory}</div>
+                </div>
+                <div className="abandon-card">
+                  <div className="abandon-header">
+                    <div className="abandon-icon">⚠️</div>
+                    <div>
+                      <div className="abandon-title">Abandonment risk</div>
+                      <div className="abandon-label">Based on activity + satellite</div>
+                    </div>
+                  </div>
+                  <div className="abandon-prob">{Math.round((selectedParcel.abandonmentProbability ?? 0) * 100)}%</div>
+                  <div className="economic-row">
+                    <div className="econ-chip"><div className="econ-val">{formatter.format(selectedParcel.projectedLoss)}</div><div className="econ-label">Projected loss</div></div>
+                    <div className="econ-chip"><div className="econ-val">{selectedParcel.complianceRisk}%</div><div className="econ-label">Compliance risk</div></div>
+                  </div>
+                </div>
+                <div className="timeline-wrap">
+                  <div className="section-label">24-month timeline</div>
+                  <div className="timeline-chart">
+                    {selectedParcel.cropHistory.map((point, index) => (
+                      <div
+                        key={`${point.month}-${index}`}
+                        className="tbar"
+                        data-tip={`${point.month}: ${point.ndvi}`}
+                        style={{ background: point.ndvi >= 70 ? '#22c55e' : point.ndvi >= 40 ? '#f59e0b' : '#ef4444', height: `${Math.max(10, Math.round((point.ndvi / 100) * 50))}px` }}
+                      />
+                    ))}
+                  </div>
+                  <div className="timeline-labels"><span>−24 mo</span><span>−12 mo</span><span>Now</span></div>
+                </div>
+                <div className="actions-grid" style={{ marginTop: '14px' }}>
+                  <button className="action-btn" type="button" onClick={() => setActiveTab('ai')}>
+                    <div className="action-icon" style={{ background: 'var(--sage-pale)', color: 'var(--sage)' }}>🤖</div>
+                    <div className="action-body">
+                      <div className="action-title">Open chatbot</div>
+                      <div className="action-desc">Ask about planting, risk, or weather impact</div>
+                    </div>
+                    <div className="action-arrow">→</div>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {activeTab === 'satellite' && <SatellitePanel parcel={selectedParcel} />}
+            {activeTab === 'chain' && <div className="chain-wrap">{renderBlockchain(selectedParcel.ledger)}</div>}
+            {activeTab === 'ai' && (
+              <>
+                <div className="chat-launch-badge">🤖 Chat bot aktiv për këtë parcelë</div>
+                <AdvisorPanel
+                  parcel={selectedParcel}
+                  chatMessages={chatMessages}
+                  chatInput={chatInput}
+                  setChatInput={setChatInput}
+                  sendChat={sendChat}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </main>
+      <FloatingChatButton label="Chat bot" onClick={() => {
+        setActiveTab('ai');
+        setMobileView('detail');
+      }} />
+
+      <nav className="mobile-nav">
+        <div className="mobile-nav-inner">
+          <button className={`mnav-btn ${mobileView === 'list' ? 'active' : ''}`} onClick={() => setMobileView('list')}>
+            <span className="mnav-icon">🗂️</span>
+            <span className="mnav-label">Parcelet</span>
+          </button>
+          <button className={`mnav-btn ${mobileView === 'map' ? 'active' : ''}`} onClick={() => setMobileView('map')}>
+            <span className="mnav-icon">🗺️</span>
+            <span className="mnav-label">Harta</span>
+          </button>
+          <button className={`mnav-btn ${mobileView === 'detail' ? 'active' : ''}`} onClick={() => setMobileView('detail')}>
+            <span className="mnav-icon">📋</span>
+            <span className="mnav-label">Detajet</span>
+          </button>
+        </div>
+      </nav>
+    </div>
+  );
+}
+
 export default function App() {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const popupRef = useRef(null);
+  const layersRef = useRef({
+    landuse: null,
+    adminareas: null,
+    water: null,
+    regional: null,
+    parcels: null
+  });
   const [selectedId, setSelectedId] = useState(detailedParcels[0]?.id ?? null);
   const [zoom, setZoom] = useState(8.2);
   const [mapReady, setMapReady] = useState(false);
@@ -302,13 +1151,30 @@ export default function App() {
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const selectedParcel = useMemo(() => findParcel(selectedId), [selectedId]);
-  const parcelData = useMemo(() => parcelFeatureCollection(detailedParcels, selectedId), [selectedId]);
+  const [adminMobileView, setAdminMobileView] = useState('map');
+  const [authUser, setAuthUser] = useState(() => {
+    try {
+      const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      return null;
+    }
+  });
+  const visibleParcels = useMemo(() => {
+    if (authUser?.role === 'farmer') {
+      return detailedParcels.filter((parcel) => parcel.owner === authUser.name);
+    }
+    return detailedParcels;
+  }, [authUser]);
+  const selectedParcel = useMemo(() => {
+    return visibleParcels.find((parcel) => parcel.id === selectedId) || visibleParcels[0] || detailedParcels[0];
+  }, [selectedId, visibleParcels]);
+  const parcelData = useMemo(() => parcelFeatureCollection(visibleParcels, selectedId), [selectedId, visibleParcels]);
   const isDetailView = zoom >= DETAIL_ZOOM;
   const stats = useMemo(() => municipalityStats(detailedParcels), []);
   const filteredParcels = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    return detailedParcels.filter((parcel) => {
+    return visibleParcels.filter((parcel) => {
       const pulse = parcel.landHealthScore ?? parcel.farmScore ?? 0;
       if (filterMode === 'risk' && pulse >= 40) return false;
       if (filterMode === 'stress' && (pulse < 40 || pulse >= 70)) return false;
@@ -322,25 +1188,33 @@ export default function App() {
         parcel.status
       ].some((field) => String(field).toLowerCase().includes(query));
     });
-  }, [filterMode, searchTerm]);
-  const filteredRegionalPoints = useMemo(() => {
-    if (filterMode === 'all') return regionalPointData;
+  }, [filterMode, searchTerm, visibleParcels]);
+  const filteredRegionalSummary = useMemo(() => {
+    if (authUser?.role === 'farmer') return EMPTY_COLLECTION;
+    if (filterMode === 'all') return regionalSummaryData;
     const statusForMode = filterMode === 'risk'
       ? 'Critical Alert'
       : filterMode === 'stress'
         ? 'Watch'
         : 'Healthy';
     return {
-      ...regionalPointData,
-      features: regionalPointData.features.filter((feature) => feature?.properties?.status === statusForMode)
+      ...regionalSummaryData,
+      features: regionalSummaryData.features.filter((feature) => feature?.properties?.status === statusForMode)
     };
-  }, [filterMode]);
+  }, [authUser, filterMode]);
   const summary = useMemo(() => {
     const critical = detailedParcels.filter((parcel) => parcel.status === 'Critical Alert').length;
     const avgHealth = Math.round(detailedParcels.reduce((sum, parcel) => sum + parcel.landHealthScore, 0) / detailedParcels.length);
     const loss = detailedParcels.reduce((sum, parcel) => sum + parcel.projectedLoss, 0);
     return { critical, avgHealth, loss };
   }, []);
+
+  useEffect(() => {
+    if (!visibleParcels.length) return;
+    if (!selectedId || !visibleParcels.some((parcel) => parcel.id === selectedId)) {
+      setSelectedId(visibleParcels[0].id);
+    }
+  }, [selectedId, visibleParcels]);
 
   useEffect(() => {
     setActiveDetailTab('overview');
@@ -355,6 +1229,13 @@ export default function App() {
   const zoomIn = () => mapRef.current?.zoomIn();
   const zoomOut = () => mapRef.current?.zoomOut();
   const resetMap = () => {
+    if (authUser?.role === 'farmer' && visibleParcels.length) {
+      const bounds = L.latLngBounds(
+        visibleParcels.flatMap((parcel) => parcel.geometry.coordinates[0].map(([lng, lat]) => [lat, lng]))
+      );
+      mapRef.current?.fitBounds(bounds, { padding: [36, 36], duration: 700 });
+      return;
+    }
     mapRef.current?.fitBounds(kosovoBounds, { padding: 36, duration: 700 });
   };
 
@@ -388,320 +1269,333 @@ export default function App() {
     setChatInput('');
   };
 
+  const handleAuth = (user) => {
+    const payload = {
+      nid: user.nid,
+      name: user.name,
+      role: user.role,
+      municipality: user.municipality
+    };
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(payload));
+    setAuthUser(payload);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    setAuthUser(null);
+  };
+
   useEffect(() => {
     if (!mapContainerRef.current) return undefined;
 
-    const map = new maplibregl.Map({
-      container: mapContainerRef.current,
-      style: offlineTerrainStyle,
-      center: [20.9, 42.58],
-      zoom: 8.2,
+    const leafletBounds = [
+      [kosovoBounds[0][1], kosovoBounds[0][0]],
+      [kosovoBounds[1][1], kosovoBounds[1][0]]
+    ];
+
+    const map = L.map(mapContainerRef.current, {
+      zoomControl: false,
+      attributionControl: false,
+      preferCanvas: true,
+      zoomSnap: 0.25,
       minZoom: 7.3,
-      maxZoom: 16.8,
-      maxBounds: kosovoBounds
+      maxZoom: 16.8
     });
 
     mapRef.current = map;
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    map.fitBounds(leafletBounds, { padding: [32, 32], animate: false });
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 18,
+      opacity: 1,
+      noWrap: true,
+      attribution: '&copy; Esri'
+    }).addTo(map);
 
     const resizeObserver = new ResizeObserver(() => {
-      map.resize();
+      map.invalidateSize();
     });
 
     const syncZoomState = () => {
       setZoom(Number(map.getZoom().toFixed(2)));
     };
 
+    const getShowDetail = () => map.getZoom() >= DETAIL_ZOOM;
+
+    const landuseStyle = (feature) => ({
+      color: feature?.properties?.category === 'woodland'
+        ? '#132a13'
+        : feature?.properties?.category === 'built'
+          ? '#4b1b07'
+          : feature?.properties?.category === 'tree_crop'
+            ? '#48acf0'
+            : '#1f923b',
+      weight: 0.7,
+      fillColor: feature?.properties?.category === 'built'
+        ? '#4b1b07'
+        : feature?.properties?.category === 'tree_crop'
+          ? '#48acf0'
+          : '#1f923b',
+      fillOpacity: 0.22,
+      opacity: 0.52
+    });
+
+    const regionalStyle = (feature) => ({
+      color: 'rgba(255,255,255,0.42)',
+      weight: 0.8,
+      fillColor: feature?.properties?.color || '#1f923b',
+      fillOpacity: 0.34,
+      opacity: 0.65
+    });
+
+    const parcelStyle = (feature) => ({
+      color: feature?.properties?.selected ? '#132a13' : '#f4fcd9',
+      weight: feature?.properties?.selected ? 3 : 1.4,
+      fillColor: feature?.properties?.color || '#1f923b',
+      fillOpacity: feature?.properties?.selected ? 0.30 : 0.16
+    });
+
     const showParcelPopup = (parcel) => {
       if (!parcel) return;
 
       popupRef.current?.remove();
-      popupRef.current = new maplibregl.Popup({
+      popupRef.current = L.popup({
         closeButton: false,
         closeOnClick: false,
-        offset: 18
+        autoClose: false,
+        className: 'toka-popup'
       })
-        .setLngLat(parcel.centroid)
-        .setHTML(
+        .setLatLng([parcel.centroid[1], parcel.centroid[0]])
+        .setContent(
           `<div class="map-label">${parcel.id}</div><div class="map-sub">${parcel.municipality} · ${parcel.currentCrop}</div>`
         )
-        .addTo(map);
+        .openOn(map);
     };
 
     const handleResize = () => {
-      map.resize();
+      map.invalidateSize();
     };
 
     resizeObserver.observe(mapContainerRef.current);
 
-    map.on('load', () => {
-      map.addSource('osm-landuse', {
-        type: 'geojson',
-        data: EMPTY_COLLECTION
-      });
+    const canvasRenderer = L.canvas({ padding: 0.5 });
 
-      map.addSource('osm-adminareas', {
-        type: 'geojson',
-        data: EMPTY_COLLECTION
-      });
-
-      map.addSource('osm-water', {
-        type: 'geojson',
-        data: EMPTY_COLLECTION
-      });
-
-      map.addSource('regional-points', {
-        type: 'geojson',
-        data: filteredRegionalPoints
-      });
-
-      map.addSource('parcel-polygons', {
-        type: 'geojson',
-        data: parcelFeatureCollection(detailedParcels, selectedId)
-      });
-
-      map.addLayer({
-        id: 'osm-landuse-fill',
-        type: 'fill',
-        source: 'osm-landuse',
-        maxzoom: DETAIL_ZOOM,
-        paint: {
-          'fill-color': [
-            'match',
-            ['get', 'category'],
-            'agriculture', '#b7d67d',
-            'tree_crop', '#d9b56f',
-            'woodland', '#5f844d',
-            'open', '#d6df98',
-            'built', '#ccb9a0',
-            '#b7d67d'
-          ],
-          'fill-opacity': ['interpolate', ['linear'], ['zoom'], 7, 0.18, 10.5, 0.15, 11.4, 0.12]
-        }
-      });
-
-      map.addLayer({
-        id: 'osm-landuse-outline',
-        type: 'line',
-        source: 'osm-landuse',
-        maxzoom: DETAIL_ZOOM,
-        paint: {
-          'line-color': [
-            'match',
-            ['get', 'category'],
-            'agriculture', '#6c8e4d',
-            'tree_crop', '#a97b2f',
-            'woodland', '#355334',
-            'open', '#9da86d',
-            'built', '#948372',
-            '#6c8e4d'
-          ],
-          'line-width': ['interpolate', ['linear'], ['zoom'], 7, 0.35, 11.4, 0.9],
-          'line-opacity': 0.34
-        }
-      });
-
-      map.addLayer({
-        id: 'osm-water-fill',
-        type: 'fill',
-        source: 'osm-water',
-        maxzoom: DETAIL_ZOOM,
-        paint: {
-          'fill-color': '#78aede',
-          'fill-opacity': ['interpolate', ['linear'], ['zoom'], 7, 0.18, 11.4, 0.11]
-        }
-      });
-
-      map.addLayer({
-        id: 'osm-water-outline',
-        type: 'line',
-        source: 'osm-water',
-        maxzoom: DETAIL_ZOOM,
-        paint: {
-          'line-color': '#5b8fc2',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 7, 0.3, 11.4, 0.7],
-          'line-opacity': 0.45
-        }
-      });
-
-      map.addLayer({
-        id: 'osm-adminareas-line',
-        type: 'line',
-        source: 'osm-adminareas',
-        maxzoom: DETAIL_ZOOM,
-        paint: {
-          'line-color': '#17391f',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 7, 0.3, 11.4, 0.8],
-          'line-opacity': 0.22,
-          'line-dasharray': [2, 1.5]
-        }
-      });
-
-      map.addLayer({
-        id: 'regional-points-glow',
-        type: 'circle',
-        source: 'regional-points',
-        maxzoom: DETAIL_ZOOM,
-        paint: {
-          'circle-radius': ['interpolate', ['linear'], ['zoom'], 7, 2, DETAIL_ZOOM, 16],
-          'circle-color': ['get', 'color'],
-          'circle-opacity': 0.22,
-          'circle-blur': 0.9
-        }
-      });
-
-      map.addLayer({
-        id: 'regional-points',
-        type: 'circle',
-        source: 'regional-points',
-        maxzoom: DETAIL_ZOOM,
-        paint: {
-          'circle-radius': ['interpolate', ['linear'], ['zoom'], 7, 1.7, DETAIL_ZOOM, 8.5],
-          'circle-color': ['get', 'color'],
-          'circle-opacity': 0.9,
-          'circle-stroke-width': 0.7,
-          'circle-stroke-color': '#ffffff'
-        }
-      });
-
-      map.addLayer({
-        id: 'parcel-fills',
-        type: 'fill',
-        source: 'parcel-polygons',
-        minzoom: DETAIL_ZOOM,
-        paint: {
-          'fill-color': ['get', 'color'],
-          'fill-opacity': ['case', ['==', ['get', 'selected'], true], 0.34, 0.14]
-        }
-      });
-
-      map.addLayer({
-        id: 'parcel-lines',
-        type: 'line',
-        source: 'parcel-polygons',
-        minzoom: DETAIL_ZOOM,
-        paint: {
-          'line-color': ['case', ['==', ['get', 'selected'], true], '#102816', '#f7f5ed'],
-          'line-width': ['case', ['==', ['get', 'selected'], true], 3.6, 1.3],
-          'line-opacity': 0.98
-        }
-      });
-
-      map.on('click', 'regional-points', (event) => {
-        const feature = event.features?.[0];
-        const parcel = findParcel(feature?.properties?.detailId);
-        if (!parcel) return;
-
-        setSelectedId(parcel.id);
-        map.flyTo({
-          center: parcel.centroid,
-          zoom: DETAIL_ZOOM + 1.8,
-          speed: 0.8,
-          curve: 1.2
+    const landuseLayer = L.geoJSON(EMPTY_COLLECTION, {
+      style: landuseStyle,
+      interactive: false
+    });
+    const adminareasLayer = L.geoJSON(EMPTY_COLLECTION, {
+      style: {
+        color: 'rgba(19,42,19,0.45)',
+        weight: 0.8,
+        dashArray: '3 3',
+        fillOpacity: 0
+      },
+      interactive: false
+    });
+    const waterLayer = L.geoJSON(EMPTY_COLLECTION, {
+      style: {
+        color: '#48acf0',
+        weight: 0.8,
+        fillColor: '#48acf0',
+        fillOpacity: 0.2,
+        opacity: 0.65
+      },
+      interactive: false
+    });
+    const regionalLayer = L.geoJSON(filteredRegionalSummary, {
+      renderer: canvasRenderer,
+      style: regionalStyle,
+      onEachFeature: (feature, layer) => {
+        layer.on({
+          click: () => {
+            const parcel = findParcel(feature?.properties?.detailId);
+            if (!parcel) return;
+            setSelectedId(parcel.id);
+            map.fitBounds(layer.getBounds(), { padding: [26, 26], duration: 0.8 });
+            map.setZoom(Math.max(DETAIL_ZOOM + 0.75, map.getZoom() + 1.25));
+          },
+          mouseover: () => {
+            map.getContainer().style.cursor = 'pointer';
+          },
+          mouseout: () => {
+            map.getContainer().style.cursor = '';
+          }
         });
-      });
-
-      map.on('click', 'parcel-fills', (event) => {
-        const feature = event.features?.[0];
-        const parcel = findParcel(feature?.properties?.id);
-        if (!parcel) return;
-
-        setSelectedId(parcel.id);
-        showParcelPopup(parcel);
-      });
-
-      ['regional-points', 'parcel-fills'].forEach((layerId) => {
-        map.on('mouseenter', layerId, () => {
-          map.getCanvas().style.cursor = 'pointer';
+      }
+    });
+    const parcelsLayer = L.geoJSON(parcelData, {
+      renderer: canvasRenderer,
+      style: parcelStyle,
+      onEachFeature: (feature, layer) => {
+        layer.on({
+          click: () => {
+            const parcel = findParcel(feature?.properties?.id);
+            if (!parcel) return;
+            setSelectedId(parcel.id);
+            showParcelPopup(parcel);
+          },
+          mouseover: () => {
+            map.getContainer().style.cursor = 'pointer';
+          },
+          mouseout: () => {
+            map.getContainer().style.cursor = '';
+          }
         });
-        map.on('mouseleave', layerId, () => {
-          map.getCanvas().style.cursor = '';
-        });
-      });
-
-      map.fitBounds(kosovoBounds, { padding: 36, duration: 0 });
-      requestAnimationFrame(() => {
-        map.resize();
-      });
-      syncZoomState();
-
-      Promise.all([
-        fetch('/data/kosovo-landuse.geojson').then((response) => response.json()),
-        fetch('/data/kosovo-adminareas.geojson').then((response) => response.json()),
-        fetch('/data/kosovo-water.geojson').then((response) => response.json())
-      ])
-        .then(([landuse, adminareas, water]) => {
-          map.getSource('osm-landuse')?.setData(landuse);
-          map.getSource('osm-adminareas')?.setData(adminareas);
-          map.getSource('osm-water')?.setData(water);
-          setOsmCounts({
-            landuse: landuse.features?.length ?? 0,
-            adminareas: adminareas.features?.length ?? 0,
-            water: water.features?.length ?? 0
-          });
-          setOsmStatus('ready');
-        })
-        .catch(() => {
-          setOsmStatus('unavailable');
-        })
-        .finally(() => {
-          setMapReady(true);
-        });
+      }
     });
 
-    map.on('zoom', syncZoomState);
+    layersRef.current = {
+      landuse: landuseLayer,
+      adminareas: adminareasLayer,
+      water: waterLayer,
+      regional: regionalLayer,
+      parcels: parcelsLayer
+    };
+
+    const syncLayerVisibility = () => {
+      const showDetail = getShowDetail();
+      const { landuse, adminareas, water, regional, parcels } = layersRef.current;
+      if (!landuse || !adminareas || !water || !regional || !parcels) return;
+
+      if (!map.hasLayer(landuse)) landuse.addTo(map);
+      if (!map.hasLayer(adminareas)) adminareas.addTo(map);
+      if (!map.hasLayer(water)) water.addTo(map);
+
+      if (authUser?.role === 'farmer' || showDetail) {
+        if (map.hasLayer(regional)) map.removeLayer(regional);
+        if (!map.hasLayer(parcels)) parcels.addTo(map);
+      } else {
+        if (map.hasLayer(parcels)) map.removeLayer(parcels);
+        if (!map.hasLayer(regional)) regional.addTo(map);
+      }
+    };
+
+    const loadLayers = async () => {
+      try {
+        const [landuse, adminareas, water] = await Promise.all([
+          fetch('/data/kosovo-landuse.geojson').then((response) => response.json()),
+          fetch('/data/kosovo-adminareas.geojson').then((response) => response.json()),
+          fetch('/data/kosovo-water.geojson').then((response) => response.json())
+        ]);
+
+        landuseLayer.clearLayers().addData(landuse);
+        adminareasLayer.clearLayers().addData(adminareas);
+        waterLayer.clearLayers().addData(water);
+
+        setOsmCounts({
+          landuse: landuse.features?.length ?? 0,
+          adminareas: adminareas.features?.length ?? 0,
+          water: water.features?.length ?? 0
+        });
+        setOsmStatus('ready');
+      } catch (error) {
+        setOsmStatus('unavailable');
+      } finally {
+        map.addLayer(landuseLayer);
+        map.addLayer(adminareasLayer);
+        map.addLayer(waterLayer);
+        syncLayerVisibility();
+        syncZoomState();
+        setMapReady(true);
+      }
+    };
+
+    loadLayers();
+
+    const syncVisibilityAndZoom = () => {
+      syncZoomState();
+      syncLayerVisibility();
+    };
+
+    map.on('zoomend', syncVisibilityAndZoom);
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
       resizeObserver.disconnect();
       popupRef.current?.remove();
+      map.off('zoomend', syncVisibilityAndZoom);
       map.remove();
       mapRef.current = null;
       popupRef.current = null;
+      layersRef.current = {
+        landuse: null,
+        adminareas: null,
+        water: null,
+        regional: null,
+        parcels: null
+      };
     };
-  }, []);
+  }, [authUser, visibleParcels]);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map?.isStyleLoaded()) return;
+    const { regional, parcels } = layersRef.current;
+    if (!map || !regional || !parcels) return;
 
-    const regionalSource = map.getSource('regional-points');
-    if (regionalSource) {
-      regionalSource.setData(filteredRegionalPoints);
-    }
+    regional.clearLayers();
+    regional.addData(filteredRegionalSummary);
 
-    const source = map.getSource('parcel-polygons');
-    if (source) {
-      source.setData(parcelData);
-    }
+    parcels.clearLayers();
+    parcels.addData(parcelData);
 
     if (selectedParcel && isDetailView) {
       popupRef.current?.remove();
-      popupRef.current = new maplibregl.Popup({
+      popupRef.current = L.popup({
         closeButton: false,
         closeOnClick: false,
-        offset: 18
+        autoClose: false,
+        className: 'toka-popup'
       })
-        .setLngLat(selectedParcel.centroid)
-        .setHTML(
+        .setLatLng([selectedParcel.centroid[1], selectedParcel.centroid[0]])
+        .setContent(
           `<div class="map-label">${selectedParcel.id}</div><div class="map-sub">${selectedParcel.municipality} · ${selectedParcel.currentCrop}</div>`
         )
-        .addTo(map);
+        .openOn(map);
     } else {
       popupRef.current?.remove();
     }
-  }, [filteredRegionalPoints, isDetailView, parcelData, selectedParcel]);
+  }, [authUser, filteredRegionalSummary, isDetailView, parcelData, selectedParcel]);
+
+  if (!authUser) {
+    return <AuthView onAuth={handleAuth} />;
+  }
+
+  if (authUser.role === 'farmer') {
+    return (
+      <FarmerDashboard
+        authUser={authUser}
+        selectedParcel={selectedParcel}
+        setSelectedId={setSelectedId}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filterMode={filterMode}
+        setFilterMode={setFilterMode}
+        mapContainerRef={mapContainerRef}
+        mapReady={mapReady}
+        osmStatus={osmStatus}
+        osmCounts={osmCounts}
+        zoom={zoom}
+        isDetailView={isDetailView}
+        handleLogout={handleLogout}
+        chatMessages={chatMessages}
+        chatInput={chatInput}
+        setChatInput={setChatInput}
+        sendChat={sendChat}
+      />
+    );
+  }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell admin-shell">
       <header className="topbar">
         <div className="brand">
           <div className="brand-hex">
-            <Sprout size={20} />
+            <BrandLogo />
           </div>
           <div>
-            <div className="brand-name">TOKA</div>
+            <div className="brand-name">toka ime</div>
             <div className="brand-tag">Paneli Administrativ</div>
           </div>
         </div>
@@ -728,9 +1622,12 @@ export default function App() {
             <span>Live — Kosovë</span>
           </div>
           <div className="admin-chip">
-            <div className="admin-av">GK</div>
-            <span>{adminUser.name}</span>
+            <div className="admin-av">{(authUser?.name || adminUser.name).slice(0, 2).toUpperCase()}</div>
+            <span>{authUser?.name || adminUser.name}</span>
           </div>
+          <button className="toka-top-btn" type="button" onClick={handleLogout}>
+            Dil
+          </button>
         </div>
       </header>
 
@@ -748,8 +1645,8 @@ export default function App() {
         <div className="sidebar-section">
           <div className="stat-grid">
             <div className="stat-card good">
-              <div className="sv">{regionalPointData.features.length.toLocaleString('de-DE')}</div>
-              <div className="sl">Visible parcel points</div>
+              <div className="sv">{regionalSummaryData.features.length.toLocaleString('de-DE')}</div>
+              <div className="sl">Visible admin hexes</div>
             </div>
             <div className="stat-card good">
               <div className="sv">{summary.avgHealth}</div>
@@ -951,10 +1848,22 @@ export default function App() {
           <div className="map-source-badge">
             {mapReady
               ? osmStatus === 'ready'
-                ? `OSM layers: ${osmCounts.landuse} land-use, ${osmCounts.adminareas} admin, ${osmCounts.water} water`
+            ? `Satellite base + ${osmCounts.landuse} land-use, ${osmCounts.adminareas} admin, ${osmCounts.water} water`
                 : 'OSM layers unavailable'
               : 'Loading map'}
           </div>
+
+          <div className="admin-ai-filter">
+            <div className="aif-title">Agriculture AI</div>
+            <div className="aif-sub">Filter parcels in danger and flag risk clusters from the map.</div>
+            <button className="aif-btn" type="button" onClick={() => setFilterMode('risk')}>
+              Show danger parcels
+            </button>
+          </div>
+
+          <button className="map-drawer-btn" type="button" onClick={() => setAdminMobileView((value) => (value === 'detail' ? 'map' : 'detail'))}>
+            {adminMobileView === 'detail' ? 'Map' : 'Detajet'}
+          </button>
 
           <div ref={mapContainerRef} id="leaflet-map" />
 
@@ -965,11 +1874,11 @@ export default function App() {
           )}
 
           <div className="map-muni-tooltip" id="muni-tooltip">
-            {isDetailView ? 'Kadastral detail view' : 'Regional land-use view'}
+            {isDetailView ? 'Synthetic parcel detail view' : 'Hex land-use overview'}
           </div>
         </section>
 
-        <div className="bottom-panels">
+        <div className={`bottom-panels ${adminMobileView === 'detail' ? 'mobile-visible' : ''}`}>
           <div className="detail-panel" id="detail-panel">
             {!selectedParcel ? (
               <div className="no-selection" id="no-selection">
@@ -987,6 +1896,14 @@ export default function App() {
                     <span className="tag green" style={{ marginLeft: 'auto' }}>
                       Demo
                     </span>
+                  </div>
+                  <div className="dp-actions-row">
+                    <button className="dp-ai-btn" type="button" onClick={() => setActiveDetailTab('advisor')}>
+                      🤖 Këshilltari AI
+                    </button>
+                    <button className="dp-link-btn" type="button" onClick={() => setActiveDetailTab('advisor')}>
+                      Open chatbot
+                    </button>
                   </div>
                 </div>
 
@@ -1044,7 +1961,7 @@ export default function App() {
                         <span className={`tag ${selectedParcel.status === 'Critical Alert' ? 'red' : selectedParcel.status === 'Watch' ? 'amber' : 'green'}`}>
                           {Math.round((selectedParcel.abandonmentProbability ?? 0) * 100)}% Probabilitet
                         </span>
-                        <span style={{ fontSize: '11px', color: 'var(--text-soft)' }}>Bazuar në modelin TOKA</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-soft)' }}>Bazuar në modelin toka ime</span>
                       </div>
                       <div className="risk-meter">
                         <div
@@ -1126,6 +2043,10 @@ export default function App() {
           </div>
         </div>
       </main>
+      <FloatingChatButton label="Chat bot" onClick={() => {
+        setActiveDetailTab('advisor');
+        setAdminMobileView('detail');
+      }} />
     </div>
   );
 }
