@@ -21,6 +21,7 @@ import {
 } from './data/landData';
 
 const DETAIL_ZOOM = 11.5;
+const SAMPLE_PARCEL_ID = 'KOS-LPJ-000613';
 const EMPTY_COLLECTION = {
   type: 'FeatureCollection',
   features: []
@@ -68,6 +69,61 @@ function parcelFeatureCollection(parcels, selectedId) {
       }
     }))
   };
+}
+
+function parcelBounds(parcel) {
+  const points = [];
+  const walk = (coords) => {
+    if (!coords) return;
+    if (typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+      points.push([coords[1], coords[0]]);
+      return;
+    }
+    coords.forEach(walk);
+  };
+
+  walk(parcel?.geometry?.coordinates);
+  return points.length ? L.latLngBounds(points) : null;
+}
+
+function buildParcelPopup(parcel) {
+  if (!parcel) return '';
+
+  const confidence = parcel.status === 'Healthy' ? 92 : parcel.status === 'Watch' ? 74 : 56;
+  const sourceLabel = parcel.id === SAMPLE_PARCEL_ID ? 'Prime example' : 'Live parcel';
+
+  return `
+    <div class="parcel-popup">
+      <div class="parcel-popup-head">
+        <div>
+          <div class="parcel-popup-id">${parcel.id}</div>
+          <div class="parcel-popup-sub">${parcel.municipality} · ${parcel.currentCrop}</div>
+        </div>
+        <div class="parcel-popup-badge">${sourceLabel}</div>
+      </div>
+      <div class="parcel-popup-grid">
+        <div class="parcel-popup-stat">
+          <span class="label">Deklaruar nga fermeri</span>
+          <strong>${parcel.owner}</strong>
+        </div>
+        <div class="parcel-popup-stat">
+          <span class="label">Satelit / Ndërveprim</span>
+          <strong>${parcel.status === 'Healthy' ? 'Aligned' : parcel.status === 'Watch' ? 'Review' : 'Mismatch'}</strong>
+        </div>
+        <div class="parcel-popup-stat">
+          <span class="label">Confidence</span>
+          <strong>${confidence}%</strong>
+        </div>
+        <div class="parcel-popup-stat">
+          <span class="label">Land Pulse</span>
+          <strong>${parcel.landHealthScore}/100</strong>
+        </div>
+      </div>
+      <div class="parcel-popup-note">
+        Prioritize outreach, verify seasonal activity, and recommend crop rotation before field inspection.
+      </div>
+    </div>
+  `;
 }
 
 function findParcel(parcelId) {
@@ -135,54 +191,7 @@ function MapBadge({ label, value }) {
 
 function BrandLogo() {
   return (
-    <svg viewBox="0 0 72 72" aria-hidden="true">
-      <defs>
-        <linearGradient id="logoField" x1="0%" x2="100%" y1="0%" y2="100%">
-          <stop offset="0%" stopColor="#1f923b" />
-          <stop offset="100%" stopColor="#48acf0" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M36 7c7 0 11 5 16 8 5 3 11 4 13 10 2 5 0 10 3 15 3 5 4 11 1 16-3 5-10 7-15 11-5 4-9 8-15 10-6 2-12-1-18-3-6-2-13-4-16-10-3-5-1-11-2-17-1-6-5-12-2-18 3-5 9-8 15-10 5-2 9-6 15-7 2-1 3-1 5-1Z"
-        fill="#1f923b"
-        opacity="0.95"
-      />
-      <path
-        d="M16 47c7-3 14-4 20-4s14 1 20 4"
-        fill="none"
-        stroke="#132a13"
-        strokeWidth="4"
-        strokeLinecap="round"
-      />
-      <path
-        d="M20 51c6 2 10 4 16 7 6-3 10-5 16-7"
-        fill="none"
-        stroke="#4b1b07"
-        strokeWidth="3.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M30 18c0 8 1 13 2 18"
-        fill="none"
-        stroke="#132a13"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M42 18c0 8-1 13-2 18"
-        fill="none"
-        stroke="#132a13"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M36 16c-4 4-8 6-11 7 5 5 9 8 11 9 2-1 6-4 11-9-3-1-7-3-11-7Z"
-        fill="#f4fcd9"
-      />
-      <path d="M36 34v13" stroke="#132a13" strokeWidth="2.4" strokeLinecap="round" />
-      <path d="M26 30c3 1 7 4 10 7" stroke="#48acf0" strokeWidth="2" strokeLinecap="round" />
-      <path d="M46 30c-3 1-7 4-10 7" stroke="#48acf0" strokeWidth="2" strokeLinecap="round" />
-    </svg>
+    <img src="/toka-logo.svg" alt="TOKA" />
   );
 }
 
@@ -844,11 +853,14 @@ function FarmerDashboard({
   authUser,
   selectedParcel,
   setSelectedId,
+  focusParcel,
   searchTerm,
   setSearchTerm,
+  filteredParcels,
   filterMode,
   setFilterMode,
   mapContainerRef,
+  mapRef,
   mapReady,
   osmStatus,
   osmCounts,
@@ -863,22 +875,7 @@ function FarmerDashboard({
   const [mobileView, setMobileView] = useState('map');
   const [activeTab, setActiveTab] = useState('detail');
 
-  const farmerParcels = useMemo(() => {
-    return detailedParcels.filter((parcel) => parcel.owner === authUser.name);
-  }, [authUser.name]);
-
-  const filteredFarmerParcels = useMemo(() => {
-    const query = searchTerm.trim().toLowerCase();
-    return farmerParcels.filter((parcel) => {
-      const pulse = parcel.landHealthScore ?? parcel.farmScore ?? 0;
-      if (filterMode === 'risk' && pulse >= 40) return false;
-      if (filterMode === 'stress' && (pulse < 40 || pulse >= 70)) return false;
-      if (filterMode === 'thriving' && pulse < 70) return false;
-      if (!query) return true;
-      return [parcel.id, parcel.owner, parcel.municipality, parcel.currentCrop, parcel.status]
-        .some((field) => String(field).toLowerCase().includes(query));
-    });
-  }, [farmerParcels, filterMode, searchTerm]);
+  const farmerParcels = filteredParcels;
 
   useEffect(() => {
     if (!farmerParcels.length) return;
@@ -941,13 +938,13 @@ function FarmerDashboard({
         <button className="sidebar-close" type="button" onClick={() => setMobileView('map')}>
           ✕
         </button>
-        <div className="sidebar-section">
-          <div className="stat-grid">
-            <div className="stat-card good">
-              <div className="sv">{farmerParcels.length}</div>
-              <div className="sl">Your parcels</div>
+          <div className="sidebar-section">
+            <div className="stat-grid">
+              <div className="stat-card good">
+                <div className="sv">{farmerParcels.length}</div>
+                <div className="sl">Your parcels</div>
             </div>
-            <div className="stat-card good">
+              <div className="stat-card good">
               <div className="sv">{Math.round(farmerParcels.reduce((sum, parcel) => sum + parcel.landHealthScore, 0) / Math.max(1, farmerParcels.length))}</div>
               <div className="sl">Avg health</div>
             </div>
@@ -998,7 +995,7 @@ function FarmerDashboard({
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredFarmerParcels.slice(0, 5).map((parcel) => (
+                  {farmerParcels.slice(0, 5).map((parcel) => (
                     <tr key={parcel.id}>
                       <td>{parcel.id}</td>
                       <td>{parcel.currentCrop}</td>
@@ -1014,15 +1011,16 @@ function FarmerDashboard({
         <div className="sidebar-section">
           <div className="ss-label">Parcelet tuaja</div>
           <div className="parcel-list">
-            {filteredFarmerParcels.map((parcel) => {
+            {farmerParcels.map((parcel) => {
               const color = parcel.status === 'Healthy' ? '#22c55e' : parcel.status === 'Watch' ? '#f59e0b' : '#ef4444';
               return (
                 <div
                   key={parcel.id}
                   className={`pitem ${selectedParcel.id === parcel.id ? 'active' : ''}`}
                   onClick={() => {
-                    setSelectedId(parcel.id);
-                    setMobileView('map');
+                    focusParcel(parcel);
+                    setMobileView('detail');
+                    setActiveTab('detail');
                   }}
                   role="button"
                   tabIndex={0}
@@ -1251,7 +1249,7 @@ export default function App() {
     regional: null,
     parcels: null
   });
-  const [selectedId, setSelectedId] = useState(detailedParcels[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState(() => detailedParcels.find((parcel) => parcel.id === SAMPLE_PARCEL_ID)?.id ?? detailedParcels[0]?.id ?? null);
   const [zoom, setZoom] = useState(8.2);
   const [mapReady, setMapReady] = useState(false);
   const [osmStatus, setOsmStatus] = useState('loading');
@@ -1263,6 +1261,10 @@ export default function App() {
   const [chatMessages, setChatMessages] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminMobileView, setAdminMobileView] = useState('map');
+  const [adminAiOpen, setAdminAiOpen] = useState(false);
+  const [adminAiStage, setAdminAiStage] = useState('Tap to start analysis');
+  const [adminAiProgress, setAdminAiProgress] = useState(0);
+  const adminAiTimersRef = useRef([]);
   const [viewMode, setViewMode] = useState(() => {
     try {
       return localStorage.getItem(VIEW_MODE_STORAGE_KEY) || 'app';
@@ -1291,12 +1293,6 @@ export default function App() {
     }
     return detailedParcels;
   }, [authUser]);
-  const selectedParcel = useMemo(() => {
-    return visibleParcels.find((parcel) => parcel.id === selectedId) || visibleParcels[0] || detailedParcels[0];
-  }, [selectedId, visibleParcels]);
-  const parcelData = useMemo(() => parcelFeatureCollection(visibleParcels, selectedId), [selectedId, visibleParcels]);
-  const isDetailView = zoom >= DETAIL_ZOOM;
-  const stats = useMemo(() => municipalityStats(detailedParcels), []);
   const filteredParcels = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
     return visibleParcels.filter((parcel) => {
@@ -1314,6 +1310,12 @@ export default function App() {
       ].some((field) => String(field).toLowerCase().includes(query));
     });
   }, [filterMode, searchTerm, visibleParcels]);
+  const selectedParcel = useMemo(() => {
+    return filteredParcels.find((parcel) => parcel.id === selectedId) || visibleParcels.find((parcel) => parcel.id === selectedId) || filteredParcels[0] || visibleParcels[0] || detailedParcels[0];
+  }, [filteredParcels, selectedId, visibleParcels]);
+  const parcelData = useMemo(() => parcelFeatureCollection(filteredParcels, selectedId), [filteredParcels, selectedId]);
+  const isDetailView = zoom >= DETAIL_ZOOM;
+  const stats = useMemo(() => municipalityStats(detailedParcels), []);
   const filteredRegionalSummary = useMemo(() => {
     if (authUser?.role === 'farmer') return EMPTY_COLLECTION;
     if (filterMode === 'all') return regionalSummaryData;
@@ -1351,11 +1353,11 @@ export default function App() {
   }, [demoPage]);
 
   useEffect(() => {
-    if (!visibleParcels.length) return;
-    if (!selectedId || !visibleParcels.some((parcel) => parcel.id === selectedId)) {
-      setSelectedId(visibleParcels[0].id);
+    if (!filteredParcels.length) return;
+    if (!selectedId || !filteredParcels.some((parcel) => parcel.id === selectedId)) {
+      setSelectedId(filteredParcels[0].id);
     }
-  }, [selectedId, visibleParcels]);
+  }, [filteredParcels, selectedId]);
 
   useEffect(() => {
     setActiveDetailTab('overview');
@@ -1424,6 +1426,66 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
     setAuthUser(null);
+  };
+
+  const clearAdminAiTimers = () => {
+    adminAiTimersRef.current.forEach((timer) => clearTimeout(timer));
+    adminAiTimersRef.current = [];
+  };
+
+  const runAdminAi = () => {
+    clearAdminAiTimers();
+    setAdminAiOpen(true);
+    setAdminAiStage('Scanning parcel clusters...');
+    setAdminAiProgress(18);
+
+    adminAiTimersRef.current.push(
+      setTimeout(() => {
+        setAdminAiStage('Comparing satellite and farmer declarations...');
+        setAdminAiProgress(56);
+      }, 700)
+    );
+
+    adminAiTimersRef.current.push(
+      setTimeout(() => {
+        setAdminAiStage('Generating outreach and inspection priorities...');
+        setAdminAiProgress(86);
+      }, 1400)
+    );
+
+    adminAiTimersRef.current.push(
+      setTimeout(() => {
+        setAdminAiStage('Analysis ready');
+        setAdminAiProgress(100);
+      }, 2200)
+    );
+  };
+
+  useEffect(() => () => clearAdminAiTimers(), []);
+
+  const focusParcel = (parcel, options = {}) => {
+    if (!parcel) return;
+
+    const bounds = parcelBounds(parcel);
+    setSelectedId(parcel.id);
+    popupRef.current?.remove();
+    if (bounds) {
+      mapRef.current?.fitBounds(bounds, {
+        padding: options.padding ?? [36, 36],
+        duration: options.duration ?? 700
+      });
+    }
+    if (options.openPopup !== false && mapRef.current) {
+      popupRef.current = L.popup({
+        closeButton: false,
+        closeOnClick: false,
+        autoClose: false,
+        className: 'toka-popup'
+      })
+        .setLatLng([parcel.centroid[1], parcel.centroid[0]])
+        .setContent(buildParcelPopup(parcel))
+        .openOn(mapRef.current);
+    }
   };
 
   useEffect(() => {
@@ -1518,9 +1580,7 @@ export default function App() {
         className: 'toka-popup'
       })
         .setLatLng([parcel.centroid[1], parcel.centroid[0]])
-        .setContent(
-          `<div class="map-label">${parcel.id}</div><div class="map-sub">${parcel.municipality} · ${parcel.currentCrop}</div>`
-        )
+        .setContent(buildParcelPopup(parcel))
         .openOn(map);
     };
 
@@ -1565,9 +1625,7 @@ export default function App() {
           click: () => {
             const parcel = findParcel(feature?.properties?.detailId);
             if (!parcel) return;
-            setSelectedId(parcel.id);
-            map.fitBounds(layer.getBounds(), { padding: [26, 26], duration: 0.8 });
-            map.setZoom(Math.max(DETAIL_ZOOM + 0.75, map.getZoom() + 1.25));
+            focusParcel(parcel, { padding: [28, 28] });
           },
           mouseover: () => {
             map.getContainer().style.cursor = 'pointer';
@@ -1586,8 +1644,7 @@ export default function App() {
           click: () => {
             const parcel = findParcel(feature?.properties?.id);
             if (!parcel) return;
-            setSelectedId(parcel.id);
-            showParcelPopup(parcel);
+            focusParcel(parcel);
           },
           mouseover: () => {
             map.getContainer().style.cursor = 'pointer';
@@ -1608,7 +1665,6 @@ export default function App() {
     };
 
     const syncLayerVisibility = () => {
-      const showDetail = getShowDetail();
       const { landuse, adminareas, water, regional, parcels } = layersRef.current;
       if (!landuse || !adminareas || !water || !regional || !parcels) return;
 
@@ -1616,14 +1672,9 @@ export default function App() {
       if (!map.hasLayer(adminareas)) adminareas.addTo(map);
       if (!map.hasLayer(water)) water.addTo(map);
       adminareas.bringToFront();
-
-      if (authUser?.role === 'farmer' || showDetail) {
-        if (map.hasLayer(regional)) map.removeLayer(regional);
-        if (!map.hasLayer(parcels)) parcels.addTo(map);
-      } else {
-        if (map.hasLayer(parcels)) map.removeLayer(parcels);
-        if (!map.hasLayer(regional)) regional.addTo(map);
-      }
+      if (map.hasLayer(regional)) map.removeLayer(regional);
+      if (!map.hasLayer(parcels)) parcels.addTo(map);
+      parcels.bringToFront();
     };
 
     const loadLayers = async () => {
@@ -1699,7 +1750,7 @@ export default function App() {
     parcels.clearLayers();
     parcels.addData(parcelData);
 
-    if (selectedParcel && isDetailView) {
+    if (selectedParcel) {
       popupRef.current?.remove();
       popupRef.current = L.popup({
         closeButton: false,
@@ -1708,14 +1759,12 @@ export default function App() {
         className: 'toka-popup'
       })
         .setLatLng([selectedParcel.centroid[1], selectedParcel.centroid[0]])
-        .setContent(
-          `<div class="map-label">${selectedParcel.id}</div><div class="map-sub">${selectedParcel.municipality} · ${selectedParcel.currentCrop}</div>`
-        )
+        .setContent(buildParcelPopup(selectedParcel))
         .openOn(map);
     } else {
       popupRef.current?.remove();
     }
-  }, [authUser, filteredRegionalSummary, isDetailView, parcelData, selectedParcel]);
+  }, [authUser, filteredRegionalSummary, parcelData, selectedParcel]);
 
   if (viewMode === 'demo') {
     return (
@@ -1752,6 +1801,7 @@ export default function App() {
           authUser={authUser}
           selectedParcel={selectedParcel}
           setSelectedId={setSelectedId}
+          focusParcel={focusParcel}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           filterMode={filterMode}
@@ -1944,19 +1994,26 @@ export default function App() {
               const pulse = parcel.landHealthScore;
               const color = parcel.status === 'Healthy' ? '#22c55e' : parcel.status === 'Watch' ? '#f59e0b' : '#ef4444';
               return (
-                <div
-                  key={parcel.id}
-                  className={`pitem ${selectedParcel.id === parcel.id ? 'active' : ''}`}
-                  onClick={() => {
-                    setSelectedId(parcel.id);
+              <div
+                key={parcel.id}
+                className={`pitem ${selectedParcel.id === parcel.id ? 'active' : ''}`}
+                onClick={() => {
+                  focusParcel(parcel);
+                  setSidebarOpen(false);
+                  setAdminMobileView('detail');
+                  setActiveDetailTab('overview');
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    focusParcel(parcel);
                     setSidebarOpen(false);
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') setSelectedId(parcel.id);
-                  }}
-                >
+                    setAdminMobileView('detail');
+                    setActiveDetailTab('overview');
+                  }
+                }}
+              >
                   <div className="pitem-pulse" style={{ background: color }}>
                     {pulse}
                   </div>
@@ -2035,10 +2092,27 @@ export default function App() {
           </div>
 
           <div className="admin-ai-filter">
-            <div className="aif-title">Agriculture AI</div>
-            <div className="aif-sub">Filter parcels in danger and flag risk clusters from the map.</div>
-            <button className="aif-btn" type="button" onClick={() => setFilterMode('risk')}>
-              Show danger parcels
+            <button
+              className={`aif-orb ${adminAiOpen ? 'open' : ''}`}
+              type="button"
+              onClick={() => {
+                runAdminAi();
+                setFilterMode('risk');
+              }}
+              aria-expanded={adminAiOpen}
+            >
+              <span className="aif-orb-core">
+                <span className={`aif-orb-ring ${adminAiProgress >= 100 ? 'done' : ''}`} />
+                <span className="aif-orb-icon">AI</span>
+              </span>
+              <span className="aif-orb-copy">
+                <span className="aif-title">Agriculture AI</span>
+                <span className="aif-sub">{adminAiStage}</span>
+                <span className="aif-progress">
+                  <span style={{ width: `${adminAiProgress}%` }} />
+                </span>
+                <span className="aif-hint">Analyzing risk clusters and outreach priority.</span>
+              </span>
             </button>
           </div>
 

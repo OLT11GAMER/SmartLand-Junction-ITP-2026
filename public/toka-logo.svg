@@ -1,0 +1,82 @@
+<svg width="720" height="720" viewBox="0 0 720 720" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TOKA logo">
+  <path
+    d="M357 30C388 25 419 43 438 68C456 90 484 96 506 116C527 135 527 169 554 184C580 199 601 226 599 257C598 286 627 311 620 340C612 372 585 390 576 420C567 451 573 488 552 514C532 538 495 536 475 559C454 583 445 621 414 631C383 640 351 615 320 614C288 613 257 631 227 623C194 614 182 580 159 559C136 537 98 531 84 502C71 476 89 440 76 413C63 384 28 367 24 335C20 302 48 276 49 244C50 213 27 181 42 154C57 127 93 125 115 107C138 88 149 55 179 43C208 31 242 42 271 39C301 36 328 35 357 30Z"
+    fill="#23983A"
+  />
+  <path
+    d="M363 318C360 297 359 282 356 262"
+    stroke="#0B2D10"
+    stroke-width="10"
+    stroke-linecap="round"
+  />
+  <path
+    d="M355 283C328 247 297 231 263 218C291 252 312 273 341 297"
+    fill="none"
+    stroke="#0B2D10"
+    stroke-width="10"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M364 283C391 247 422 231 456 218C428 252 407 273 378 297"
+    fill="none"
+    stroke="#0B2D10"
+    stroke-width="10"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M288 286C313 302 328 314 354 338"
+    fill="none"
+    stroke="#25B24D"
+    stroke-width="12"
+    stroke-linecap="round"
+  />
+  <path
+    d="M430 286C405 302 390 314 364 338"
+    fill="none"
+    stroke="#25B24D"
+    stroke-width="12"
+    stroke-linecap="round"
+  />
+  <path
+    d="M145 489C220 477 284 485 353 520C414 487 490 470 580 489"
+    fill="none"
+    stroke="#0B2D10"
+    stroke-width="10"
+    stroke-linecap="round"
+  />
+  <path
+    d="M111 528C179 514 238 524 301 560"
+    fill="none"
+    stroke="#23983A"
+    stroke-width="18"
+    stroke-linecap="round"
+  />
+  <path
+    d="M323 559C383 525 451 508 543 509"
+    fill="none"
+    stroke="#23983A"
+    stroke-width="18"
+    stroke-linecap="round"
+  />
+  <path
+    d="M470 529L558 575"
+    stroke="#23983A"
+    stroke-width="18"
+    stroke-linecap="round"
+  />
+  <path
+    d="M214 562C241 586 257 612 272 646"
+    stroke="#23983A"
+    stroke-width="18"
+    stroke-linecap="round"
+  />
+  <path
+    d="M365 432C365 415 365 398 366 380"
+    stroke="#0B2D10"
+    stroke-width="10"
+    stroke-linecap="round"
+  />
+  <circle cx="365" cy="360" r="13" fill="#0B2D10" />
+</svg>
