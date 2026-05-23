@@ -2927,7 +2927,7 @@ input {
 
   .farm-map-fab,
   .map-drawer-btn {
-    display: block;
+    display: none;
   }
 
   .admin-shell .main {
@@ -3072,13 +3072,11 @@ input {
   }
 
   .farm-map-fab {
-    right: 10px;
-    bottom: 10px;
-    padding: 9px 12px;
+    display: none;
   }
 
   .farm-map-fab.secondary {
-    bottom: 50px;
+    display: none;
   }
 
   .chatbot-fab {

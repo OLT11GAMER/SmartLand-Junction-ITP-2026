@@ -794,6 +794,52 @@ function FloatingChatButton({ label, onClick }) {
   );
 }
 
+function AdminMobileNav({ sidebarOpen, setSidebarOpen, adminMobileView, setAdminMobileView, activeDetailTab, setActiveDetailTab }) {
+  const openDetail = (tab = 'overview') => {
+    setAdminMobileView('detail');
+    setActiveDetailTab(tab);
+  };
+
+  return (
+    <nav className="mobile-nav admin-mobile-nav" aria-label="Admin mobile navigation">
+      <div className="mobile-nav-inner">
+        <button
+          className={`mnav-btn ${adminMobileView === 'map' ? 'active' : ''}`}
+          onClick={() => setAdminMobileView('map')}
+          type="button"
+        >
+          <span className="mnav-icon">🗺️</span>
+          <span className="mnav-label">Harta</span>
+        </button>
+        <button
+          className={`mnav-btn ${sidebarOpen ? 'active' : ''}`}
+          onClick={() => setSidebarOpen((value) => !value)}
+          type="button"
+        >
+          <span className="mnav-icon">🗂️</span>
+          <span className="mnav-label">Lista</span>
+        </button>
+        <button
+          className={`mnav-btn ${adminMobileView === 'detail' ? 'active' : ''}`}
+          onClick={() => openDetail('overview')}
+          type="button"
+        >
+          <span className="mnav-icon">📋</span>
+          <span className="mnav-label">Detaje</span>
+        </button>
+        <button
+          className={`mnav-btn ${adminMobileView === 'detail' && activeDetailTab === 'advisor' ? 'active' : ''}`}
+          onClick={() => openDetail('advisor')}
+          type="button"
+        >
+          <span className="mnav-icon">🤖</span>
+          <span className="mnav-label">AI</span>
+        </button>
+      </div>
+    </nav>
+  );
+}
+
 function FarmerDashboard({
   authUser,
   selectedParcel,
@@ -2182,6 +2228,14 @@ export default function App() {
         setActiveDetailTab('advisor');
         setAdminMobileView('detail');
       }} />
+      <AdminMobileNav
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        adminMobileView={adminMobileView}
+        setAdminMobileView={setAdminMobileView}
+        activeDetailTab={activeDetailTab}
+        setActiveDetailTab={setActiveDetailTab}
+      />
       </div>
     </>
   );
