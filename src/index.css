@@ -1302,6 +1302,12 @@ input {
   z-index: 260;
 }
 
+.app-switch-cluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .app-mode-switch {
   display: inline-flex;
   align-items: center;
@@ -1313,7 +1319,20 @@ input {
   backdrop-filter: blur(8px);
 }
 
+.demo-role-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(45, 74, 46, 0.84);
+  box-shadow: 0 10px 24px rgba(13, 28, 15, 0.16);
+  backdrop-filter: blur(8px);
+}
+
 .app-mode-switch-btn,
+.demo-role-switch-btn,
 .mode-switcher-page {
   border: none;
   border-radius: 999px;
@@ -1327,6 +1346,7 @@ input {
 }
 
 .app-mode-switch-btn.active,
+.demo-role-switch-btn.active,
 .mode-switcher-page.active {
   background: rgba(255, 255, 255, 0.16);
   color: #fff;

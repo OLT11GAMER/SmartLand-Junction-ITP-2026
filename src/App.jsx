@@ -217,6 +217,27 @@ function AppModeSwitch({ viewMode, setViewMode }) {
   );
 }
 
+function DemoRoleSwitch({ authUser, onSelectRole }) {
+  return (
+    <div className="demo-role-switch" role="group" aria-label="Switch React sample role">
+      <button
+        type="button"
+        className={`demo-role-switch-btn ${authUser?.role === 'farmer' ? 'active' : ''}`}
+        onClick={() => onSelectRole('farmer')}
+      >
+        Farmer
+      </button>
+      <button
+        type="button"
+        className={`demo-role-switch-btn ${authUser?.role === 'admin' ? 'active' : ''}`}
+        onClick={() => onSelectRole('admin')}
+      >
+        Admin
+      </button>
+    </div>
+  );
+}
+
 function HtmlDemoView({ demoPage, setDemoPage }) {
   const src = DEMO_HTML_PAGES[demoPage] || DEMO_HTML_PAGES.login;
 
@@ -1425,6 +1446,19 @@ export default function App() {
     };
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(payload));
     setAuthUser(payload);
+    setViewMode('app');
+
+    if (payload.role === 'farmer') {
+      const firstOwnedParcel = detailedParcels.find((parcel) => parcel.owner === payload.name);
+      if (firstOwnedParcel) {
+        setSelectedId(firstOwnedParcel.id);
+      }
+    }
+  };
+
+  const handleDemoRole = (role) => {
+    const account = role === 'farmer' ? DEMO_ACCOUNTS['1234567890'] : DEMO_ACCOUNTS.admin;
+    handleAuth(account);
   };
 
   const handleLogout = () => {
@@ -1795,8 +1829,9 @@ export default function App() {
   if (authUser.role === 'farmer') {
     return (
       <>
-        <div className="app-mode-switch-shell">
+        <div className="app-mode-switch-shell app-switch-cluster">
           <AppModeSwitch viewMode={viewMode} setViewMode={setViewMode} />
+          <DemoRoleSwitch authUser={authUser} onSelectRole={handleDemoRole} />
         </div>
         <FarmerDashboard
           authUser={authUser}
@@ -1825,8 +1860,9 @@ export default function App() {
 
   return (
     <>
-      <div className="app-mode-switch-shell">
+      <div className="app-mode-switch-shell app-switch-cluster">
         <AppModeSwitch viewMode={viewMode} setViewMode={setViewMode} />
+        <DemoRoleSwitch authUser={authUser} onSelectRole={handleDemoRole} />
       </div>
       <div className="app-shell admin-shell">
       <header className="topbar">
