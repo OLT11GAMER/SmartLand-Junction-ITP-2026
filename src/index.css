@@ -213,6 +213,26 @@ input {
   animation: fadeIn 0.4s ease;
 }
 
+.auth-mode-switch {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.auth-mode-switch .app-mode-switch {
+  background: rgba(45, 74, 46, 0.08);
+  border-color: rgba(45, 74, 46, 0.12);
+}
+
+.auth-mode-switch .app-mode-switch-btn {
+  color: var(--forest);
+}
+
+.auth-mode-switch .app-mode-switch-btn.active {
+  background: var(--forest);
+  color: #fff;
+}
+
 .form-title {
   font-size: 24px;
   font-weight: 800;
@@ -1215,6 +1235,7 @@ input {
   height: 100%;
   display: block;
   object-fit: cover;
+  filter: brightness(0) invert(1);
 }
 
 .brand-name {
@@ -1276,7 +1297,8 @@ input {
 .app-mode-switch-shell {
   position: fixed;
   top: 12px;
-  right: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 260;
 }
 
@@ -2938,7 +2960,9 @@ input {
 
   .app-mode-switch-shell {
     top: 8px;
-    right: 8px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
   }
 
   .app-mode-switch {

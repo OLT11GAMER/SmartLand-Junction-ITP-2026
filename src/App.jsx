@@ -26,11 +26,12 @@ const EMPTY_COLLECTION = {
   type: 'FeatureCollection',
   features: []
 };
-const VIEW_MODE_STORAGE_KEY = 'toka_view_mode';
+const VIEW_MODE_STORAGE_KEY = 'toka_view_mode_v3';
+const DEMO_PAGE_STORAGE_KEY = 'toka_demo_page_v3';
 const DEMO_HTML_PAGES = {
-  login: '/Old%20HTML%20version/login_updated.html',
-  farmer: '/Old%20HTML%20version/final%20farmer%20responsive.html',
-  admin: '/Old%20HTML%20version/adminnnn%20pa%20button.html'
+  login: '/kinda%20newer%20html/index.html',
+  farmer: '/kinda%20newer%20html/farmer.html',
+  admin: '/kinda%20newer%20html/admin.html'
 };
 
 const offlineTerrainStyle = {
@@ -191,7 +192,7 @@ function MapBadge({ label, value }) {
 
 function BrandLogo() {
   return (
-    <img src="/toka-logo.svg" alt="TOKA" />
+    <img src="/logo.svg" alt="TOKA" />
   );
 }
 
@@ -302,7 +303,7 @@ const DEMO_AKK = {
   }
 };
 
-function AuthView({ onAuth }) {
+function AuthView({ onAuth, viewMode, setViewMode }) {
   const [tab, setTab] = useState('login');
   const [loginNid, setLoginNid] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -462,6 +463,9 @@ function AuthView({ onAuth }) {
 
       <div className="auth-right">
         <div className="form-card">
+          <div className="auth-mode-switch">
+            <AppModeSwitch viewMode={viewMode} setViewMode={setViewMode} />
+          </div>
           <div className="form-title">{tab === 'login' ? 'Mirë se kthyet' : 'Regjistrim i Ri'}</div>
           <div className="form-sub">
             {tab === 'login'
@@ -1267,14 +1271,14 @@ export default function App() {
   const adminAiTimersRef = useRef([]);
   const [viewMode, setViewMode] = useState(() => {
     try {
-      return localStorage.getItem(VIEW_MODE_STORAGE_KEY) || 'app';
+      return localStorage.getItem(VIEW_MODE_STORAGE_KEY) || 'demo';
     } catch (error) {
-      return 'app';
+      return 'demo';
     }
   });
   const [demoPage, setDemoPage] = useState(() => {
     try {
-      return localStorage.getItem('toka_demo_page') || 'login';
+      return localStorage.getItem(DEMO_PAGE_STORAGE_KEY) || 'login';
     } catch (error) {
       return 'login';
     }
@@ -1346,7 +1350,7 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('toka_demo_page', demoPage);
+      localStorage.setItem(DEMO_PAGE_STORAGE_KEY, demoPage);
     } catch (error) {
       // Ignore persistence errors.
     }
@@ -1783,10 +1787,7 @@ export default function App() {
   if (!authUser) {
     return (
       <>
-        <div className="app-mode-switch-shell">
-          <AppModeSwitch viewMode={viewMode} setViewMode={setViewMode} />
-        </div>
-        <AuthView onAuth={handleAuth} />
+        <AuthView onAuth={handleAuth} viewMode={viewMode} setViewMode={setViewMode} />
       </>
     );
   }
